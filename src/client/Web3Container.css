@@ -1,0 +1,70 @@
+/* TopContainer.css */
+
+.web3-container-grand {
+
+    padding-top: 7%;
+    padding-bottom: 7%;
+  }
+  
+  .line-web3 {
+    border: 0;
+    height: 4px;
+    background: #2B4072; 
+    border-radius: 2px;/* Adjust the color as needed */
+    margin: 20px 0; /* Adjust the spacing as needed */
+    width: 100%; /* Make the line full width */
+    box-shadow: 0 0 10px rgba(48, 58, 82, 0.5);
+    margin-bottom: 7%;
+  }
+  
+  .web3-container {
+    display: flex;
+    flex-direction: column;
+    
+    /* justify-content: center;
+    align-items: center; */
+    width: 100%;
+  }
+  
+  
+  .img-container {
+  width: 20%;
+    aspect-ratio: 1/1 auto;
+    
+    
+    
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 15px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    
+  }
+  
+  .image {
+    width: 100%;
+    
+    object-fit: cover;
+    border-radius: 15px;
+    
+  }
+  
+  .web3-container-text {
+  
+   width: 50%;
+   margin-left: auto;
+   margin-right: auto;
+  text-align: center;
+padding-top: 7%;
+  }
+  
+  .about-us {
+   text-align: center;
+    font-family: "liberation-serif", serif;
+    font-weight: 700;
+    font-size: 2.5rem;
+  }
+  

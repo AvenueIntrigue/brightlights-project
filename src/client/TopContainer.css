@@ -1,0 +1,100 @@
+.top-container-grand {
+  padding-top: 7%;
+  padding-bottom: 7%;
+  
+}
+
+.line-top {
+  border: 0;
+  height: 4px;
+  background: transparent; 
+  border-radius: 2px;
+  margin: 20px 0;
+  width: 100%;
+  box-shadow: 0 0 10px rgba(48, 58, 82, 0.5);
+  margin-bottom: 7%;
+}
+
+.top-container {
+  display: flex;
+  justify-content: space-between; /* Space out text and image containers */
+  align-items: center; /* Vertically center content */
+  width: 100%;  
+  
+}
+
+.tp-container {
+
+  width: 50%;
+}
+
+.top-img-container {
+  width: 44%;
+  
+  aspect-ratio: 1/1 auto;
+  margin-left: 0;
+  
+  border-radius: 15px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.top-image {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.top-container-text {
+  width: 50%;
+
+  text-align: right;
+}
+
+.top-about-us {
+  text-align: right;
+  font-family: "liberation-serif", serif;
+  font-weight: 700;
+  font-size: 2.5rem;
+}
+/* Hide the default file input */
+.file-input {
+  display: none;
+}
+
+/* Style the custom file button */
+.custom-file-button {
+  display: inline-block;
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+/* Add a hover effect to the custom file button */
+.custom-file-button:hover {
+  background-color: #0056b3;
+}
+
+.keyword {
+  display: inline-block;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+  padding: 5px 10px;
+  margin: 5px;
+}
+
+.remove-button {
+  background: none;
+  border: none;
+  color: #ff0000;
+  margin-left: 5px;
+  cursor: pointer;
+}
+

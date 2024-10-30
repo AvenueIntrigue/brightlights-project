@@ -1,0 +1,122 @@
+.bullet-container-grand {
+
+  padding-top: 7%;
+  padding-bottom: 7%;
+}
+
+.line-bullet {
+  border: 0;
+  height: 4px;
+  background: #2B4072; 
+  border-radius: 2px;/* Adjust the color as needed */
+  margin: 20px 0; /* Adjust the spacing as needed */
+  width: 100%; /* Make the line full width */
+  box-shadow: 0 0 10px rgba(48, 58, 82, 0.5);
+  margin-bottom: 7%;
+}
+
+.bullet-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Ensures 3 equal columns */
+    gap: 3rem; /* Adjust the spacing between columns */
+    /* background-color: #304152; */
+    width: 100%;
+    height: auto;
+    
+    margin: 7% auto;
+    border: 2px transparent;
+    border-radius: 15px;
+    box-shadow: 5px black;
+    text-align: left;
+    
+  }
+  
+  .bullet-item {
+    background-color: transparent; /* Match the background color to make it seamless */
+    padding: 1rem;
+  }
+  
+  .bullet-container-text {
+    font-family: "liberation-serif", serif;
+    font-weight: 300;
+    font-size: 1.75rem;
+    width: 100%;
+    height: auto;
+    position: relative;
+    text-align: left;
+    grid-column: span 3;
+  }
+
+  .bullet-title {
+
+
+
+    font-size: x-large;
+    font-weight: 700;
+    /* text-align: center; */
+    padding-top: 7%;
+  }
+
+  .bullet-description {
+
+    padding-top: 7%;
+  }
+  
+  .about-us {
+    
+    text-align: left;
+    font-family: "liberation-serif", serif;
+    font-weight: 700;
+    font-size: 2.5rem;
+    grid-column: span 3; /* Make the heading span all three columns */
+  }
+  
+  img {
+    padding-top: 7%;
+    padding-bottom: 7%;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+    height: auto;
+    object-fit: contain;
+    overflow: hidden;
+    
+    
+  }
+
+  /* BulletContainer.css */
+
+.keywords-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px; /* Add some space between keywords */
+  margin-top: 10px; /* Adjust margin as needed */
+}
+
+.keyword {
+  display: flex;
+  align-items: center;
+  background-color: #e0e0e0; /* Background color for the keyword */
+  border-radius: 12px; /* Rounded corners */
+  padding: 5px 10px; /* Padding around the keyword */
+  font-size: 14px; /* Adjust font size */
+  color: #333; /* Text color */
+}
+
+.remove-button {
+  margin-left: 8px; /* Space between the keyword and remove button */
+  background-color: transparent; /* Transparent background */
+  border: none; /* Remove button border */
+  color: #ff0000; /* Color for the remove button (red in this case) */
+  cursor: pointer; /* Change cursor to pointer on hover */
+  font-size: 14px; /* Adjust button size */
+}
+
+.remove-button:hover {
+  color: #d00000; /* Darker red on hover */
+}
+
+  
+
+  
+  

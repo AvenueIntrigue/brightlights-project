@@ -1,0 +1,221 @@
+.contact-container {
+    position: relative;
+    width: 80svw;
+    height: auto;
+    padding-top: 7%;
+    padding-bottom: 7%;
+    /* z-index: 101; */
+    margin-left: auto;
+    margin-right: auto;
+   
+
+}
+
+
+
+.create-contact{
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 60svw;
+    height: auto;
+    align-items: center;
+    margin-left: auto;
+    margin-right: auto;
+    
+}
+
+.form-container {
+    display: flex;
+    position: relative;
+    border-radius: 0.75rem;
+    width: 100%;
+    background-color:  #353941;
+    padding: 1.25rem;
+}
+
+.form {
+
+    width: 100%;
+    height: auto;
+    border-radius: 5%;
+  
+
+  }
+
+.form-content {
+
+    width: 100%;
+    height: auto;
+    padding-top: 3.5%;
+    padding-bottom: 3.5%;
+    font-family: "adapt-variable", sans-serif;
+    font-variation-settings: "wdth" 500, "wght" 500;
+    color: #6B7280;
+  }
+
+  .input-field, .tiptap {
+    margin-bottom: 1rem;
+    position: relative;
+    width: 100%;
+    height: 2.5rem;
+    border: 1px solid #6B7280;
+    border-radius: 0.375rem;
+    background-color: transparent; /* Ensure transparency */
+    color: #6b7280; /* Set text color */
+    outline: none; /* Remove default outline */
+}
+
+
+
+.input-field input{
+    width: 100%; /* Make inputs and textarea take up the full width */
+    background-color: transparent !important;
+    color: #bbf7d0;
+    border: none;
+    outline: none;
+    padding-top: 0.4rem; /* Add padding to space the content inside */
+    padding-left: 1.25rem;
+    box-sizing: border-box; /* Ensure padding is included in the width calculation */
+}
+
+
+
+.floating-label {
+    position: absolute;
+    top: 50%;
+    left: 1.25rem;
+    transform: translateY(-50%);
+    transition: all 0.2s ease-in-out;
+    color: #6b7280;
+    pointer-events: none;
+}
+
+.floating-label.filled,
+.input-field input:focus + .floating-label {
+    /* top: -10px; */
+    font-size: 0.75rem;
+    color: transparent;
+}
+
+
+ .tiptap::placeholder {
+  
+  color: #6b7280 !important; /* Set placeholder text color */
+    opacity: 1; /* Ensure full opacity for placeholders */
+   padding: 0;
+}
+
+.input-field input:focus + label,
+.label-active {
+    top: -0.5rem;
+    left: 0.75rem;
+    font-size: 0.85rem;
+    color: #4ade80; /* Example color for active state */
+}
+
+.input-error label {
+    color: #ff2800; /* Red label for errors */
+    
+}
+
+.input-error input {
+    
+    border: 2px solid #ff2800; /* Red border for errors */
+    height: 100%;
+}
+
+
+
+
+
+/* Ensure the TipTap editor content is styled properly */
+.editor-two .ProseMirror {
+  position: relative;
+  width: 100%;
+  min-height: 15rem;
+  border: 1px solid #6B7280;
+  border-radius: 0.375rem;
+  padding: 0.25rem 1.25rem; /* Padding matches other input fields */
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+  
+  .ProseMirror p.is-empty::before {
+
+    content: attr(data-placeholder);
+
+    position: absolute;
+    left: -0.1rem; /* Matches padding-left of other input fields */
+    top: 0.25rem;
+    background-color: transparent !important;
+    font-family: "adapt-variable", sans-serif;
+    font-variation-settings: "wdth" 500, "wght" 500;
+    color: #6b7280;
+    pointer-events: none;
+    height: 0; /* Ensure it doesn't affect the layout */
+   
+   
+}
+
+
+
+  .editor-two .ProseMirror p {
+    line-height: 1.5rem; /* Adjust the line height to make text more readable */
+    font-size: inherit; /* Make sure the font size inherits from the editor settings */
+    padding-left: 0.75rem;
+  }
+
+  .editor-two:focus-within .ProseMirror {
+    color: #bbf7d0; /* Text color when the editor is active */
+}
+
+
+  .editor-two:hover .ProseMirror {
+
+    border: 3px solid #bbf7d0;
+    transition: border 250ms ease-in-out;
+    color: #bbf7d0;
+    cursor: pointer;
+  }
+
+  .editor-two.input-error .ProseMirror {
+
+    border: 2px solid #ff2800;
+    border-radius: 0.375rem;
+    
+    
+}
+
+
+
+
+  .submit-button {
+    
+
+    font-family: "adapt-variable", sans-serif;
+    font-variation-settings: "wdth" 700, "wght" 700;
+    text-transform: uppercase;
+    
+  }
+
+  .submit-button:hover {
+
+    background-color: mediumspringgreen;
+    
+  }
+
+
+
+  .editor-error p {
+
+    color: #ff2800;  }
+
+ 
+
+
+
+
+

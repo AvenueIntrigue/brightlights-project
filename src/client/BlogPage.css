@@ -1,0 +1,16 @@
+.blogpage-container {
+
+
+
+width: 100%;
+height: auto;
+margin-left: auto;
+margin-right: auto;
+padding-top: 10%;
+padding-bottom: 10%;
+display: flex;
+flex-direction: column;
+position: relative;
+
+
+}
