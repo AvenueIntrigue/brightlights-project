@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import ViteExpress from "vite-express";
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
-import { BlogPostModel, BlogPost, PricingPostModel, PricingPost, AboutPost, AboutPostModel, TopContainerContentModel, MiddleContainerContentModel, BulletContainerContentModel, web3ContainerContentModel, BulletContainerAboutUsModel, CategoryModel} from '../shared/interfaces.js';
+import { BlogPostModel, BlogPost, PricingPostModel, AboutPostModel, ServicesPostModel, Web3PostModel, TopContainerContentModel, MiddleContainerContentModel, BulletContainerContentModel, web3ContainerContentModel, BulletContainerAboutUsModel, CategoryModel} from '../shared/interfaces.js';
 
 dotenv.config();
 
@@ -88,32 +88,46 @@ app.get('/api/posts', async (req: Request, res: Response) => {
 
 
 
-app.get('/api/pricing', async (req: Request, res: Response) => {
+app.get('/api/:type', async (req: Request, res: Response) => {
+  const type = req.params.type; // 'pricing', 'about', 'services', etc.
+  
+  let Model;
+  switch (type) {
+    case 'pricing':
+      Model = PricingPostModel;
+      break;
+    case 'about':
+      Model = AboutPostModel;
+      break;
+    case 'services':
+      Model = ServicesPostModel;
+      break;
+    default:
+      return res.status(400).send({ message: 'Invalid post type' });
+  }
+
   try {
-    const post = await PricingPostModel.findOne();
+    const post = await Model.findOne();
     if (post) {
       res.json(post);
     } else {
-      res.status(404).send({ message: 'Pricing post not found' });
+      res.status(404).send({ message: `${type} post not found` });
     }
   } catch (error) {
-    res.status(500).send({ message: 'Error fetching pricing post', error });
+    res.status(500).send({ message: `Error fetching ${type} post`, error });
   }
 });
 
-
-
-
-app.get('/api/about', async (req: Request, res: Response) => {
+app.get('/api/web3', async (req: Request, res: Response) => {
   try {
-    const post = await AboutPostModel.findOne();
+    const post = await Web3PostModel.findOne();
     if (post) {
       res.json(post);
     } else {
-      res.status(404).send({ message: 'About post not found' });
+      res.status(404).send({ message: 'Web3 post not found' });
     }
   } catch (error) {
-    res.status(500).send({ message: 'Error fetching about post', error });
+    res.status(500).send({ message: 'Error fetching Web 3 post', error });
   }
 });
 
@@ -132,6 +146,13 @@ app.put('/api/:pageName', async (req: Request, res: Response) => {
       break;
     case 'pricingposts':
       Model = PricingPostModel;
+      break;
+      case 'servicesposts':
+      Model = ServicesPostModel;
+      break;
+
+     case 'web3posts':
+      Model = Web3PostModel;
       break;
     default:
       return res.status(400).send({

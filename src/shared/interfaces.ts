@@ -47,7 +47,9 @@ export interface TopContainerContent extends Document {
   description: string;
 }
 
-export interface PricingPost extends Document {
+
+
+export interface PostSection {
   _id?: mongoose.Types.ObjectId; // MongoDB's default unique identifier
   title: string;
   description: string;
@@ -61,24 +63,7 @@ export interface PricingPost extends Document {
   
 };
 
-const PricingPostSchema: Schema<PricingPost> = new Schema({
-  title: { type: String, required: true },
-  description: { type: String, required: true },
-  images: [{
-    url: { type: String, required: true },
-    alt: { type: String, required: true }
-  }],
-  pages: { 
-    type: String, 
-    required: true,
-  },
-  createdOn: { type: Date, default: Date.now },
-  keywords: { type: [String], required: false}
-});
-
-const PricingPostModel = mongoose.model<PricingPost>('PricingPost', PricingPostSchema);
-
-export interface AboutPost extends Document {
+export interface Post extends Document {
   _id?: mongoose.Types.ObjectId; // MongoDB's default unique identifier
   title: string;
   description: string;
@@ -89,10 +74,9 @@ export interface AboutPost extends Document {
   pages: string;
   keywords: string[];
   createdOn: Date;
-  
-};
+}
 
-const AboutPostSchema: Schema<AboutPost> = new Schema({
+const PostSchema = new Schema<Post>({
   title: { type: String, required: true },
   description: { type: String, required: true },
   images: [{
@@ -107,39 +91,14 @@ const AboutPostSchema: Schema<AboutPost> = new Schema({
   keywords: { type: [String], required: false}
 });
 
-const AboutPostModel = mongoose.model<AboutPost>('AboutPost', AboutPostSchema);
+// Example for Pricing Post
+const PricingPostModel = mongoose.model<Post>('PricingPost', PostSchema);
+const AboutPostModel = mongoose.model<Post>('AboutPost', PostSchema);
+const ServicesPostModel = mongoose.model<Post>('ServicesPost', PostSchema);
+const Web3PostModel = mongoose.model<Post>('Web3Post', PostSchema);
 
-export interface ServicesPost extends Document {
-  _id?: mongoose.Types.ObjectId; // MongoDB's default unique identifier
-  title: string;
-  description: string;
-  images: {
-    url: string;
-    alt: string;
-  };
-  pages: string;
-  keywords: string[];
-  createdOn: Date;
-  
-};
 
-const ServicesPostSchema: Schema<ServicesPost> = new Schema({
-  title: { type: String, required: true },
-  description: { type: String, required: true },
-  images: [{
-    url: { type: String, required: true },
-    alt: { type: String, required: true }
-  }],
-  pages: { 
-    type: String, 
-    required: true,
-  },
-  createdOn: { type: Date, default: Date.now },
-  keywords: { type: [String], required: false}
-});
-
-const ServicesPostModel = mongoose.model<ServicesPost>('ServicesPost', ServicesPostSchema);
-
+// You would follow a similar pattern for AboutPost, BlogPost, etc.
 
 
 const TopContainerContentSchema: Schema<TopContainerContent> = new Schema({
@@ -227,4 +186,4 @@ export { web3ContainerContentModel };
 
 
 
-export { BulletContainerAboutUsModel, BulletContainerContentModel, BlogPostModel, PricingPostModel, AboutPostModel, CategoryModel, CategorySchema };
+export { BulletContainerAboutUsModel, BulletContainerContentModel, BlogPostModel, PricingPostModel, AboutPostModel, ServicesPostModel, Web3PostModel, CategoryModel, CategorySchema };

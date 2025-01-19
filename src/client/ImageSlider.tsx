@@ -1,6 +1,6 @@
 import { useState } from "react"
-import { ArrowBigLeft, ArrowBigRight, CircleDot, Circle } from "lucide-react"
-import "./BlogPost.css"
+import { ArrowLeft, ArrowRight, Circle, Eclipse } from "lucide-react"
+
 
 type ImageSliderProps = {
 
@@ -44,8 +44,8 @@ export function ImageSlider( {images}: ImageSliderProps ) {
                     <img key={url} src={url} alt={alt} aria-hidden={imageIndex !== index} className="img-slider-img" style={{translate: `${-100 * imageIndex}%` }} />
                 ))}
          
-            <button onClick={showPrevImage} aria-label="View Previous Image" className="img-slider-btn" style={{left: "0"}}><ArrowBigLeft aria-hidden /></button>
-            <button onClick={showNextImage} aria-label="View Next Image" className="img-slider-btn" style={{right: "0"}}><ArrowBigRight aria-hidden /></button>
+            <button onClick={showPrevImage} aria-label="View Previous Image" className="img-slider-btn-l" style={{left: "0"}}><ArrowLeft aria-hidden /></button>
+            <button onClick={showNextImage} aria-label="View Next Image" className="img-slider-btn-r" style={{right: "0"}}><ArrowRight aria-hidden /></button>
 
             <div style={{
               position: "absolute",
@@ -57,7 +57,7 @@ export function ImageSlider( {images}: ImageSliderProps ) {
 
             }}>
                 {images.map((_, index) => (
-                    <button key={index} className="img-slider-dot-btn" aria-label={`View Image ${index + 1}`} onClick={()=> setImageIndex(index)}>{index === imageIndex ? <CircleDot aria-hidden /> : <Circle />}</button>
+                    <button key={index} className="img-slider-dot-btn" aria-label={`View Image ${index + 1}`} onClick={()=> setImageIndex(index)}>{index === imageIndex ? <Eclipse aria-hidden /> : <Circle />}</button>
                 ))}
             </div>
             <div id="after-image-slider-controls"></div>

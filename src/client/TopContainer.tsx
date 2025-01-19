@@ -179,27 +179,34 @@ const TopContainer: React.FC<TopContainerContentProps> = ({ initialKeywords = []
         <div className='top-img-container'>
           {isLoading ? <SkeletonImage /> : <img className="top-image" src={image} alt={imageAlt} />}
           {isEditing && (
-            <div>
+            <div className='bg-amber-400 w-96 rounded-md flex flex-col'>
               <input
-                className='file-input'
+                className='file-input w-7 bg-red-500'
                 ref={fileInputRef}
                 id="image-upload"
                 type="file"
                 onChange={handleFileChange}
               />
+              
+              <input className='w-full bg-slate-900 h-10 p-2 border' id='image-alt' placeholder='Image Alt' type="text" value={newImageAlt} onChange={(e) => setNewImageAlt(e.target.value)} />
+              
+              <div className='p-2'>
               <button
-                className="custom-file-button"
-                onClick={() => fileInputRef.current?.click()}
+                className="custom-file-button w-full text-center justify-center align-middle h-7"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
               >
                 {fileName}
               </button>
-              <input className='w-full h-10 p-2 border' id='image-alt' placeholder='Image Alt' type="text" value={newImageAlt} onChange={(e) => setNewImageAlt(e.target.value)} />
+              </div>
             </div>
           )}
         </div>
         </div>
         
-        <div className="top-container-text">
+        <div className="top-container-text bg-transparent">
           {isLoading ? (
             <>
               <SkeletonText short />
@@ -210,27 +217,29 @@ const TopContainer: React.FC<TopContainerContentProps> = ({ initialKeywords = []
               <input
                 placeholder='Title'
                 id='title'
-                className='w-full h-10 p-2 border'
+                className='w-full h-10 p-2 mb-4 border bg-transparent rounded-md'
                 type="text"
                 value={newTitle}
                 onChange={(e) => setNewTitle(e.target.value)}
               />
+              <div>
               <textarea
                 placeholder='Description'
-                className="w-full h-32 p-2 border"
+                className="w-full h-auto relative p-2 border bg-transparent rounded-md mb-4"
                 value={newDescription}
                 onChange={(e) => setNewDescription(e.target.value)}
               />
+              </div>
               <input
                 type="text"
                 id='keywords'
-                className='w-full h-10 p-2 border'
+                className='w-full h-10 p-2 border bg-transparent rounded-md mb-4'
                 value={inputValue}
                 placeholder='Add Keyword. If multiple, separate with commas.'
                 onChange={handleInputChange}
                 onBlur={handleInputBlur}
               />
-              <div className="keywords-list">
+              <div className="keywords-list bg-transparent">
                 {(keywords || []).map((keyword, index) => (
                   <span key={index} className="keyword">
                     {keyword}

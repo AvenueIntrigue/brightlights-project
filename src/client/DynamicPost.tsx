@@ -48,10 +48,14 @@ const DynamicPost: React.FC<{ type: string }> = ({ type }) => {
   }
 
   const sanitizedTitle = DOMPurify.sanitize(post.title);
-  const sanitizedDescription = DOMPurify.sanitize(post.description);
+  const sanitizedDescription = DOMPurify.sanitize(post.description, {
+    // Allow specific attributes or tags if needed
+    ALLOWED_TAGS: ['p', 'br', 'span', 'div', 'img', 'a', /* other tags */],
+    ALLOWED_ATTR: ['style', 'class', 'src', 'href', 'alt', /* other attributes */]
+  });
 
   return (
-    <div className='BlogPostContainer'>
+    <div className='PricingPostContainer w-[80%]'>
       <Helmet>
         <title>{post.title}</title>
         <meta name="description" content={post.description} />
@@ -59,30 +63,33 @@ const DynamicPost: React.FC<{ type: string }> = ({ type }) => {
           <meta name="keywords" content={post.keywords.join(', ')} />
         )}
       </Helmet>
-      <div className='BlogPost'>
-        <div className='pricing-container w-[100%] flex'>
-          <div className='img-section w-1/2'>
-            <div className='BlogPostImgContainer'>
+      <div className='PricingPost w-full'>
+
+      <div className='pricing-container w-full'>
+          <div className='pricing-img-section'>
+            <div className='PricingPostImgContainer'>
               {post.images.length > 1 ? (
+                <div className=''>
                 <ImageSlider images={post.images} />
+                </div>
               ) : (
-                <img className='BlogPostImg' src={post.images[0]?.url} alt={post.images[0]?.alt} />
+                <div className='align-top'>
+                <img className='PricingPostImg' src={post.images[0]?.url} alt={post.images[0]?.alt} />
+                </div>
               )}
             </div>
           </div>
-          <div className='text-section w-1/2 text-right'>
-            <div className='BlogPostTitle'>
+          <div className='pricing-text-section'>
+            <div className='PricingPostTitle'>
               <div dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
             </div>
-            <div className='BlogPostText'>
-              <div dangerouslySetInnerHTML={{ __html: sanitizedDescription }} />
+            <div className='PricingPostText'>
+              <div className='descriptionParagraph' dangerouslySetInnerHTML={{ __html: sanitizedDescription }} />
             </div>
-            <div className='timestamp'>
-              <p>Page: {post.page}</p>
-              <p>Created On: {new Date(post.createdOn).toLocaleDateString()}</p>
-            </div>
+           
           </div>
         </div>
+       
       </div>
     </div>
   );

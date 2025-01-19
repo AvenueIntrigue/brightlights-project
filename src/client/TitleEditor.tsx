@@ -99,7 +99,7 @@ const TitleEditor: React.FC<TitleEditorProps> = ({ onTitleChange, setEditorOne, 
     <div className='test'>
       <div className='toolbar-top'>
         {/* Font Family Selector */}
-        <button type='button'  onClick={toggleFontDropdown} className={`toolbar-button ${isFontDropdownOpen ? 'active' : ''}`} >
+        <button type='button' title='Font-Family' onClick={toggleFontDropdown} className={`toolbar-button ${isFontDropdownOpen ? 'active' : ''}`} >
           <Type/>
         </button>
         {isFontDropdownOpen && (
@@ -107,6 +107,7 @@ const TitleEditor: React.FC<TitleEditorProps> = ({ onTitleChange, setEditorOne, 
                  {availableAdobeFonts.map((font) => (
                   <div className='dropdown-item'>
       <button type='button'
+        
         key={font.family}
         style={{ fontFamily: font.family, padding: '8px 12px', margin: '4px', display: 'block' }}
         onClick={() => selectFontFamily(font.family)}
@@ -120,7 +121,7 @@ const TitleEditor: React.FC<TitleEditorProps> = ({ onTitleChange, setEditorOne, 
           )}
 
         {/* Font Size Selector */}
-        <button type='button'  onClick={toggleFontSizeDropdown} className={`toolbar-button ${isFontSizeDropdownOpen ? 'active' : ''}`}>
+        <button type='button' title='Font-Size'  onClick={toggleFontSizeDropdown} className={`create-toolbar-button ${isFontSizeDropdownOpen ? 'active' : ''}`}>
           <CaseSensitive/>
         </button>
         {isFontSizeDropdownOpen && (
@@ -142,20 +143,23 @@ const TitleEditor: React.FC<TitleEditorProps> = ({ onTitleChange, setEditorOne, 
 
         {/* Other toolbar buttons */}
         <button type='button'
+          title='Bold'
           onClick={() => editorOne.chain().focus().toggleBold().run()}
-          className={`toolbar-button ${editorOne.isActive('bold') ? 'is-active' : ''}`}
+          className={`create-toolbar-button ${editorOne.isActive('bold') ? 'is-active' : ''}`}
         >
           <Bold/>
         </button>
         <button type='button'
+          title='Italic'
           onClick={() => editorOne.chain().focus().toggleItalic().run()}
-          className={`toolbar-button ${editorOne.isActive('italic') ? 'is-active' : ''}`}
+          className={`create-toolbar-button ${editorOne.isActive('italic') ? 'is-active' : ''}`}
         >
           <Italic/>
         </button>
         <button type='button'
+          title='Underline'
           onClick={() => editorOne.chain().focus().toggleUnderline().run()}
-          className={`toolbar-button ${editorOne.isActive('underline') ? 'is-active' : ''}`}
+          className={`create-toolbar-button ${editorOne.isActive('underline') ? 'is-active' : ''}`}
         >
           <Underline/>
         </button>

@@ -28,6 +28,7 @@ const App: React.FC = () => {
         <Route path="/pricing" element={<DynamicPost type="pricing" />} />
         <Route path="/about" element={<DynamicPost type="about" />} />
         <Route path="/services" element={<DynamicPost type="services" />} />
+        <Route path="/web3" element={<DynamicPost type="web3" />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/create" element={<SignedIn><CreatePricing /></SignedIn>}/>
         <Route path="/create-about" element={<SignedIn><CreatePricing /></SignedIn>}/>

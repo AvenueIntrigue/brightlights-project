@@ -17,7 +17,7 @@ import YouTube, { Youtube } from '@tiptap/extension-youtube';
 import { FontSize } from './FontSize';
 import { availableAdobeFonts } from './Fonts';
 
-import { Bold, Heading, Italic, Underline, Type, AlignLeft, AlignCenter, AlignRight, AlignJustify, CaseSensitive, ImageIcon, Strikethrough, Clapperboard, MessageSquareQuote, Link, List, Plus, Divide, Check} from 'lucide-react';
+import { Bold, Heading, Italic, Underline, Type, AlignLeft, AlignCenter, AlignRight, AlignJustify, CaseSensitive, ImageIcon, Strikethrough, Clapperboard, MessageSquareQuote, Link, List, Plus, Divide, Check, Pilcrow} from 'lucide-react';
 
 
 
@@ -45,7 +45,9 @@ import { Bold, Heading, Italic, Underline, Type, AlignLeft, AlignCenter, AlignRi
 
 
 const editorTwo = useEditor({
-    extensions: [ StarterKit, TextStyle, 
+    extensions: [ StarterKit.configure({
+      
+    }), TextStyle, 
       
       
       FontFamily.configure({
@@ -53,11 +55,14 @@ const editorTwo = useEditor({
 
       }), TextAlign.configure({
     types: ['heading', 'paragraph'], 
+    
+
     }),
     extLink.configure({
       openOnClick: false,
       autolink: true,
       defaultProtocol: 'https',
+      protocols: ['ftp', 'mailto', 'tel'],
       
   validate: (href) => /^https?:\/\//.test(href),
   HTMLAttributes: {
@@ -87,6 +92,17 @@ availableFontSizes: availableFontSizes,
       width: 640,
       height: 480,
     }),
+
+    Paragraph.configure({
+
+      HTMLAttributes: {
+
+        class: 'descriptionParagraph',
+      }
+
+    }),
+
+    
     
   
 
@@ -132,6 +148,7 @@ availableFontSizes: availableFontSizes,
   if (!editorTwo) {
     return null;
   }
+
 
   const toggleFontSizeDropdown = () => {
     setIsFontSizeDropdownOpen(!isFontSizeDropdownOpen);
@@ -202,11 +219,11 @@ availableFontSizes: availableFontSizes,
       <label className="block pt-1 pl-5">Description</label>
     )}
     
-    <div className='toolbar'>
-      <button type='button' onClick={()=> editorTwo?.chain().focus().toggleBold().run()} className={`toolbar-button ${editorTwo?.isActive('bold') ? 'is-active' : ''}`}><Bold /></button>
-      <button type='button' onClick={()=> editorTwo?.chain().focus().toggleItalic().run()} className={`toolbar-button ${editorTwo?.isActive('italic') ? 'is-active' : ''}`}><Italic/></button>
-      <button type='button' onClick={()=> editorTwo?.chain().focus().toggleUnderline().run()} className={`toolbar-button ${editorTwo?.isActive('underlines') ? 'is-active' : ''}`}><Underline/></button>
-      <button type='button'  onClick={toggleFontDropdown} className={`toolbar-button ${isFontDropdownOpen ? 'active' : ''}`} >
+    <div className='create-toolbar-bottom'>
+      <button type='button' title='Bold' onClick={()=> editorTwo?.chain().focus().toggleBold().run()} className={`create-toolbar-button ${editorTwo?.isActive('bold') ? 'is-active' : ''}`}><Bold /></button>
+      <button type='button' title='Italic' onClick={()=> editorTwo?.chain().focus().toggleItalic().run()} className={`create-toolbar-button ${editorTwo?.isActive('italic') ? 'is-active' : ''}`}><Italic/></button>
+      <button type='button' title='Underline' onClick={()=> editorTwo?.chain().focus().toggleUnderline().run()} className={`create-toolbar-button ${editorTwo?.isActive('underlines') ? 'is-active' : ''}`}><Underline/></button>
+      <button type='button' title='Font-Family'  onClick={toggleFontDropdown} className={`create-toolbar-button ${isFontDropdownOpen ? 'active' : ''}`} >
               <Type/>
             </button>
             {isFontDropdownOpen && (
@@ -225,7 +242,7 @@ availableFontSizes: availableFontSizes,
                
               </div>
             )}
-            <button type='button'  onClick={toggleFontSizeDropdown} className={`toolbar-button ${isFontSizeDropdownOpen ? 'active' : ''}`}>
+            <button type='button' title='Font Size'  onClick={toggleFontSizeDropdown} className={`create-toolbar-button ${isFontSizeDropdownOpen ? 'active' : ''}`}>
               <CaseSensitive/>
             </button>
             {isFontSizeDropdownOpen && (
@@ -252,55 +269,69 @@ availableFontSizes: availableFontSizes,
             )}
           
           <button type='button' 
+          title='Align-Left'
             onClick={() => handleAlignmentClick('left')} 
-            className={`toolbar-button ${activeAlignment === 'left' ? 'is-active' : ''}`}
+            className={`create-toolbar-button ${activeAlignment === 'left' ? 'is-active' : ''}`}
           >
             <AlignLeft />
           </button>
           <button type='button'  
+            title='Align-Center'
             onClick={() => handleAlignmentClick('center')} 
-            className={`toolbar-button ${activeAlignment === 'center' ? 'is-active' : ''}`}
+            className={`create-toolbar-button ${activeAlignment === 'center' ? 'is-active' : ''}`}
           >
             <AlignCenter />
           </button>
-          <button type='button'  
+          <button type='button' 
+            title='Align-Right'
             onClick={() => handleAlignmentClick('right')} 
-            className={`toolbar-button ${activeAlignment === 'right' ? 'is-active' : ''}`}
+            className={`create-toolbar-button ${activeAlignment === 'right' ? 'is-active' : ''}`}
           >
             <AlignRight/>
           </button>
-          <button type='button'  
+          <button type='button' 
+            title='Align-Justify' 
             onClick={() => handleAlignmentClick('justify')} 
-            className={`toolbar-button ${activeAlignment === 'justify' ? 'is-active' : ''}`}
+            className={`create-toolbar-button ${activeAlignment === 'justify' ? 'is-active' : ''}`}
           >
             <AlignJustify />
           </button>
-          <button type='button'  onClick={insertImageURL} className="toolbar-button">
+          <button type='button' title='Add Image-URL'  onClick={insertImageURL} className="create-toolbar-button">
                   <ImageIcon />
                 </button>
-                <button onClick={addYoutubeVideo} className="toolbar-button">
+                <button title='Add YouTube Link' onClick={addYoutubeVideo} className="create-toolbar-button">
   <Clapperboard/>
   </button>
   <button type='button' 
+              title='Bullet-List'
               onClick={() => editorTwo.chain().focus().toggleBulletList().run()}
-              className={`toolbar-button ${editorTwo.isActive('bulletList') ? 'is-active' : ''}`}
+              className={`create-toolbar-button ${editorTwo.isActive('bulletList') ? 'is-active' : ''}`}
             >
               <List />
             </button>
                 <button type='button' 
+              title='Strike-Through'
               onClick={() => editorTwo.chain().focus().toggleStrike().run()}
-              className={`toolbar-button ${editorTwo.isActive('strike') ? 'is-active' : ''}`}
+              className={`create-toolbar-button ${editorTwo.isActive('strike') ? 'is-active' : ''}`}
             >
               <Strikethrough/>
             </button>
             <button type='button' 
+              title='Block-Quote'
               onClick={() => editorTwo.chain().focus().toggleBlockquote().run()}
-              className={`toolbar-button ${editorTwo.isActive('blockquote') ? 'is-active' : ''}`}
+              className={`create-toolbar-button ${editorTwo.isActive('blockquote') ? 'is-active' : ''}`}
             >
               <MessageSquareQuote/>
             </button>
-            <button type='button' onClick={setLink} className={`toolbar-button ${editorTwo.isActive('link') ? 'is-active' : ''}`}>
+            <button type='button' title='Add-Link' onClick={setLink} className={`create-toolbar-button ${editorTwo.isActive('link') ? 'is-active' : ''}`}>
               <Link />
+            </button>
+            <button type='button' 
+              title='Set-Paragraph'
+              onClick={() => editorTwo.chain().focus().setParagraph().run()}
+              className={`create-toolbar-button ${editorTwo.isActive('paragraph') ? 'is-active' : ''}`}
+            >
+              <Pilcrow/>
             </button>
   
             

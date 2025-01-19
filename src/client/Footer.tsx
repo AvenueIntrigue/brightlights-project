@@ -29,9 +29,9 @@ function Footer() {
                         </SignInButton>
                     </SignedOut>
                     <SignedIn>
-                        <a href="" className="px-5">
+                        <div className="px-5">
                         <UserButton/>
-                        </a>
+                        </div>
 
                     </SignedIn>
                 

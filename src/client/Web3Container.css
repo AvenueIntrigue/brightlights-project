@@ -54,11 +54,20 @@
   
   .web3-container-text {
   
-   width: 50%;
+   width: 80%;
    margin-left: auto;
    margin-right: auto;
-  text-align: center;
+  text-align: justify;
 padding-top: 7%;
+
+  }
+
+  .web3-description {
+    display: -webkit-box;
+    -webkit-line-clamp: 3; /* number of lines to show */
+    -webkit-box-orient: vertical;  
+    overflow: hidden;
+   
   }
   
   .about-us {
@@ -66,5 +75,19 @@ padding-top: 7%;
     font-family: "liberation-serif", serif;
     font-weight: 700;
     font-size: 2.5rem;
+  }
+
+  .readMore-button{
+
+    background-color: #353941;
+    color: whitesmoke;
+    border-radius: 0.25rem;
+  }
+
+  .readMore-button:hover{
+
+    border: 2px solid #bbf7d0;
+    color: #bbf7d0;
+    
   }
   

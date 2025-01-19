@@ -41,7 +41,7 @@ import {
 } from "lucide-react";
 import { useUser, useSession } from "@clerk/clerk-react";
 import axios from "axios";
-import "../client/CreateAbout.css";
+import "./Create.css"
 import Paragraph from "@tiptap/extension-paragraph";
 import { availableAdobeFonts } from "./Fonts";
 import { FontSize } from "./FontSize";
@@ -72,9 +72,35 @@ const initialValue: CustomElement[] = [
 ];
 
 const Create = () => {
-  const [pages, setPages] = useState<string[]>(["About", "Services"]);
+
+
+
+
+  const [pages, setPages] = useState<string[]>([]);
 
   const [selectedPage, setSelectedPage] = useState<string>("");
+
+  useEffect(() => {
+    const fetchPages = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/pages');
+        if (!response.ok) {
+          throw new Error('Failed to fetch pages');
+        }
+        const data = await response.json();
+        if (Array.isArray(data)) {
+          setPages(data); // Assuming data is an array of strings
+        } else {
+          console.error('Data from server is not an array:', data);
+          setPages([]); // Default to empty array if data is not as expected
+        }
+      } catch (error) {
+        console.error('Error fetching pages:', error);
+      }
+    };
+  
+    fetchPages();
+  }, []);
 
   const availableFontSizes = [
     "12",
@@ -192,8 +218,20 @@ const Create = () => {
     const dropdownRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
+    
     const handleDropdownToggle = () => {
       setIsDropdownVisible(!isDropdownVisible);
+    };
+
+    const handlePageSelect = (selectedPage: string) => {
+      if (pages.includes(selectedPage)) {
+        setSelectedPage(selectedPage);
+        // Optionally, update other states or perform actions here
+      } else if (selectedPage === "Add New Page") {
+        setShowNewPageInput(true);
+      } else {
+        console.warn('Selected page does not exist:', selectedPage);
+      }
     };
 
     const handlePageClick = (page: string) => {
@@ -201,16 +239,25 @@ const Create = () => {
         setShowNewPageInput(true); // Show the input field
       } else {
         onPageSelect(page);
-        setIsDropdownVisible(false); // Close dropdown when category is selected
+        setTimeout(() => setIsDropdownVisible(false), 0); // Close dropdown after state update
       }
     };
 
     const handleAddNewPage = () => {
-      if (newPage.trim()) {
-        onPageSelect(newPage); // Add and select the new category
-        setShowNewPageInput(false); // Hide input field after adding
-        setNewPage(""); // Clear the input field
-        setIsDropdownVisible(false); // Close dropdown
+      if (newPage.trim() && !pages.includes(newPage.trim())) {
+        setPages(prevPages => [...prevPages, newPage.trim()]);
+        handlePageSelect(newPage.trim()); // Select the new page after adding
+        setShowNewPageInput(false);
+        setNewPage(""); 
+      } else {
+        console.warn('Page already exists or input is empty:', newPage);
+      }
+    };
+
+    const handleRemovePage = (pageToRemove: string) => {
+      setPages(prevPages => prevPages.filter(page => page !== pageToRemove));
+      if (selectedPage === pageToRemove) {
+        setSelectedPage(""); // Reset selection if the removed page was selected
       }
     };
 
@@ -236,7 +283,7 @@ const Create = () => {
 
     return (
       <div
-        className="custom-dropdown h-10"
+        className="create-custom-dropdown"
         ref={dropdownRef}
         onClick={handleDropdownToggle}
       >
@@ -264,9 +311,13 @@ const Create = () => {
               </div>
             </div>
           ) : selectedPage ? (
-            selectedPage
+            <div className="create-category-placeholder">
+            {selectedPage}
+            </div>
           ) : (
-            <span className="category-placeholder">Page</span>
+            <div className="create-category-placeholder">
+            <span>Page</span>
+            </div>
           )}
         </div>
         {isDropdownVisible && (
@@ -469,50 +520,61 @@ const Create = () => {
   };
 
   return (
-    <div className="create-blog-container mx-auto">
-      <form className="create-blog" onSubmit={handleSubmit}>
-        <div className="form-container">
-          <h1 className="form-box-text">Create Post</h1>
+    <div className="create-grandpa mx-auto">
+      <form className="create-form" onSubmit={handleSubmit}>
+        <div className="create-form-container">
+          <h1 className="create-form-box-text">Create Post</h1>
         </div>
-        <div className="form-content">
-          <div className="pt-[1%]">
+        <div className="create-form-content">
+          <div title="Add Title" className="">
             <TitleEditor
               onTitleChange={(newTitle) => setTitle(newTitle)}
               initialTitle={title}
               setEditorOne={setEditorOne}
             />
 
-            <div className="input-field relative">
+            <div title="Choose Desired Page" className="create-input-field relative mb-4">
               <CustomDropdown
                 pages={pages}
                 selectedPage={selectedPage}
                 onPageSelect={handlePageSelect}
                 onPageRemove={handleRemovePage}
+                
               />
             </div>
+          
 
-            <div className="input-field mb-4 relative">
+          <div className="flex w-full h-auto">
+            <div title="Upload Image" className="create-input-field relative mb-4 text-wrap p-3 flex-col">
+              <div className="">
+              <div className="">
               {isImageUploaded && (
-                <div className="image-preview-container">
+                <div className="create-image-preview-container p-[7%]">
                   <img
                     src={imagePreview}
                     alt="Image Preview"
-                    className="w-[50px] h-[50px] object-cover rounded-full mr-2"
+                    className="w-[50px] h-[50px] object-cover rounded-full mr-2 flex"
                   />
                 </div>
               )}
+
+              <div className="flex">
               {!fileName && focusedField !== "imageURL" && (
-                <label className="block pt-1 pl-5">
-                  Image URL: (1/1 Aspect Ratio)
+                <div className="img-label-container">
+                <label className="img-label">
+                  Image URL: (1/1 Aspect Ratio PDF JPG PNG)
                 </label>
+                </div>
               )}
               {fileName && (
-                <label className="block pt-1 pl-5">{fileName}</label>
+                <label className="create-file-name col-y pt-1 pl-5">{fileName}</label>
               )}
-              <div className="file-input-wrapper">
+              
+              <div className="create-file-input-wrapper">
+              
                 <input
                   type="file"
-                  className="file-input"
+                  className="create-file-input"
                   onChange={(e) => {
                     if (e.target.files && e.target.files[0]) {
                       const alt = prompt("Enter alt text for the image:");
@@ -525,45 +587,62 @@ const Create = () => {
                   onFocus={() => setFocusedField("imageURL")}
                   onBlur={() => setFocusedField("")}
                 />
-                <div className="custom-file-label">Choose file</div>
-              </div>
-            </div>
+             <div className="create-custom-file-label">
+                <label className="w-full h-auto flex-1">Choose file</label>
+                </div>
+                </div>
+                </div>
+                </div>
+                </div>
 
-            <div className="input-field">
+
+            
+            {/* Image Preview Section */}
+
+            <div className="create-ips-container">
               {images.map((image, index) => (
-                <div key={index} className="image-preview-container">
-                  <div className="image-cancel">
+                <div key={index} className="create-image-preview-container flex">
+                  
+                  <div className="create-image-container">
                     <img
                       src={image.url}
                       alt={image.alt}
-                      className="image-preview"
+                      className="create-image-preview"
                     />
-
+                    </div>
+                    <div className="create-image-cancel">
+                    <div className="create-cancel-button-container flex-1">
                     <button
-                      className="cancel-button"
+                      className="create-cancel-button"
                       onClick={() => handleCancelImage(index)}
                     >
                       x
                     </button>
+                    </div>
                   </div>
-                  <input
-                    type="text"
-                    className="image-alt-text"
-                    placeholder="Alt text"
-                    value={image.alt}
-                    onChange={(e) => handleAltChange(index, e.target.value)}
-                  />
+                  <div className="create-img-alt-text-container text-wrap">
+                  <label className="create-image-alt-text">{image.alt}</label>
+                  </div>
+                  
                 </div>
               ))}
+
+              </div>
+            
+            </div>
+            </div>
+            {/* <Image Preview Section/> */}
+            
+            
+            <div title="Add Your Article">
+            <DescriptionEditor setEditorTwo={setEditorTwo} />
             </div>
 
-            <DescriptionEditor setEditorTwo={setEditorTwo} />
-
-            <div className="keywords-section">
-              <div>
+            <div title="Add Keywords for SEO Optimization" className="create-keywords-section">
+              <div className="">
                 <input
                   type="text"
-                  className="input-field mb-4 relative h-10 border border-gray-500 w-full text-gray-500"
+                  className="create-input-field relative h-10 mb-4 bg-transparent"
                   value={inputValue}
                   onChange={handleInputChange}
                   onKeyPress={handleKeyPress} // Handle pressing Enter
@@ -573,15 +652,16 @@ const Create = () => {
               </div>
 
               {/* Display added keywords */}
-              <div className="keyword-list flex flex-wrap mt-2">
+              <div className="create-keyword-list flex flex-wrap mt-2">
                 {keywords.map((keyword, index) => (
                   <div
                     key={index}
-                    className="keyword-chip flex items-center px-2 py-2 mr-2 mb-2 rounded"
+                    className="create-keyword-chip flex items-center px-2 py-2 mr-2 mb-2 rounded"
                   >
                     <button
+                    title="Delete Keyword"
                       onClick={() => handleDeleteKeyword(keyword)}
-                      className="keyword-btn"
+                      className="create-keyword-btn"
                     >
                       x
                     </button>
@@ -594,7 +674,7 @@ const Create = () => {
               {keywords.length > 0 && (
                 <button
                   onClick={handleClearAllKeywords}
-                  className="clear-all-btn text-red-500 mt-2"
+                  className="create-clear-all-btn text-red-500 mt-2"
                 >
                   Clear All Keywords
                 </button>
@@ -605,8 +685,9 @@ const Create = () => {
 
         <button
           type="submit"
+          title="Submit"
           disabled={!selectedPage}
-          className="submit-button bg-green-200 border-none text-slate-700 h-10 rounded w-full mt-4 mx-auto"
+          className="create-submit-button bg-green-200 border-none text-slate-700 h-10 rounded w-full mt-4 mx-auto"
         >
           <Check className="mx-auto" />
         </button>
