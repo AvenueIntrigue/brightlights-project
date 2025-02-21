@@ -4,8 +4,11 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Divide, Send, ThumbsUp } from 'lucide-react';
+import PaperAirplane from '../client/assets/Paper-Airplane-Icon.svg';
 import './contact.css';
 import TextStyle from '@tiptap/extension-text-style';
+import OpenBox from '../client/assets/OpenBox.svg';
+
 
 const serviceID = "service_kefq6x7";
 const templateID = "template_y83enxx";
@@ -123,41 +126,67 @@ const EmailForm: React.FC = () => {
     return (
         <div className='contact-container mx-auto'>
             <form className='create-contact' onSubmit={handleSubmit}>
-                <div className='form-container'>
-                    <h1 className='form-box-text'>Contact Us</h1>
+                <div className='form-container flex'>
+                    
+                    <div className='contact-letter-card'>
+                    
+                    <div className='contact-letter-container'>
+                    <img className='contact-letter-image' src={OpenBox} alt="Open Box Logo" />
+                    <h1 className='contact-box-text'>Contact Us</h1>
+                    
+                    </div>
+                    <br/>
+                    <div className='contact-friendly-text'>
+                    <h4>Hi there! </h4>
+                    <br/>
+                    <h4>Please fill out the form below & we'll be in touch shortly.</h4>
+                    <br/>
+                    <h4 className='contact-text-thanks'>~Thanks!</h4>
+                    </div>
+                    </div>
+                    <div className='paper-airplane-card'>
+                        <div className='paper-airplane-container'>
+                    <img src={PaperAirplane} alt="Paper Airplane Logo" />
+                    </div>
+                    </div>
                 </div>
                 <div className='form-content'>
                     <div className='pt-[1%]'>
                     <div className={`input-field ${isFieldInvalid(formData.name, 'name') ? 'input-error' : ''}`}>
                             <label className={`floating-label ${formData.name ? 'filled' : ''}`} htmlFor="name">{isFieldInvalid(formData.name, 'name') ? 'Name required' : 'Name'}</label>
                                 <input
-
+                                id="name"
                                 type="text"
                                 name="name"
                                 value={formData.name}
                                 onChange={handleChange}
                                 onBlur={handleBlur}
+                                autoComplete="name"
                             />
                         </div>
                         <div className={`input-field ${isFieldInvalid(formData.phone, 'phone') ? 'input-error' : ''}`}>
                         <label className={`floating-label ${formData.phone ? 'filled' : ''}`} htmlFor="phone">{isFieldInvalid(formData.phone, 'phone') ? 'Phone required' : 'Phone'}</label>
                             <input
+                                id="phone"
                                 type="text"
                                 name="phone"
                                 value={formData.phone}
                                 onChange={handleChange}
                                 onBlur={handleBlur}
+                                autoComplete="phone"
                             />
                         </div>
 
                         <div className={`input-field ${isFieldInvalid(formData.email, 'email') ? 'input-error' : ''}`}>
                             <label className={`floating-label ${formData.email ? 'filled' : ''}`} htmlFor="email">{isFieldInvalid(formData.email, 'email') ? 'Email required' : 'Email'}</label>
                             <input
+                                id="email"
                                 type="email"
                                 name="email"
                                 value={formData.email}
                                 onChange={handleChange}
                                 onBlur={handleBlur}
+                                autoComplete="email"
                             />
                         </div>
 
