@@ -116,6 +116,7 @@ const toggleMenu = () => {
         <a className="hover:text-cyan-400 duration-300" href="/about"><li className="my-5">ABOUT</li></a>
         <a className="hover:text-cyan-400 duration-300" href="/portfolio"><li className="my-5">PORTFOLIO</li></a>
         <a className="hover:text-cyan-400 duration-300" href="/services"><li className="my-5">SERVICES</li></a>
+        <a className="hover:text-cyan-400 duration-300" href="/pricing"><li className="my-5">PRICING</li></a>
         <a className="hover:text-cyan-400 duration-300" href="/blog"><li className="my-5">BLOG</li></a>
         <a className="hover:text-cyan-400 duration-300" href="/contact"><li className="my-5">CONTACT</li></a>
     </ul> 

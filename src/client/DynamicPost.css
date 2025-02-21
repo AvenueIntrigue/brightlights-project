@@ -18,6 +18,23 @@
     padding-bottom: 7%;
     
   }
+
+    h1, h2, h3 {
+    color: #bbf7d0;
+    padding-top: 7%;
+    padding-bottom: 1.25%;
+    
+    
+  }
+
+
+  .sanitized-title {
+
+    color: #bbf7d0;
+    padding-bottom: 1.25%;
+  }
+ 
+
   
   .PricingPostImgContainer{
   
@@ -27,7 +44,7 @@
     margin-left: 0px;
     margin-right: auto;
     margin-bottom: 7%;
-    width: 50%;
+    width: 66%;
     aspect-ratio: 1/1 auto;
     overflow: hidden;
     border-radius: 15px;
@@ -213,14 +230,14 @@
       padding-bottom: 7%;
       padding-left: 3.5%;
       padding-right: 3.5%;
-      background-color: olivedrab;
+      
   }
 
   .descriptionParagraph {
    
-    text-align: initial;
-    text-align-last: initial;
+    text-align: right;
     margin-bottom: 4rem;
+    
     
   }
   
@@ -228,9 +245,7 @@
   
   .pricing-img-section, .pricing-text-section {
   
-      /* flex: 1 1 50%; */
-      
-      /* max-width: 50%; */
+  
       box-sizing: border-box;
       
   }
@@ -250,6 +265,8 @@
 .pricing-text-section {
   
   margin-top: 0px;
+  width: auto;
+  height: auto;
   
   
 }
@@ -259,9 +276,7 @@
       padding-top: 0%;
       padding-left: 0%;
       padding-right: 0%;
-      /* font-family: "dejanire-headline", serif;
-      font-weight: 400;
-      font-style: normal; */
+
       font-size: clamp(2rem, 4vw, 2.5rem);
       line-height: 1.2;
       word-wrap: break-word;
@@ -332,12 +347,7 @@
       background-color: #353941;
     }
   
-    /* .toolbar-button svg {
-  
-      width: 20px;
-      height: 20px;
-      
-    } */
+
   
     .toolbar-button:hover {
       background-color: #e0e0e0;
@@ -415,12 +425,7 @@
   margin-bottom: 4rem;
 }
 
-  /* .ProseMirror p {
 
-    margin-bottom: 2rem;
-
-  } */
-  
   @keyframes fadeInOut {
       0% { opacity: 0; }
       50% { opacity: 1; }
@@ -437,7 +442,7 @@
 
       display: flex;
       flex-direction: column;
-      background-color: orange;
+      /* background-color: orange; */
     }
    
 
@@ -451,6 +456,12 @@
       width: 17rem;
     }
 
+    .pricing-text-section {
+
+     text-align: start;
+     background-color: green;
+    }
+
     .PricingPostTitle {
 
       text-align: left;
@@ -461,9 +472,10 @@
     .descriptionParagraph {
 
       text-align: justify;
+      direction: ltr;
       
       
-      text-align-last: left;
+      background-color: orange;
       
 
       
@@ -493,7 +505,10 @@
       position: relative;
       width: 100%;
       padding: 0%;
+      
     }
+
+  
 
  
       .pricing-text-section {
@@ -506,6 +521,11 @@
         display: flex;
         flex-direction: column;
         
+        
+       
+        
+       
+        
 
       }
 
@@ -514,7 +534,8 @@
         padding-left: 5%;
         padding-right: 5%;
         padding-bottom: 0%;
-        text-align: left;
+       
+       
         
       }
       .PricingPostText {
@@ -522,26 +543,33 @@
         padding-top: 7%;
         padding-left: 5%;
         padding-right: 5%;
+        
+        
+        
       }
-
+      
+   
+  
 
       .PricingPostImgContainer {
 
         margin-left: auto;
         margin-right: auto;
-        
+        width: 100%;
+        padding: 10%;
+        justify-content: center;
+        align-items: center;
         border-radius: 15px;
+        
       }
  
-
-    
-  
-
       .pricing-img-section,
       .pricing-text-section {
         flex: 1 1 100%; /* Stacks elements vertically */
         max-width: 100%; /* Takes full width on small screens */
       }
+
+
 
      
   
@@ -550,6 +578,8 @@
           padding-bottom: 2rem;
       }
 
+      
+
       .pricing-text-section {
         padding-top: 3.5%;
         padding-bottom: 3.5%;
@@ -557,26 +587,24 @@
         padding-right: 1.25%;
       }
 
-      .PricingPostTitle {
+     
+      .sanitized-title {
 
         text-align: left;
-        
-        
       }
 
       .descriptionParagraph {
 
-        text-align: justify;
-        
-        text-align-last: right;
-        
-
-        
+        text-align: left;
       }
+
+   
+
 
       .descriptionParagraph p {
 
         margin-bottom: 1.5rem;
+        
       }
 
     

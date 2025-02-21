@@ -47,17 +47,28 @@ const DynamicPost: React.FC<{ type: string }> = ({ type }) => {
     return <div>{type.charAt(0).toUpperCase() + type.slice(1)} post not found</div>;
   }
 
+    // Sanitize the title but strip all tags for the tab title
+    const sanitizedTitleForTab = DOMPurify.sanitize(post.title, {
+      ALLOWED_TAGS: []
+    }).replace(/<\/?[^>]+(>|$)/g, "");
+
   const sanitizedTitle = DOMPurify.sanitize(post.title);
   const sanitizedDescription = DOMPurify.sanitize(post.description, {
     // Allow specific attributes or tags if needed
-    ALLOWED_TAGS: ['p', 'br', 'span', 'div', 'img', 'a', /* other tags */],
+    ALLOWED_TAGS: ['h1','h2','h3','p', 'br', 'span', 'div', 'img', 'a', /* other tags */],
     ALLOWED_ATTR: ['style', 'class', 'src', 'href', 'alt', /* other attributes */]
   });
+
+  
 
   return (
     <div className='PricingPostContainer w-[80%]'>
       <Helmet>
-        <title>{post.title}</title>
+      <link rel="icon" href="/OpenBox.svg" type="image/x-icon" />
+        <link rel="icon" href="/favicon.png" type="image/png" sizes="16x16" />
+        {/* Optionally, add for Apple devices */}
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <title >{sanitizedTitleForTab}</title>
         <meta name="description" content={post.description} />
         {post.keywords && (
           <meta name="keywords" content={post.keywords.join(', ')} />
@@ -81,11 +92,13 @@ const DynamicPost: React.FC<{ type: string }> = ({ type }) => {
           </div>
           <div className='pricing-text-section'>
             <div className='PricingPostTitle'>
-              <div dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
+              <div className='sanitized-title' dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
             </div>
             <div className='PricingPostText'>
               <div className='descriptionParagraph' dangerouslySetInnerHTML={{ __html: sanitizedDescription }} />
+              
             </div>
+            
            
           </div>
         </div>

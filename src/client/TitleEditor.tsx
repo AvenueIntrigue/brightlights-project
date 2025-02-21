@@ -6,6 +6,7 @@ import TextStyle from '@tiptap/extension-text-style';
 import Underlines from '@tiptap/extension-underline';
 import { availableAdobeFonts } from './Fonts';
 import { FontSize } from './FontSize';
+import Heading from '@tiptap/extension-heading';
 import Placeholder from '@tiptap/extension-placeholder'; // Import Placeholder extension
 import { CaseSensitive, Type, Bold, Italic, Underline } from 'lucide-react';
 
@@ -36,10 +37,19 @@ const TitleEditor: React.FC<TitleEditorProps> = ({ onTitleChange, setEditorOne, 
       FontSize.configure({
         availableFontSizes: availableFontSizes,
       }),
+
+      Heading.configure({
+
+        HTMLAttributes: {
+          class: 'tiptap-title',
+        },
+      }),
+  
       Placeholder.configure({
         placeholder: ({ node }) => {
           return node.type.name === 'paragraph' ? 'Title' : ''; // Show 'Title' as a placeholder
         },
+
       
       }),
     ],

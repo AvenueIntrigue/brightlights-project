@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { EditorContent, isActive, useEditor } from "@tiptap/react";
-import { Node, mergeAttributes } from "@tiptap/core";
+import { Node as TipTapNode, mergeAttributes } from "@tiptap/core";
 import StarterKit from "@tiptap/starter-kit";
 import TextStyle from "@tiptap/extension-text-style";
 import TextAlign from "@tiptap/extension-text-align";
@@ -83,19 +83,28 @@ const Create = () => {
   useEffect(() => {
     const fetchPages = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/pages');
-        if (!response.ok) {
-          throw new Error('Failed to fetch pages');
+        // Hardcoded list of known page types, capitalized here
+        const knownTypes = ['pricing', 'about', 'services'].map(type => 
+          type.charAt(0).toUpperCase() + type.slice(1)
+        );
+        let availablePages: string[] = [];
+  
+        for (const type of knownTypes) {
+          const response = await fetch(`http://localhost:3000/api/${type.toLowerCase()}`);
+          if (response.ok) {
+            // If the response is OK, we know this type exists, so we add it to our list
+            availablePages.push(type);
+          } else if (response.status === 404) {
+            // If 404, it means this type doesn't exist or has no posts yet
+            console.log(`${type} type not found or has no posts.`);
+          } else {
+            throw new Error(`Failed to fetch ${type} page status: ${response.status}`);
+          }
         }
-        const data = await response.json();
-        if (Array.isArray(data)) {
-          setPages(data); // Assuming data is an array of strings
-        } else {
-          console.error('Data from server is not an array:', data);
-          setPages([]); // Default to empty array if data is not as expected
-        }
+  
+        setPages(availablePages); // Update the state with the types that exist
       } catch (error) {
-        console.error('Error fetching pages:', error);
+        console.error('Error fetching page types:', error);
       }
     };
   
@@ -219,20 +228,19 @@ const Create = () => {
     const inputRef = useRef<HTMLInputElement>(null);
 
     
-    const handleDropdownToggle = () => {
-      setIsDropdownVisible(!isDropdownVisible);
-    };
 
-    const handlePageSelect = (selectedPage: string) => {
-      if (pages.includes(selectedPage)) {
-        setSelectedPage(selectedPage);
-        // Optionally, update other states or perform actions here
-      } else if (selectedPage === "Add New Page") {
-        setShowNewPageInput(true);
-      } else {
-        console.warn('Selected page does not exist:', selectedPage);
+    
+    const handleDropdownToggle = (e: React.MouseEvent<HTMLDivElement>) => {
+      if (e.target !== inputRef.current) {
+        setIsDropdownVisible(!isDropdownVisible);
       }
     };
+
+    const handlePageSelect = (page: string) => {
+
+      onPageSelect(page);
+      setIsDropdownVisible(false);
+    }
 
     const handlePageClick = (page: string) => {
       if (page === "Add New Page") {
@@ -243,14 +251,16 @@ const Create = () => {
       }
     };
 
-    const handleAddNewPage = () => {
-      if (newPage.trim() && !pages.includes(newPage.trim())) {
-        setPages(prevPages => [...prevPages, newPage.trim()]);
-        handlePageSelect(newPage.trim()); // Select the new page after adding
-        setShowNewPageInput(false);
-        setNewPage(""); 
-      } else {
-        console.warn('Page already exists or input is empty:', newPage);
+    const handleAddNewPage = (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (newPage.trim() && !pages.includes(newPage.trim())) {
+          // Add new page to the list and select it
+          onPageSelect(newPage.trim());
+          onPageRemove("Add New Page"); // Assuming "Add New Page" is an option
+          setNewPage(""); // Clear the input
+        }
+        setIsDropdownVisible(false); // Close dropdown after adding new page
       }
     };
 
@@ -262,15 +272,11 @@ const Create = () => {
     };
 
     const handleClickOutside = (event: MouseEvent) => {
-      const targetElement = event.target as HTMLElement | null;
-      if (
-        dropdownRef.current &&
-        inputRef.current &&
-        targetElement &&
-        !dropdownRef.current.contains(targetElement) &&
-        !inputRef.current.contains(targetElement)
-      ) {
-        setIsDropdownVisible(false);
+      const target = event.target as EventTarget;
+      if (dropdownRef.current && target instanceof Node) {
+        if (!dropdownRef.current.contains(target as Node) && inputRef.current && !inputRef.current.contains(target as Node)) {
+          setIsDropdownVisible(false);
+        }
       }
     };
 
@@ -282,71 +288,41 @@ const Create = () => {
     }, []);
 
     return (
-      <div
-        className="create-custom-dropdown"
-        ref={dropdownRef}
-        onClick={handleDropdownToggle}
-      >
+      <div ref={dropdownRef} className="create-custom-dropdown" onClick={handleDropdownToggle}>
+        <div className="cd-input-field absolute top-0 left-0 right-0 outline-3">
         <div className="dropdown-selected block w-full">
-          {showNewPageInput ? (
-            <div className="input-button-div flex flex-row">
-              <div className="add-new-input-container">
-                <input
-                  type="text"
-                  className="add-new-input"
-                  value={newPage}
-                  onChange={(e) => setNewPage(e.target.value)}
-                  placeholder="Add New Page"
-                  ref={inputRef}
-                />
-              </div>
-              <div className="add-new-button-container">
-                <a
-                  type="button"
-                  onClick={handleAddNewPage}
-                  className="add-new-button"
-                >
-                  <Plus />
-                </a>
-              </div>
-            </div>
-          ) : selectedPage ? (
-            <div className="create-category-placeholder">
-            {selectedPage}
-            </div>
-          ) : (
-            <div className="create-category-placeholder">
-            <span>Page</span>
-            </div>
-          )}
+          {selectedPage || <div className="create-category-placeholder w-full"><span>Page</span></div>}
         </div>
         {isDropdownVisible && (
-          <div className="custom-menu dropdown-menu left-0 w-[33%] rounded-xl">
-            {!showNewPageInput ? (
-              <>
-                {pages.map((pag) => (
-                  <div key={pag} className="cat-sect">
-                    <div className="dropdown-item">
-                      <button
-                        className="remove-category w-[10%] mr-3"
-                        onClick={() => onPageRemove(pag)}
-                      >
-                        x
-                      </button>
-                      <span onClick={() => handlePageClick(pag)}>{pag}</span>
-                    </div>
-                  </div>
-                ))}
-                <button
-                  className="addnew mx-auto"
-                  onClick={() => handlePageClick("Add New Page")}
-                >
-                  Add New Page
-                </button>
-              </>
-            ) : null}
+          <div className="create-dropdown-menu top-0 w-full h-auto rounded-md">
+            {pages.map((page) => (
+              <div key={page} className="cat-sect w-full h-auto">
+                <div className="dropdown-item w-full">
+                  
+                  <span className="w-full " onClick={() => handlePageSelect(page)}>{page}</span>
+                </div>
+              </div>
+              
+            ))}
+            <div className="dropdown-item w-full bg-transparent">
+            
+            <input
+              type="text"
+              ref={inputRef}
+              className="cat-sect w-full h-auto bg-transparent outline-none hover:text-slate-600 text-center"
+              placeholder="Add New Page"
+              value={newPage}
+              onChange={(e) => setNewPage(e.target.value)}
+              onKeyPress={handleAddNewPage}
+              onClick={(e) => e.stopPropagation()}
+            />
+            
+            </div>
+            
           </div>
+          
         )}
+        </div>
       </div>
     );
   };
@@ -533,14 +509,17 @@ const Create = () => {
               setEditorOne={setEditorOne}
             />
 
-            <div title="Choose Desired Page" className="create-input-field relative mb-4">
+            <div title="Choose Desired Page" className="create-input-field relative mb-4 ">
+              
               <CustomDropdown
                 pages={pages}
                 selectedPage={selectedPage}
+
                 onPageSelect={handlePageSelect}
                 onPageRemove={handleRemovePage}
                 
               />
+              
             </div>
           
 

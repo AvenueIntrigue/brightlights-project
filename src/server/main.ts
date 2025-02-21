@@ -118,6 +118,8 @@ app.get('/api/:type', async (req: Request, res: Response) => {
   }
 });
 
+
+
 app.get('/api/web3', async (req: Request, res: Response) => {
   try {
     const post = await Web3PostModel.findOne();

@@ -7,6 +7,7 @@ import { Node, mergeAttributes } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import TextStyle from '@tiptap/extension-text-style';
 import TextAlign from '@tiptap/extension-text-align';
+import Heading1 from '@tiptap/extension-heading';
 import FontFamily from '@tiptap/extension-font-family';
 import Underlines from '@tiptap/extension-underline';
 import Image from '@tiptap/extension-image';
@@ -93,6 +94,13 @@ availableFontSizes: availableFontSizes,
       height: 480,
     }),
 
+    Heading1.configure({
+
+levels: [1,2,3],
+
+    }),
+
+
     Paragraph.configure({
 
       HTMLAttributes: {
@@ -109,9 +117,14 @@ availableFontSizes: availableFontSizes,
 
     
   ],
-    content: '<p></p>',
-
-
+  content: `
+  
+   <h1></h1>
+   <h2></h2>
+        <h3></h3>
+        <h4></h4>
+  
+`,
   });
 
     // Pass the editor instance back to CreateBlog.tsx
@@ -267,6 +280,24 @@ availableFontSizes: availableFontSizes,
                       </div>
               
             )}
+                      <button
+            onClick={() => editorTwo.chain().focus().toggleHeading({ level: 1 }).run()}
+            className={`create-toolbar-button ${editorTwo?.isActive('heading1', { level: 1}) ? 'is-active' : ''}`}
+          >
+            H1
+          </button>
+          <button
+            onClick={() => editorTwo.chain().focus().toggleHeading({ level: 2 }).run()}
+            className={`create-toolbar-button ${editorTwo?.isActive('heading1', { level: 2}) ? 'is-active' : ''}`}
+          >
+            H2
+          </button>
+          <button
+            onClick={() => editorTwo.chain().focus().toggleHeading({ level: 3 }).run()}
+            className={`create-toolbar-button ${editorTwo?.isActive('heading1', { level: 3}) ? 'is-active' : ''}`}
+          >
+            H3
+          </button>
           
           <button type='button' 
           title='Align-Left'
@@ -302,6 +333,9 @@ availableFontSizes: availableFontSizes,
                 <button title='Add YouTube Link' onClick={addYoutubeVideo} className="create-toolbar-button">
   <Clapperboard/>
   </button>
+  <button onClick={() => editorTwo.chain().focus().unsetTextAlign().run()}>
+            Unset text align
+          </button>
   <button type='button' 
               title='Bullet-List'
               onClick={() => editorTwo.chain().focus().toggleBulletList().run()}
