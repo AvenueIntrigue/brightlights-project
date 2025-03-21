@@ -45,6 +45,7 @@ import "./Create.css"
 import Paragraph from "@tiptap/extension-paragraph";
 import { availableAdobeFonts } from "./Fonts";
 import { FontSize } from "./FontSize";
+import { Color } from "@tiptap/extension-color";
 import TitleEditor from "./TitleEditor";
 import DescriptionEditor from "./DescriptionEditor";
 
@@ -84,7 +85,7 @@ const Create = () => {
     const fetchPages = async () => {
       try {
         // Hardcoded list of known page types, capitalized here
-        const knownTypes = ['pricing', 'about', 'services'].map(type => 
+        const knownTypes = ['pricing', 'about', 'services', 'web-development', 'app-development', 'graphic-design', 'web3', 'projects'].map(type => 
           type.charAt(0).toUpperCase() + type.slice(1)
         );
         let availablePages: string[] = [];
@@ -297,9 +298,9 @@ const Create = () => {
           <div className="create-dropdown-menu top-0 w-full h-auto rounded-md">
             {pages.map((page) => (
               <div key={page} className="cat-sect w-full h-auto">
-                <div className="dropdown-item w-full">
+                <div className="dropdown-item w-full h-auto">
                   
-                  <span className="w-full " onClick={() => handlePageSelect(page)}>{page}</span>
+                  <span className="w-full h-auto " onClick={() => handlePageSelect(page)}>{page}</span>
                 </div>
               </div>
               
@@ -454,6 +455,9 @@ const Create = () => {
       if (!token) {
         console.error("Failed to retrieve token");
         return;
+
+        editorTwo.chain().focus().unsetColor().run();
+
       }
 
       const newPost = {
@@ -613,7 +617,7 @@ const Create = () => {
             {/* <Image Preview Section/> */}
             
             
-            <div title="Add Your Article">
+            <div className="editorContainer" title="Add Your Article">
             <DescriptionEditor setEditorTwo={setEditorTwo} />
             </div>
 

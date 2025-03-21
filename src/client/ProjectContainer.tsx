@@ -4,9 +4,9 @@ import DOMPurify from 'dompurify';
 import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
 import { Share, BookOpenText} from 'lucide-react';
-import { XIcon, FaceBookIcon, EmailIcon, CopyLinkIcon, CheckMarkIcon } from './CustomIcons';
-import { ImageSlider } from './ImageSlider';
-import './TopContainer.css';
+import { XIcon, FaceBookIcon, EmailIcon, CopyLinkIcon, CheckMarkIcon } from './CustomIcons.js';
+import { ImageSlider } from './ImageSlider.js';
+import './ProjectContainer.css';
 import { link } from 'fs';
 interface Post {
   title: string;
@@ -17,7 +17,7 @@ interface Post {
   keywords?: string[];
 }
 
-const TopContainer: React.FC<{ type: string }> = ({ type }) => {
+const ProjectContainer: React.FC<{ type: string }> = ({ type }) => {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ const TopContainer: React.FC<{ type: string }> = ({ type }) => {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/api/about`);
+        const response = await fetch(`http://localhost:3000/api/projects`);
         if (response.ok) {
           const data = await response.json();
           setPost(data);
@@ -64,13 +64,13 @@ const TopContainer: React.FC<{ type: string }> = ({ type }) => {
 
  const handleReadMore = () => {
 
-  navigate(`/about`);
+  navigate(`/projects`);
  }
   
   
 
   return (
-    <div className='TCPostContainer'>
+    <div className='ProjectPostContainer'>
       <Helmet>
       <link rel="icon" href="/OpenBox.svg" type="image/x-icon" />
         <link rel="icon" href="/favicon.png" type="image/png" sizes="16x16" />
@@ -82,35 +82,35 @@ const TopContainer: React.FC<{ type: string }> = ({ type }) => {
           <meta name="keywords" content={post.keywords.join(', ')} />
         )}
       </Helmet>
-      <div className='TCPost'>
+      <div className='ProjectPost'>
 
-      <div className='TC-container flex'>
-          <div className='tc-img-section'>
+      <div className='Project-container flex'>
+          <div className='project-img-section'>
             <div>
-            <div className='TCImgContainer'>
+            <div className='ProjectImgContainer'>
               {post.images.length > 1 ? (
                 <div className=''>
                 <ImageSlider images={post.images} />
                 </div>
               ) : (
                 <div className='align-top'>
-                <img className='TCPostImg' src={post.images[0]?.url} alt={post.images[0]?.alt} />
+                <img className='ProjectPostImg' src={post.images[0]?.url} alt={post.images[0]?.alt} />
                 </div>
               )}
             </div>
             </div>
           </div>
-          <div className='tc-text-section'>
+          <div className='project-text-section'>
             <div className='flex flex-col p-4'>
-            <div className='TCPostTitle'>
+            <div className='ProjectPostTitle'>
               <div className='sanitized-title' dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
             </div>
-            <div className='TCPostText'>
-              <div className='TCdescriptionParagraph' dangerouslySetInnerHTML={{ __html: sanitizedDescription }} />
+            <div className='ProjectPostText'>
+              <div className='ProjectdescriptionParagraph' dangerouslySetInnerHTML={{ __html: sanitizedDescription }} />
               
               </div>
-              <div className='tc-button-container'>
-              <button type="submit" className="tc-button" onClick={handleReadMore}><BookOpenText className="icon"/><span className="tc-button-text">Read More</span></button>
+              <div className='project-button-container'>
+              <button type="submit" className="project-button" onClick={handleReadMore}><BookOpenText className="icon"/><span className="project-button-text">Read More</span></button>
               </div>
             </div>
             
@@ -123,4 +123,4 @@ const TopContainer: React.FC<{ type: string }> = ({ type }) => {
   );
 };
 
-export default TopContainer;
+export default ProjectContainer;

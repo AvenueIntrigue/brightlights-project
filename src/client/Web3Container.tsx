@@ -1,17 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useUser, useSession } from '@clerk/clerk-react';
-import { Book } from 'lucide-react';
 import DOMPurify from 'dompurify';
-import { SkeletonImage, SkeletonText } from './SkeletonComponent';
+import { useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { Share, BookOpenText} from 'lucide-react';
+import { XIcon, FaceBookIcon, EmailIcon, CopyLinkIcon, CheckMarkIcon } from './CustomIcons';
+import { ImageSlider } from './ImageSlider';
 import './Web3Container.css';
 import { link } from 'fs';
-
-interface PublicMetadata {
-  permissions?: string[];
-}
-
 interface Post {
   title: string;
   description: string;
@@ -21,20 +17,10 @@ interface Post {
   keywords?: string[];
 }
 
-
-
-const Web3Container: React.FC<{type: string}> = ({ type }) => {
-  const navigate = useNavigate();
-  const { user } = useUser();
+const Web3Container: React.FC<{ type: string }> = ({ type }) => {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
-
-  // Helper function to strip HTML tags
-function stripHtml(html: string): string {
-  let tmp = document.createElement("DIV");
-  tmp.innerHTML = html;
-  return tmp.textContent || tmp.innerText || "";
-}
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -64,64 +50,77 @@ function stripHtml(html: string): string {
     return <div>{type.charAt(0).toUpperCase() + type.slice(1)} post not found</div>;
   }
 
-    // Strip HTML tags from title and description
-    const strippedTitle = stripHtml(post.title);
-    const strippedDescription = stripHtml(post.description);
+    // Sanitize the title but strip all tags for the tab title
+    const sanitizedTitleForTab = DOMPurify.sanitize(post.title, {
+      ALLOWED_TAGS: []
+    }).replace(/<\/?[^>]+(>|$)/g, "");
 
   const sanitizedTitle = DOMPurify.sanitize(post.title);
-  const sanitizedDescription = DOMPurify.sanitize(post.description);
+  const sanitizedDescription = DOMPurify.sanitize(post.description, {
+    // Allow specific attributes or tags if needed
+    ALLOWED_TAGS: ['h1','h2','h3','p', 'br', 'span', 'div', 'img', 'a', /* other tags */],
+    ALLOWED_ATTR: ['style', 'class', 'src', 'href', 'alt', /* other attributes */]
+  });
 
+ const handleReadMore = () => {
 
-  const handleReadMore = async () => {
-    navigate(`/web3`); // Navigate to the specific web3 article
-  };
-
-  const handleEditClick = async () => {
-
-    navigate('/create');
-
-  };
+  navigate(`/web3`);
+ }
+  
+  
 
   return (
-    <div className='web3-container-grand pt-[7%]'>
+    <div className='W3PostContainer'>
       <Helmet>
-        <title>{sanitizedTitle}</title>
-        <meta name="description" content={sanitizedDescription} />
+      <link rel="icon" href="/OpenBox.svg" type="image/x-icon" />
+        <link rel="icon" href="/favicon.png" type="image/png" sizes="16x16" />
+        {/* Optionally, add for Apple devices */}
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        {type && <title>{sanitizedTitleForTab}</title>}
+        <meta name="description" content={post.description} />
         {post.keywords && (
           <meta name="keywords" content={post.keywords.join(', ')} />
         )}
       </Helmet>
-      <hr className='line-web3' />
-      <div className="web3-container">
-        <div className='img-container mx-auto mb-4'>
-          {post.images && post.images.length > 0 ? 
-            <img className="image" src={post.images[0].url} alt={post.images[0].alt} /> 
-            : <SkeletonImage />
-          }
-        </div>
-        <div className="web3-container-text">
-          <div className='web3-title mb-4'>
-          <h1 className='about-us p-2'>{strippedTitle}</h1>
-          </div>
-          <div className='web3-description mb-4'>
-          <h4>{strippedDescription}</h4>
-          </div>
-          <div className='w-full p-4 flex justify-end'>
-            <button onClick={handleReadMore} className='readMore-button'>
-              <div className='flex p-2'>
-                <div className='pr-1'><Book/></div>
-                <div className='pl-1'>Read More</div>
-              </div>
-            </button>
-          </div>
-          {user &&  // Check if user is logged in
-          <div className='ml-0'>
-            <button className="web3-edit-button w-1/4 rounded-md" onClick={handleEditClick}>
-              <i className="fa-solid fa-pen-to-square"></i>
-            </button>
+      <div className='W3Post'>
+
+      <div className='W3-container flex'>
+          
+          <div className='w3-text-section'>
+            <div className='flex flex-col p-4'>
+            <div className='W3PostTitle'>
+              <div className='sanitized-title' dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
             </div>
-          }
+            <div className='W3PostText'>
+              <div className='W3descriptionParagraph' dangerouslySetInnerHTML={{ __html: sanitizedDescription }} />
+              
+              </div>
+              <div className='w3-button-container'>
+              <button type="button" className="w3-button" onClick={handleReadMore}><BookOpenText className="icon"/><span className="w3-button-text">Read More</span></button>
+              </div>
+              
+            </div>
+            
+            
+           
+          </div>
+          <div className='w3-img-section'>
+            <div>
+            <div className='W3ImgContainer'>
+              {post.images.length > 1 ? (
+                <div className=''>
+                <ImageSlider images={post.images} />
+                </div>
+              ) : (
+                <div className='align-top'>
+                <img className='W3PostImg' src={post.images[0]?.url} alt={post.images[0]?.alt} />
+                </div>
+              )}
+            </div>
+            </div>
+          </div>
         </div>
+       
       </div>
     </div>
   );

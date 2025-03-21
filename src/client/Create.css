@@ -13,7 +13,7 @@ margin-right: auto;
 .create-form {
   position: relative;
   width: 100%;
-  height: 100%;
+  height: auto;
   
 
 
@@ -63,6 +63,12 @@ margin-right: auto;
   border-radius: 5%;
 
 
+}
+
+.create-form-container{
+
+  width: 100%;
+  height: auto;
 }
 
 .create-form-content {
@@ -402,6 +408,7 @@ margin-right: auto;
   margin-bottom: 1rem;
   position: relative;
   width: 100%;
+  height: auto;
   border: 1px solid #6B7280;
   border-radius: 0.375rem;
   outline: none;
@@ -530,12 +537,7 @@ label,
 
 }
 
-/* .ProseMirror {
-        min-height: 100px;
-        padding: 10px;
-        border: 1px solid #6b7280 ;
-        border-radius: 0.75rem;
-      } */
+
 
 .tiptap p.is-editor-empty:first-child::before {
   display: block;
@@ -563,9 +565,9 @@ label,
 
 .editor-one .ProseMirror {
   margin-bottom: 1rem;
-  position: relative;
+  /* position: relative; */
   width: 100%;
-  height: 100%;
+  height: auto;
   min-height: 2.5rem;
   /* Minimum height */
   
@@ -595,27 +597,44 @@ label,
 }
 
 
+
+
+.editor-two {
+
+  min-height: 25rem;
+}
+
+
+
+
 .editor-two .ProseMirror {
 
-  margin-bottom: 1rem;
+  
+  
   position: relative;
   width: 100%;
+  height: auto;
   min-height: 15rem;
   /* Minimum height */
   border: 1px solid #6B7280;
   border-radius: 0.375rem;
-  padding: 0.5rem;
+  
   /* Add padding to give space between text and border */
-  overflow: hidden;
+ 
   /* This prevents any overflow until the text grows the container */
 }
+
+
+
+
 
 .editor-two .ProseMirror p {
   line-height: 1.5;
   /* Adjust the line height to make text more readable */
   font-size: inherit;
   /* Make sure the font size inherits from the editor settings */
-  margin-bottom: 4rem;
+  background-color: #6B7280;
+
 }
 
 .editor-two:hover .ProseMirror {
@@ -873,6 +892,17 @@ label,
   border-radius: inherit;
   outline: none;
 }
+
+/* .editorContainer{
+
+  height: 300px;
+  overflow: auto;
+  
+} */
+
+
+
+
 
 /* Media Query for Medium Screens */
 

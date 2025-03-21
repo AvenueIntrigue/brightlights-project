@@ -17,7 +17,7 @@ interface Post {
   keywords?: string[];
 }
 
-const TopContainer: React.FC<{ type: string }> = ({ type }) => {
+const Portfolio: React.FC<{ type: string }> = ({ type }) => {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -25,7 +25,7 @@ const TopContainer: React.FC<{ type: string }> = ({ type }) => {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/api/about`);
+        const response = await fetch(`http://localhost:3000/api/portfolio `);
         if (response.ok) {
           const data = await response.json();
           setPost(data);
@@ -123,4 +123,4 @@ const TopContainer: React.FC<{ type: string }> = ({ type }) => {
   );
 };
 
-export default TopContainer;
+export default Portfolio;

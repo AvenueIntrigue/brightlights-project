@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import ViteExpress from "vite-express";
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
-import { BlogPostModel, BlogPost, PricingPostModel, AboutPostModel, ServicesPostModel, Web3PostModel, TopContainerContentModel, MiddleContainerContentModel, BulletContainerContentModel, web3ContainerContentModel, BulletContainerAboutUsModel, CategoryModel} from '../shared/interfaces.js';
+import { BlogPostModel, BlogPost, PricingPostModel, AboutPostModel, ServicesPostModel, Web3PostModel, TopContainerContentModel, MiddleContainerContentModel, BulletContainerContentModel, web3ContainerContentModel, BulletContainerAboutUsModel, CategoryModel, GraphicDesignPostModel, AppDevelopmentPostModel, WebDevelopmentPostModel, ProjectsPostModel, PortfolioPostModel} from '../shared/interfaces.js';
 
 dotenv.config();
 
@@ -86,146 +86,25 @@ app.get('/api/posts', async (req: Request, res: Response) => {
   }
 });
 
-
-
-app.get('/api/:type', async (req: Request, res: Response) => {
-  const type = req.params.type; // 'pricing', 'about', 'services', etc.
-  
-  let Model;
-  switch (type) {
-    case 'pricing':
-      Model = PricingPostModel;
-      break;
-    case 'about':
-      Model = AboutPostModel;
-      break;
-    case 'services':
-      Model = ServicesPostModel;
-      break;
-    default:
-      return res.status(400).send({ message: 'Invalid post type' });
-  }
-
-  try {
-    const post = await Model.findOne();
-    if (post) {
-      res.json(post);
-    } else {
-      res.status(404).send({ message: `${type} post not found` });
-    }
-  } catch (error) {
-    res.status(500).send({ message: `Error fetching ${type} post`, error });
-  }
-});
-
-
-
-app.get('/api/web3', async (req: Request, res: Response) => {
-  try {
-    const post = await Web3PostModel.findOne();
-    if (post) {
-      res.json(post);
-    } else {
-      res.status(404).send({ message: 'Web3 post not found' });
-    }
-  } catch (error) {
-    res.status(500).send({ message: 'Error fetching Web 3 post', error });
-  }
-});
-
-
-
-// Instead of having separate PUT routes for pricing and about, you can do:
-
-// This route will handle both 'pricingposts' and 'aboutposts'
-app.put('/api/:pageName', async (req: Request, res: Response) => {
-  const { pageName } = req.params;
-  let Model = null;
-
-  switch (pageName) {
-    case 'aboutposts':
-      Model = AboutPostModel;
-      break;
-    case 'pricingposts':
-      Model = PricingPostModel;
-      break;
-      case 'servicesposts':
-      Model = ServicesPostModel;
-      break;
-
-     case 'web3posts':
-      Model = Web3PostModel;
-      break;
-    default:
-      return res.status(400).send({
-        message: 'Invalid page name',
-        details: `The page name "${pageName}" is not supported.`
-      });
-  }
-
-  try {
-    // Delete old posts before creating or updating the new one
-    await Model.deleteMany({});
-
-    const newPost = new Model(req.body);
-    await newPost.save();
-    res.status(200).send({ id: newPost._id, message: `Successfully created ${pageName}` });
-  } catch (error) {
-    console.error(`Error in creating ${pageName}:`, error);
-
-    if (error instanceof Error) {
-      // Error is now known to be an instance of Error
-      if (error.name === 'ValidationError') {
-        const validationErrors = Object.keys((error as mongoose.Error.ValidationError).errors).map(key => ({
-          field: key,
-          message: (error as mongoose.Error.ValidationError).errors[key].message
-        }));
-        return res.status(400).send({
-          message: `Validation error creating ${pageName}`,
-          details: validationErrors
-        });
-      }
-
-      // General error response
-      res.status(500).send({
-        message: `An error occurred while creating ${pageName}`,
-        // In production, you might want to remove or sanitize this
-        error: error.message
-      });
-    } else {
-      // If error is not an instance of Error, log it and send a generic message
-      console.error(`Unexpected error type in creating ${pageName}:`, error);
-      res.status(500).send({
-        message: `An unexpected error occurred while creating ${pageName}`
-      });
-    }
-  }
-});
-
-// Keep other routes as they are if they don't need to change
-
-
-
-
-
-
 app.get('/api/topcontainer', async (req: Request, res: Response) => {
+  console.log('GET /api/topcontainer hit'); // Debug log
   try {
     const content = await TopContainerContentModel.findOne();
     if (content) {
       res.json(content);
     } else {
-      res.status(404).send({ message: 'Content not found' });
+      res.status(404).json({ message: 'Content not found' });
     }
   } catch (error) {
-    res.status(500).send({ message: 'Error fetching top container content', error });
+    console.error('Error fetching top container content:', error);
+    res.status(500).json({ message: 'Error fetching top container content', error });
   }
 });
 
 app.put('/api/topcontainer', async (req: Request, res: Response) => {
   try {
-    const { image, imageAlt, title, description } = req.body;
-    const content = await TopContainerContentModel.findOneAndUpdate({}, { image, imageAlt, title, description }, { new: true, upsert: true });
+    const { image, imageAlt, title, description, keywords } = req.body;
+    const content = await TopContainerContentModel.findOneAndUpdate({}, { image, imageAlt, title, description, keywords }, { new: true, upsert: true });
     res.json(content);
   } catch (error) {
     res.status(500).send({ message: 'Error updating top container content', error });
@@ -345,6 +224,182 @@ app.put('/api/web3container', async (req: Request, res: Response) => {
     res.status(500).send({ message: 'Error updating top container content', error });
   }
 });
+
+
+
+app.get('/api/:type', async (req: Request, res: Response) => {
+  const type = req.params.type; // 'pricing', 'about', 'services', etc.
+  
+  let Model;
+  switch (type) {
+    case 'pricing':
+      Model = PricingPostModel;
+      break;
+    case 'about':
+      Model = AboutPostModel;
+      break;
+    case 'services':
+      Model = ServicesPostModel;
+      break;
+   
+      case 'web-development':
+        Model = WebDevelopmentPostModel;
+        break;
+
+        case 'app-development':
+          Model = AppDevelopmentPostModel;
+          break;
+
+          case 'graphic-design':
+            Model = GraphicDesignPostModel;
+            break;
+
+            case 'web3':
+            Model = Web3PostModel;
+            break;
+
+            case 'projects':
+              Model = ProjectsPostModel;
+              break;
+
+              case 'portfolioposts':
+                Model = PortfolioPostModel;
+                break;
+         
+       
+     
+      
+    default:
+      return res.status(400).send({ message: 'Invalid post type' });
+  }
+
+  try {
+    const post = await Model.findOne();
+    if (post) {
+      res.json(post);
+    } else {
+      res.status(404).send({ message: `${type} post not found` });
+    }
+  } catch (error) {
+    res.status(500).send({ message: `Error fetching ${type} post`, error });
+  }
+});
+
+
+
+app.get('/api/web3', async (req: Request, res: Response) => {
+  try {
+    const post = await Web3PostModel.findOne();
+    if (post) {
+      res.json(post);
+    } else {
+      res.status(404).send({ message: 'Web3 post not found' });
+    }
+  } catch (error) {
+    res.status(500).send({ message: 'Error fetching Web 3 post', error });
+  }
+});
+
+
+
+// Instead of having separate PUT routes for pricing and about, you can do:
+
+// This route will handle both 'pricingposts' and 'aboutposts'
+app.put('/api/:pageName', async (req: Request, res: Response) => {
+  const { pageName } = req.params;
+  let Model = null;
+
+  switch (pageName) {
+    case 'aboutposts':
+      Model = AboutPostModel;
+      break;
+    case 'pricingposts':
+      Model = PricingPostModel;
+      break;
+      case 'servicesposts':
+      Model = ServicesPostModel;
+      break;
+      case 'web-developmentposts':
+      Model = WebDevelopmentPostModel;
+      break;
+
+      case 'app-developmentposts':
+        Model = AppDevelopmentPostModel;
+        break;
+
+        case 'graphic-designposts':
+          Model = GraphicDesignPostModel;
+          break;
+
+    
+
+     case 'web3posts':
+      Model = Web3PostModel;
+      break;
+
+      case 'projectsposts':
+        Model = ProjectsPostModel;
+        break;
+
+        case 'portfolioposts':
+        Model = PortfolioPostModel;
+        break;
+
+
+    default:
+      return res.status(400).send({
+        message: 'Invalid page name',
+        details: `The page name "${pageName}" is not supported.`
+      });
+  }
+
+  try {
+    // Delete old posts before creating or updating the new one
+    await Model.deleteMany({});
+
+    const newPost = new Model(req.body);
+    await newPost.save();
+    res.status(200).send({ id: newPost._id, message: `Successfully created ${pageName}` });
+  } catch (error) {
+    console.error(`Error in creating ${pageName}:`, error);
+
+    if (error instanceof Error) {
+      // Error is now known to be an instance of Error
+      if (error.name === 'ValidationError') {
+        const validationErrors = Object.keys((error as mongoose.Error.ValidationError).errors).map(key => ({
+          field: key,
+          message: (error as mongoose.Error.ValidationError).errors[key].message
+        }));
+        return res.status(400).send({
+          message: `Validation error creating ${pageName}`,
+          details: validationErrors
+        });
+      }
+
+      // General error response
+      res.status(500).send({
+        message: `An error occurred while creating ${pageName}`,
+        // In production, you might want to remove or sanitize this
+        error: error.message
+      });
+    } else {
+      // If error is not an instance of Error, log it and send a generic message
+      console.error(`Unexpected error type in creating ${pageName}:`, error);
+      res.status(500).send({
+        message: `An unexpected error occurred while creating ${pageName}`
+      });
+    }
+  }
+});
+
+// Keep other routes as they are if they don't need to change
+
+
+
+
+
+
+
 
 
 

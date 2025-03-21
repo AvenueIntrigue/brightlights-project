@@ -13,6 +13,8 @@ import Underlines from '@tiptap/extension-underline';
 import Image from '@tiptap/extension-image';
 import extLink from '@tiptap/extension-link';
 import ListItem from '@tiptap/extension-list-item';
+import BulletList from '@tiptap/extension-bullet-list';
+import { Color } from '@tiptap/extension-color';
 import Paragraph from '@tiptap/extension-paragraph';
 import YouTube, { Youtube } from '@tiptap/extension-youtube';
 import { FontSize } from './FontSize';
@@ -47,8 +49,11 @@ import { Bold, Heading, Italic, Underline, Type, AlignLeft, AlignCenter, AlignRi
 
 const editorTwo = useEditor({
     extensions: [ StarterKit.configure({
+
+      paragraph: false,
+      heading: false,
       
-    }), TextStyle, 
+    }), TextStyle, Color,
       
       
       FontFamily.configure({
@@ -106,9 +111,16 @@ levels: [1,2,3],
       HTMLAttributes: {
 
         class: 'descriptionParagraph',
-      }
+        style: 'margin-bottom: 1rem;',
+      },
+
+      
+
+     
 
     }),
+
+    BulletList,
 
     
     
@@ -117,14 +129,12 @@ levels: [1,2,3],
 
     
   ],
-  content: `
-  
-   <h1></h1>
-   <h2></h2>
-        <h3></h3>
-        <h4></h4>
-  
-`,
+  content: `<p>${"Test paragraph ".repeat(50)}</p>`,
+editorProps: {
+  attributes: {
+    class: 'editor-two', // Custom class for styling
+  },
+},
   });
 
     // Pass the editor instance back to CreateBlog.tsx
@@ -227,7 +237,7 @@ levels: [1,2,3],
   return(
 
 
-    <div className="mb-4 relative">
+    <div className="">
     {!editorTwo?.getHTML().trim() && focusedField !== 'description' && (
       <label className="block pt-1 pl-5">Description</label>
     )}
@@ -333,8 +343,20 @@ levels: [1,2,3],
                 <button title='Add YouTube Link' onClick={addYoutubeVideo} className="create-toolbar-button">
   <Clapperboard/>
   </button>
-  <button onClick={() => editorTwo.chain().focus().unsetTextAlign().run()}>
+  <button onClick={() => editorTwo.chain().focus().unsetTextAlign().run()} className="create-toolbar-button">
             Unset text align
+          </button>
+          <button onClick={() => editorTwo.chain().focus().unsetFontFamily().run()} className='create-toolbar-button'
+                  data-test-id="unsetFontFamily">
+            Unset font family
+          </button>
+          <button onClick={() => editorTwo.chain().focus().unsetFontSize().run()} className='create-toolbar-button'
+                  data-test-id="unsetFontSize">
+            Unset font size
+          </button>
+          <button onClick={() => editorTwo.chain().focus().unsetAllMarks().run()} className='create-toolbar-button'
+                  data-test-id="unsetAllMarks">
+            Unset All Marks
           </button>
   <button type='button' 
               title='Bullet-List'
@@ -357,12 +379,43 @@ levels: [1,2,3],
             >
               <MessageSquareQuote/>
             </button>
-            <button type='button' title='Add-Link' onClick={setLink} className={`create-toolbar-button ${editorTwo.isActive('link') ? 'is-active' : ''}`}>
-              <Link />
-            </button>
+            <button
+          onClick={() => {
+            const url = prompt('Enter URL');
+            if (url) {
+              editorTwo
+                .chain()
+                .focus()
+                .toggleLink({ href: url, target: '_self' }) // Fixed: Removed 'url:' prefix
+                .setColor('#bbf7d0 !important') // Blue, distinct from #F5F5F5 (paragraphs)
+                .run();
+            }
+          }}
+          className={`create-toolbar-button ${editorTwo.isActive('link') ? 'is-active' : ''}`}
+          title="Add URL"
+        >
+          <Link />
+        </button>
+            <button
+          onClick={() => {
+            const url = prompt('Enter phone number (e.g., +1234567890):');
+            if (url) {
+              editorTwo
+                .chain()
+                .focus()
+                .toggleLink({ href: `tel:${url}`, target: '_self' })
+                .setColor('#bbf7d0 !important')
+                .run();
+            }
+          }}
+          className={`create-toolbar-button ${editorTwo.isActive('link') ? 'is-active' : ''}`}
+          title="Add Phone Link"
+        >
+          <Link />
+        </button>
             <button type='button' 
               title='Set-Paragraph'
-              onClick={() => editorTwo.chain().focus().setParagraph().run()}
+              onClick={() => editorTwo.chain().focus().setParagraph().setColor('#F5F5F5').run()}
               className={`create-toolbar-button ${editorTwo.isActive('paragraph') ? 'is-active' : ''}`}
             >
               <Pilcrow/>
@@ -373,10 +426,10 @@ levels: [1,2,3],
           
     </div>
     
-    <div className='editor-two'>
+    
         
         <EditorContent editor={editorTwo} />
-      </div>
+    
 
     </div>
 

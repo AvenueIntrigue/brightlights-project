@@ -45,7 +45,99 @@ export interface TopContainerContent extends Document {
   imageAlt: string;
   title: string;
   description: string;
+  keywords: string[];
 }
+
+const TopContainerContentSchema: Schema<TopContainerContent> = new Schema({
+  image: { type: String, required: true },
+  imageAlt: { type: String, required: true },
+  title: { type: String, required: true},
+  description: { type: String, required: true},
+  keywords: { type: [String], required: false }
+
+});
+
+const TopContainerContentModel = mongoose.model<TopContainerContent>('topcontainercontents', TopContainerContentSchema);
+
+export { TopContainerContentModel };
+
+export interface MiddleContainerContent extends Document {
+  image: string;
+  imageAlt: string;
+  title: string;
+  description: string;
+  keywords: string[];
+}
+
+const MiddleContainerContentSchema: Schema<MiddleContainerContent> = new Schema({
+  image: { type: String, required: true },
+  imageAlt: { type: String, required: true },
+  title: { type: String, required: true},
+  description: { type: String, required: true},
+  keywords: { type: [String], required: false }
+});
+
+const MiddleContainerContentModel = mongoose.model<MiddleContainerContent>('middlecontainercontents', MiddleContainerContentSchema);
+
+export { MiddleContainerContentModel };
+// shared/interfaces.ts
+
+
+
+export interface BulletContainerAboutUs {
+  aboutUs: string;
+}
+
+const BulletContainerAboutUsSchema: Schema<BulletContainerAboutUs> = new Schema({
+  aboutUs: { type: String, required: true },
+});
+
+export interface BulletContainerContent {
+  title: string;
+  description: string;
+  image: string;
+  imageAlt: string;
+  keywords: string[];
+}
+
+const BulletContainerContentSchema: Schema<BulletContainerContent> = new Schema({
+  title: { type: String, required: true },
+  image: { type: String, required: true },
+  imageAlt: { type: String, required: true },
+  description: { type: String, required: true },
+  keywords: { type: [String], required: true },
+});
+
+const BulletContainerAboutUsModel = mongoose.model<BulletContainerAboutUs>('bulletcontaineraboutus', BulletContainerAboutUsSchema);
+const BulletContainerContentModel = mongoose.model<BulletContainerContent>('bulletcontainercontents', BulletContainerContentSchema);
+
+
+
+
+export interface web3ContainerContent extends Document {
+  image: string;
+  imageAlt: string;
+  title: string;
+  description: string;
+  keywords: string[];
+}
+
+const web3ContainerContentSchema: Schema<web3ContainerContent> = new Schema({
+  image: { type: String, required: true },
+  imageAlt: {type: String, required: true},
+  title: {type: String, required: true},
+  description: { type: String, required: true },
+  keywords: { type: [String], required: true}
+});
+
+const web3ContainerContentModel = mongoose.model<web3ContainerContent>('web3containercontents', web3ContainerContentSchema);
+
+export { web3ContainerContentModel };
+
+
+
+
+
 
 
 
@@ -94,96 +186,16 @@ const PostSchema = new Schema<Post>({
 // Example for Pricing Post
 const PricingPostModel = mongoose.model<Post>('PricingPost', PostSchema);
 const AboutPostModel = mongoose.model<Post>('AboutPost', PostSchema);
+const WebDevelopmentPostModel = mongoose.model<Post>('Web-DevelopmentPost', PostSchema);
+const AppDevelopmentPostModel = mongoose.model<Post>('App-DevelopmentPost', PostSchema);
+const GraphicDesignPostModel = mongoose.model<Post>('Graphic-DesignPost', PostSchema);
 const ServicesPostModel = mongoose.model<Post>('ServicesPost', PostSchema);
 const Web3PostModel = mongoose.model<Post>('Web3Post', PostSchema);
+const ProjectsPostModel = mongoose.model<Post>('ProjectsPost', PostSchema);
+const PortfolioPostModel = mongoose.model<Post>('PortfolioPost', PostSchema);
 
 
 // You would follow a similar pattern for AboutPost, BlogPost, etc.
 
+export { BulletContainerAboutUsModel, BulletContainerContentModel, BlogPostModel, PricingPostModel, AboutPostModel, WebDevelopmentPostModel, AppDevelopmentPostModel, GraphicDesignPostModel, ServicesPostModel, Web3PostModel,ProjectsPostModel, PortfolioPostModel, CategoryModel, CategorySchema };
 
-const TopContainerContentSchema: Schema<TopContainerContent> = new Schema({
-  image: { type: String, required: true },
-  imageAlt: { type: String, required: true },
-  title: { type: String, required: true},
-  description: { type: String, required: true}
-});
-
-const TopContainerContentModel = mongoose.model<TopContainerContent>('TopContainerContent', TopContainerContentSchema);
-
-export { TopContainerContentModel };
-
-export interface MiddleContainerContent extends Document {
-  image: string;
-  imageAlt: string;
-  title: string;
-  description: string;
-}
-
-const MiddleContainerContentSchema: Schema<MiddleContainerContent> = new Schema({
-  image: { type: String, required: true },
-  imageAlt: { type: String, required: true },
-  title: { type: String, required: true},
-  description: { type: String, required: true}
-});
-
-const MiddleContainerContentModel = mongoose.model<MiddleContainerContent>('MiddleContainerContent', MiddleContainerContentSchema);
-
-export { MiddleContainerContentModel };
-// shared/interfaces.ts
-
-
-
-export interface BulletContainerAboutUs {
-  aboutUs: string;
-}
-
-const BulletContainerAboutUsSchema: Schema<BulletContainerAboutUs> = new Schema({
-  aboutUs: { type: String, required: true },
-});
-
-export interface BulletContainerContent {
-  title: string;
-  description: string;
-  image: string;
-  imageAlt: string;
-  keywords: string[];
-}
-
-const BulletContainerContentSchema: Schema<BulletContainerContent> = new Schema({
-  title: { type: String, required: true },
-  image: { type: String, required: true },
-  imageAlt: { type: String, required: true },
-  description: { type: String, required: true },
-  keywords: { type: [String], required: true },
-});
-
-const BulletContainerAboutUsModel = mongoose.model<BulletContainerAboutUs>('BulletContainerAboutUs', BulletContainerAboutUsSchema);
-const BulletContainerContentModel = mongoose.model<BulletContainerContent>('BulletContainerContent', BulletContainerContentSchema);
-
-
-
-
-export interface web3ContainerContent extends Document {
-  image: string;
-  imageAlt: string;
-  title: string;
-  description: string;
-  keywords: string[];
-}
-
-const web3ContainerContentSchema: Schema<web3ContainerContent> = new Schema({
-  image: { type: String, required: true },
-  imageAlt: {type: String, required: true},
-  title: {type: String, required: true},
-  description: { type: String, required: true },
-  keywords: { type: [String], required: true}
-});
-
-const web3ContainerContentModel = mongoose.model<web3ContainerContent>('web3ContainerContent', web3ContainerContentSchema);
-
-export { web3ContainerContentModel };
-
-
-
-
-export { BulletContainerAboutUsModel, BulletContainerContentModel, BlogPostModel, PricingPostModel, AboutPostModel, ServicesPostModel, Web3PostModel, CategoryModel, CategorySchema };

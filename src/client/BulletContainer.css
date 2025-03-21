@@ -27,7 +27,8 @@
     border: 2px transparent;
     border-radius: 15px;
     box-shadow: 5px black;
-    text-align: left;
+    text-align: justify;
+    direction: ltr;
     
   }
   
@@ -37,8 +38,9 @@
   }
   
   .bullet-container-text {
-    font-family: "liberation-serif", serif;
-    font-weight: 300;
+    font-family: "tablet-gothic", sans-serif;
+font-weight: 400;
+font-style: normal;
     font-size: 1.75rem;
     width: 100%;
     height: auto;
@@ -50,16 +52,42 @@
   .bullet-title {
 
 
-
-    font-size: x-large;
+    font-family: "utopia", serif;
+    font-size: 2rem;
     font-weight: 700;
-    /* text-align: center; */
+    text-align: center;
     padding-top: 7%;
+    margin-bottom: 2.5rem;
   }
 
   .bullet-description {
 
-    padding-top: 7%;
+    
+      width: 100%;
+      max-height: 10.5rem;
+      font-family: "tablet-gothic", sans-serif;
+      font-weight: 500;
+      font-style: normal;
+      font-size: 1.15rem;
+      line-height: 1.5;
+      position: relative;
+      -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+      mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+      overflow: hidden; /* Ensure overflow text is hidden */
+      margin-bottom: 1rem;
+      
+      
+      
+      
+    
+  }
+
+  .bullet-description p {
+
+    
+    text-align: justify;
+    margin-bottom: 1rem;
+    
   }
   
   .about-us {
@@ -84,39 +112,107 @@
     
   }
 
-  /* BulletContainer.css */
 
-.keywords-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px; /* Add some space between keywords */
-  margin-top: 10px; /* Adjust margin as needed */
-}
 
-.keyword {
-  display: flex;
-  align-items: center;
-  background-color: #e0e0e0; /* Background color for the keyword */
-  border-radius: 12px; /* Rounded corners */
-  padding: 5px 10px; /* Padding around the keyword */
-  font-size: 14px; /* Adjust font size */
-  color: #333; /* Text color */
-}
-
-.remove-button {
-  margin-left: 8px; /* Space between the keyword and remove button */
-  background-color: transparent; /* Transparent background */
-  border: none; /* Remove button border */
-  color: #ff0000; /* Color for the remove button (red in this case) */
-  cursor: pointer; /* Change cursor to pointer on hover */
-  font-size: 14px; /* Adjust button size */
-}
-
-.remove-button:hover {
-  color: #d00000; /* Darker red on hover */
-}
-
+  .bc-button-container {
+    display: flex;
+    width: 100%;
+    justify-content: flex-end;
+    align-content: flex-end;
+    padding-top: 3.5%;
+    padding-bottom: 3.5%;
+    /* padding-left: 1%;
+    padding-right: 1%; */
+    /* margin-inline-end: auto; */
+    text-align: center;
+   
+   
+    
+  }
   
+  
+  
+  .bc-button {
+    
+    display: flex;
+    font-family: "darkmode-off-cc", sans-serif;
+    font-variation-settings: "wdth" 700, "wght" 700;
+    text-transform: uppercase;
+    font-size: 1.5rem;
+    border: none;
+    border-radius: 0.25rem;
+    margin-top: 1rem;
+    width: 40%;
+    background-color:  #353941;
+    color: #f5f5f5;
+    height: 2.5rem;
+    align-items: center;
+    justify-content: center;
+    
+  
+   
+    
+  }
+  
+  .bc-button:hover {
+  
+    border: 3px solid #bbf7d0;
+    transition: border 250ms ease-in-out;
+    color: #bbf7d0;
+    cursor: pointer;
+    font-size: 1.45rem;
+    
+  }
+  
+  .icon {
+  
+    margin-right: 8px;
+    width: 2rem;
+  }
+  
+  .bc-button-text {
+  
+  font-size: 1rem;
+  }
+  
+
+@media (min-width: 768px) and (max-width:1024px) {
+
+  .bc-button {
+    width: 33.3%;
+    height: 3.5rem;
+    font-size: 1.6rem;
+  }
+
+  .bc-button:hover {
+
+    font-size: 1.55rem;
+    
+  }
+  
+}
+
+
+
+
+
+@media (max-width: 768px) {
+
+  .bc-button {
+    width: 50%;
+    height: 3.5rem;
+    font-size: 1.25rem;
+  }
+
+  .bc-button:hover {
+
+    font-size: 1.2rem;
+    
+  }
+
+
+}
+
 
   
   

@@ -33,6 +33,15 @@
     color: #bbf7d0;
     padding-bottom: 1.25%;
   }
+
+  .pricing-img-section {
+
+    max-width: 25%;
+    height: auto;
+    margin-right: 7%;
+    margin-bottom: 7%;
+  
+  }
  
 
   
@@ -44,7 +53,8 @@
     margin-left: 0px;
     margin-right: auto;
     margin-bottom: 7%;
-    width: 66%;
+    max-width: 100%;
+    
     aspect-ratio: 1/1 auto;
     overflow: hidden;
     border-radius: 15px;
@@ -297,17 +307,29 @@
       font-weight: 300;
       font-style: normal;
       line-height: 2.5rem;
-      text-align: justify;
       word-wrap: break-word;
+      width: 100%;
       max-width: 100%;
-      overflow-wrap: break-word;
+      overflow-wrap:normal;
       
   
   }
 
-  .descriptionParagraph p{
+ 
 
+  .descriptionParagraph p{
+    width: 100%;
     margin-bottom: 2%;
+    text-align: justify;
+    
+    
+    
+   
+  }
+
+  link{
+
+    color: #bbf7d0;
   }
 
   .timestamp {
@@ -424,6 +446,25 @@
   /* Make sure the font size inherits from the editor settings */
   margin-bottom: 4rem;
 }
+
+
+.descriptionParagraph .ProseMirror p {
+
+  color: #f5f5f5 !important;
+}
+
+
+.descriptionParagraph p,
+.descriptionParagraph span,
+.descriptionParagraph div {
+  color: #f5f5f5 !important;
+}
+
+.descriptionParagraph a.extlink {
+
+  color: #bbf7d0 !important;
+}
+
 
 
   @keyframes fadeInOut {
