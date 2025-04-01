@@ -7,13 +7,27 @@ h1, h2, h3 {
 }
 
 
-
+/* <Master Container> */
 
 .TCPostContainer {
   padding-top: 7%;
   padding-bottom: 7%;
   
 }
+
+/* </Master Container> */
+
+/* <Section Container> */
+
+.TC-container {
+
+  display: flex;
+}
+
+
+
+/* <Line> */
+
 
 .line-middle {
   border: 0;
@@ -26,8 +40,13 @@ h1, h2, h3 {
   margin-bottom: 7%;
 }
 
+/* </Line> */
+
+/* <Section Container> */
+
 .TC-container {
-  padding-top: 7%;
+  margin-top: 7%;
+  margin-bottom: 7%;
   display: flex;
   justify-content: space-between; /* Space out text and image containers */
   align-items: center; /* Vertically center content */
@@ -36,12 +55,24 @@ h1, h2, h3 {
   
 }
 
+
+/* </Section Container> */
+
+
+
+/* <Img Section> */
+
+
 .tc-img-section {
 
   width: 50%;
+  margin-top: 3.5%;
+  margin-bottom: 3.5%;
 }
 
 .TCImgContainer {
+
+  min-width: 400px;
   width: 44%;
   aspect-ratio: 1/1 auto;
   margin-left: 0;
@@ -61,26 +92,40 @@ h1, h2, h3 {
   border-radius: inherit;
 }
 
+/* </Img Section> */
+
+/* <Text Section> */
+
 .tc-text-section {
   
   width: 50%;
   height: auto;
   text-align: right;
   overflow: visible;
+  margin-top: 3.5%;
+  margin-bottom: 3.5%;
+}
+
+.TCTextContainer {
+
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
 }
 
  .TCPostText {
   width: 100%;
   max-height: 10.5rem;
-  font-family: "tablet-gothic", sans-serif;
-font-weight: 400;
+font-family: "lemonde-sans", sans-serif;
+font-weight: 500;
 font-style: normal;
-  font-size: 1.15rem;
-  line-height: 1.5;
+  font-size: 1.5rem;
+  line-height: 2rem;
   position: relative;
   -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
   mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
   overflow: hidden; /* Ensure overflow text is hidden */
+  margin-top: 3.5%;
   margin-bottom: 1rem;
 
   
@@ -91,24 +136,21 @@ font-style: normal;
   
   /* background-color: rebeccapurple; */
   margin-bottom: 1rem;
-  line-height: 1.3rem;
+  line-height: 2rem;
 }
-
-
-
-
-
 
 .TCPostTitle {
   text-align: right;
   font-family: "utopia", serif;
   font-weight: 700;
   font-size: 2.5rem;
+  margin-bottom: 3.5%;
 }
 
 
+/* </Text Section> */
 
-
+/* <Button Section> */
 
 .tc-button-container {
   display: flex;
@@ -137,11 +179,11 @@ font-style: normal;
   font-size: 1.5rem;
   border: none;
   border-radius: 0.25rem;
-  margin-top: 1rem;
-  width: 25%;
+  
+  width: 33.3%;
   background-color:  #353941;
   color: #f5f5f5;
-  height: 2.5rem;
+  height: 3rem;
   align-items: center;
   justify-content: center;
   
@@ -171,11 +213,17 @@ font-style: normal;
 font-size: 1rem;
 }
 
+/* </Button Section> */
+
+
+
 @media (min-width: 768px) and (max-width:1024px) {
 
   .tc-button {
-    width: 33.3%;
-    height: 3.5rem;
+    width: 50%;
+    height: 3rem;
+    margin-left: auto;
+    margin-right: auto;
     font-size: 1.6rem;
   }
 
@@ -184,6 +232,78 @@ font-size: 1rem;
     font-size: 1.55rem;
     
   }
+
+  .tc-text-section {
+    margin-top: 3.5%;
+    margin-bottom: 3.5%;
+    text-align: justify;
+    direction: ltr;
+  }
+
+  .TC-container {
+
+    display: flex;
+    flex-direction: column;
+    
+
+  }
+
+  .tc-img-section {
+
+    width: 50%;
+    height: auto;
+    
+    
+  }
+  
+  .TCImgContainer {
+    width: 100%;
+    aspect-ratio: 1/1 auto;
+    margin-left: auto;
+    margin-right: auto;
+    /* margin-right: auto; */
+    border-radius: 15px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+  }
+  
+  .TCPostImg {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    border-radius: inherit;
+  }
+  
+  .tc-text-section {
+    
+    width: 100%;
+    height: auto;
+    text-align: justify;
+    direction: ltr;
+    overflow: visible;
+  }
+
+  .TCPostTitle {
+
+    margin-left: auto;
+    margin-right: auto;
+    
+  }
+
+  .TCPostText {
+    text-align: justify;
+    direction: ltr;
+  
+    
+  }
+
+
+  
+ 
+  
   
 }
 
@@ -194,7 +314,7 @@ font-size: 1rem;
 @media (max-width: 768px) {
 
   .tc-button {
-    width: 50%;
+    width: 100%;
     height: 3.5rem;
     font-size: 1.25rem;
   }
@@ -204,6 +324,74 @@ font-size: 1rem;
     font-size: 1.2rem;
     
   }
+
+
+
+  .tc-text-section {
+  
+    text-align: justify;
+    direction: ltr;
+  }
+
+  .TC-container {
+
+    display: flex;
+    flex-direction: column;
+  
+
+  }
+
+  .tc-img-section {
+
+    width: 100%;
+    
+    
+  }
+  
+  .TCImgContainer {
+    width: 100%;
+    aspect-ratio: 1/1 auto;
+    margin-left: auto;
+    margin-right: auto;
+    /* margin-right: auto; */
+    border-radius: 15px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+  }
+  
+  .TCPostImg {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    border-radius: inherit;
+  }
+  
+  .tc-text-section {
+    
+    width: 100%;
+    height: auto;
+    text-align: left;
+    overflow: visible;
+  }
+
+  .TCPostTitle {
+
+   margin-left: auto;
+   margin-right: auto;
+   
+  }
+
+  .TCPostText {
+    text-align: justify;
+    direction: ltr;
+  
+    
+  }
+
+
 
 
 }

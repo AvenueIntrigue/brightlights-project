@@ -91,10 +91,10 @@ const DynamicPost: React.FC<{ type: string }> = ({ type }) => {
             </div>
           </div>
           <div className='pricing-text-section'>
-            <div className='PricingPostTitle'>
+            <div className='DynamicPostTitle'>
               <div className='sanitized-title' dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
             </div>
-            <div className='PricingPostText'>
+            <div className='descriptionParagraphContainer'>
               <div className='descriptionParagraph' dangerouslySetInnerHTML={{ __html: sanitizedDescription }} />
               
             </div>

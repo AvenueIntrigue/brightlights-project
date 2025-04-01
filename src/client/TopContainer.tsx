@@ -84,7 +84,7 @@ const TopContainer: React.FC<{ type: string }> = ({ type }) => {
       </Helmet>
       <div className='TCPost'>
 
-      <div className='TC-container flex'>
+      <div className='TC-container'>
           <div className='tc-img-section'>
             <div>
             <div className='TCImgContainer'>
@@ -101,7 +101,7 @@ const TopContainer: React.FC<{ type: string }> = ({ type }) => {
             </div>
           </div>
           <div className='tc-text-section'>
-            <div className='flex flex-col p-4'>
+            <div className='TCTextContainer'>
             <div className='TCPostTitle'>
               <div className='sanitized-title' dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
             </div>

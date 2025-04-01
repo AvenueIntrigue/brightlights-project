@@ -1,0 +1,588 @@
+.POPostContainer {
+ 
+    width: 80%;
+    height: auto;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 7%;
+    padding-bottom: 7%;
+    display: flex;
+    position: relative;
+    
+    
+    }
+  
+    .POPost {
+  
+      padding-top: 7%;
+      padding-bottom: 7%;
+      
+    }
+  
+      h1, h2, h3 {
+      color: #bbf7d0;
+      padding-top: 7%;
+      padding-bottom: 1.25%;
+      
+      
+    }
+  
+  
+    .sanitized-title {
+    
+      color: #bbf7d0;
+      font-family: "utopia", serif;
+      padding-top: 1.25%;
+      padding-bottom: 1.25%;
+    }
+  
+    .po-img-section {
+  
+      
+      width: 100%;
+      height: 100%;
+      margin-right: 7%;
+      margin-bottom: 7%;
+    
+    }
+   
+  
+    
+    .POPostImgContainer{
+    
+      display: flex;
+      position: relative;
+      justify-content: center;
+      align-items: center;
+      /* margin-left: 0px; */
+      margin-right: auto;
+      margin-bottom: 7%;
+     
+     
+     width: 100%;
+     height: auto;
+      
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      border-radius: 15px;
+    
+    
+    }
+    .POImgSliderContainer {
+
+        width: 100%;
+        height: 100%;
+        
+        
+    }
+    
+    .ImageCarousel {
+    
+    display: flex;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    
+    overflow: hidden;
+    border-radius: inherit;
+    }
+    
+    .po-image-container {
+    
+        
+        width: 100%;
+        height: auto;
+        
+        overflow: hidden;
+         border-radius: inherit;
+         
+    }
+    
+    .POPostImg, .img-slider-img {
+      display: flex;
+      width: 100%;
+      height: 100%;
+     padding: 0;
+      aspect-ratio: 1 / 1;
+       object-fit: fill;
+       
+       border-radius: 15px;
+       flex-shrink: 0;
+       transition: transform 300ms ease-in-out;
+       
+       
+       
+   }
+    
+    
+    
+    .img-slider-btn-l, .img-slider-btn-r {
+    
+        all: unset;
+        display: block;
+        position: absolute;
+        top: 0%;
+        bottom: 0%;
+        padding: 0.5rem;
+        cursor: pointer;
+        
+        
+        transition: background-color 100ms ease-in-out;
+    
+    }
+    
+    .img-slider-btn-l:hover,.img-slider-btn-r:hover,
+    .img-slider-btn-l:focus-visible, .img-slider-btn-r:focus-visible {
+    
+        background-color: rgba(0, 0, 0, 0.25);
+        width: 10%;
+        height: inherit;
+        
+        
+    }
+  
+    .img-slider-btn-l:hover,
+    .img-slider-btn-l:focus-visible {
+      border-top-left-radius: inherit;
+      border-bottom-left-radius: inherit;
+    }
+  
+    .img-slider-btn-r:hover,
+    .img-slider-btn-r:focus-visible {
+      border-top-right-radius: inherit;
+      border-bottom-right-radius: inherit;
+    }
+  
+  
+    
+  
+    
+    .img-slider-btn-l:hover>*, .img-slider-btn-r:hover>*,
+    .img-slider-btn-l:focus-visible, .img-slider-btn-r:focus-visible {
+    
+        animation: squish 200ms ease-in-out;
+    
+    }
+    
+    @keyframes squish {
+    
+        50% {
+            scale: 1.4 0.6;
+        }
+    
+    }
+    
+    .img-slider-btn>* {
+    
+        stroke: #7E7474;
+        fill: none;
+        width: 2rem;
+        height: 2rem;
+    }
+    
+    .img-slider-dot-btn {
+    
+        all: unset;
+        display: flex;
+        position: relative;
+        padding-bottom: 1.5rem;
+        cursor: pointer;
+        width: 1rem;
+        height: 1rem;
+        transition: scale 100ms ease-in-out;
+    
+    }
+    
+    .img-slider-dot-btn:hover,
+    .img-slider-dot-btn:focus-visible {
+    
+        scale: 1.2;
+    }
+    
+    .img-slider-dot-btn>* {
+    
+        stroke: #7E7474;
+        fill: none;
+        height: 100%;
+        width: 100%;
+    }
+    
+    .img-slider-btn:focus-visible,
+    .img-slider-dot-btn:focus-visible {
+    
+        outline: auto;
+    }
+    
+    .skip-link {
+    
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        border: 0;
+        clip: rect(0, 0, 0, 0);
+    }
+    
+    .skip-link:focus-visible {
+    
+        top: 0;
+        left: 0;
+        border: 1px solid black;
+        background-color: white;
+        padding: 0.5rem;
+        width: auto;
+        height: auto;
+        margin: 0;
+        clip: unset;
+        text-decoration: none;
+        color: black;
+        z-index: 100;
+    }
+    
+    .POPost {
+        
+        position: relative;
+        align-items: center;
+        width: 100%;
+  
+    }
+  
+    .po-container {
+  
+      
+        margin-left: auto;
+        margin-right: auto;
+        padding-top: 7%;
+        padding-bottom: 7%;
+        padding-left: 3.5%;
+        padding-right: 3.5%;
+        
+    }
+  
+    .descriptionParagraph {
+     
+      text-align: right;
+      margin-bottom: 4rem;
+      
+      
+    }
+    
+    
+    
+    .po-img-section, .po-text-section {
+    
+    
+        box-sizing: border-box;
+        
+    }
+    
+    
+  
+  
+ 
+  
+  .po-text-section {
+    
+    margin-top: 3.5%;
+    
+    width: auto;
+    height: auto;
+    
+    
+  }
+    
+    .POPostTitle {
+    
+        padding-top: 3.5%;
+        font-family: "utopia", serif;
+        font-size: clamp(3rem, 4vw, 2.5rem);
+        line-height: 1.2;
+        word-wrap: break-word;
+        max-width: 100%;
+        overflow-wrap: break-word;
+        text-align: right;
+        margin-bottom: 4%;
+      
+    }
+    
+    .POPostText {
+    
+        font-size: 1.5rem;
+        padding-bottom: 7%;
+        padding-left: 0%;
+        padding-right: 0%;
+        font-family: "dejanire-headline", serif;
+font-weight: 400;
+font-style: normal;
+        line-height: 2.5rem;
+        word-wrap: break-word;
+        width: 100%;
+        max-width: 100%;
+        overflow-wrap:normal;
+        
+    
+    }
+
+    .POdescriptionParagraphContainer {
+
+        font-family: "lemonde-sans", sans-serif;
+    }
+  
+   
+  
+    .POdescriptionParagraph p{
+      width: 100%;
+      margin-bottom: 2%;
+      text-align: justify;
+      direction: ltr;
+      
+      
+      
+     
+    }
+  
+    link{
+  
+      color: #bbf7d0;
+    }
+  
+   
+    
+   
+    
+    
+  
+   p {
+    line-height: 1.5;
+    /* Adjust the line height to make text more readable */
+    font-size: inherit;
+    /* Make sure the font size inherits from the editor settings */
+    margin-bottom: 4rem;
+  }
+  
+  
+  .descriptionParagraph .ProseMirror p {
+  
+    color: #f5f5f5 !important;
+  }
+  
+  
+  .descriptionParagraph p,
+  .descriptionParagraph span,
+  .descriptionParagraph div {
+    color: #f5f5f5 !important;
+  }
+  
+  .descriptionParagraph a.extlink {
+  
+    color: #bbf7d0 !important;
+  }
+  
+  
+  
+    @keyframes fadeInOut {
+        0% { opacity: 0; }
+        50% { opacity: 1; }
+        100% { opacity: 0; }
+    }
+    
+   
+
+    .po-button {
+
+        margin-left: 75%;
+        height: 3rem;
+    }
+    @media (min-width: 768px) and (max-width: 1024px) {
+  
+  
+  
+      /* Styles for medium screens */
+  
+      .po-container {
+  
+        display: flex;
+        flex-direction: column;
+        
+      }
+     
+  
+      .img-slider-dot-btn {
+  
+        padding-bottom: 1rem;
+      }
+  
+      .POPostImgContainer {
+  
+        width: 17rem;
+      }
+  
+      .po-text-section {
+  
+       text-align: start;
+       
+      }
+  
+      .POPostTitle {
+  
+        text-align: left;
+      }
+  
+     
+  
+      .descriptionParagraph {
+  
+        text-align: justify;
+        direction: ltr;
+        
+        
+        
+        
+  
+        
+      }
+  
+      .descriptionParagraph p {
+  
+        margin-bottom: 1.5rem;
+      }
+  
+      .POPostImgContainer {
+  
+        margin-left: 0px;
+        /* margin-right: auto; */
+        width: 35%;
+        /* padding: 10%; */
+        justify-content: center;
+        align-items: center;
+        border-radius: 15px;
+        
+      }
+  
+  
+      
+  
+  
+    
+    }
+    
+    
+    @media (max-width: 768px) {
+  
+  
+  
+      .po-container {
+  
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        width: 100%;
+        padding: 0%;
+        
+      }
+  
+    
+  
+   
+        .po-text-section {
+  
+          width: inherit;
+          
+         padding-top: 4rem;
+          
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          
+          
+         
+          
+         
+          
+  
+        }
+  
+        .POPostTitle {
+          font-size: 2rem;
+          padding-left: 5%;
+          padding-right: 5%;
+          padding-bottom: 0%;
+         
+         
+          
+        }
+        .POPostText {
+          font-size: 1.2rem;
+          padding-top: 7%;
+          padding-left: 5%;
+          padding-right: 5%;
+          
+          
+          
+        }
+        
+     
+    
+  
+        .POPostImgContainer {
+  
+          margin-left: 5%;
+          width: 40%;
+  
+          
+        }
+   
+        .po-img-section,
+        .po-text-section {
+          flex: 1 1 100%; /* Stacks elements vertically */
+          max-width: 100%; /* Takes full width on small screens */
+        }
+  
+  
+  
+       
+    
+        .img-slider-dot-btn {
+    
+            padding-bottom: 2rem;
+        }
+  
+        
+  
+        .po-text-section {
+          padding-top: 3.5%;
+          padding-bottom: 3.5%;
+          padding-left: 1.25%;
+          padding-right: 1.25%;
+        }
+  
+       
+        .sanitized-title {
+  
+          text-align: left;
+        }
+  
+        .descriptionParagraph {
+  
+          text-align: left;
+        }
+  
+     
+  
+  
+        .descriptionParagraph p {
+  
+          margin-bottom: 1.5rem;
+          
+        }
+  
+      
+      }
+      
+  
+  
+  
+      
+      

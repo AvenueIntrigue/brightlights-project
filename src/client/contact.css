@@ -1,5 +1,14 @@
+p {
+
+  color: #f5f5f5;
+  background-color: transparent;
+  fill: none;
+}
+
+
 .contact-container {
-    position: relative;
+    display: flex;
+    flex-direction: column;
     width: 80svw;
     height: auto;
     padding-top: 7%;
@@ -13,24 +22,31 @@
 
 
 
+
+
 .create-contact{
 
     position: relative;
     display: flex;
     flex-direction: column;
-    width: 60svw;
+    width: 66%;
     height: auto;
     align-items: center;
     margin-left: auto;
     margin-right: auto;
+    margin-top: 3.5%;
+    margin-bottom: 3.5%;
     
 }
 
 .form-container {
+
     display: flex;
-    position: relative;
-    border-radius: 0.75rem;
+    flex-direction: row;
+    
+    border-radius: 15px;
     width: 100%;
+    height: auto;
     background-color:  #353941;
     padding: 1.25rem;
 }
@@ -45,15 +61,137 @@
   }
 
 .form-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+    margin-top: 3.5%;
+    margin-bottom: 3.5%;
+    font-family: "lemonde-sans", sans-serif;
+    font-weight: 500;
+    font-size: 1.25rem;
+    font-style: normal;
+    color: #6B7280;
+    line-height: 1.5rem;
+    
+    
+  }
+
+
+  .letter-container{
 
     width: 100%;
     height: auto;
-    padding-top: 3.5%;
-    padding-bottom: 3.5%;
-    font-family: "adapt-variable", sans-serif;
-    font-variation-settings: "wdth" 500, "wght" 500;
-    color: #6B7280;
+    margin-top: 3.5%;
+    margin-bottom: 3.5%;
+    
   }
+
+
+  .letter-card {
+
+    width: 60%;
+    height: auto;
+    margin-top: 3.5%;
+    margin-bottom: 3.5%;
+    
+  }
+
+  .logo-card {
+
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: auto;
+    margin-top: 3.5%;
+    margin-bottom: 3.5%;
+    align-items: center;
+    justify-content: flex-start;
+    
+  }
+
+  .bl-logo-card-img-container {
+    display: flex;
+    flex-direction: row; /* Ensure children are in a row */
+    width: 100%; /* Take full width of logo-card */
+    height: auto;
+    align-items: center; /* Center vertically */
+  }
+
+  
+  .bl-logo-img {
+    
+    display: flex;
+    justify-content: flex-start; /* Center the icon horizontally */
+    align-items: center; /* Center the icon vertically */
+    max-width: 25%; /* Optional: Limit icon width */
+    min-width: 50px;
+    height: auto;
+  }
+
+  .OpenBox-container {
+    width: 100%; /* Ensure it takes full space of its parent */
+    height: auto;
+   
+  }
+
+
+  .bl-logo-title-container {
+    
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+    justify-content: flex-end; /* Center the title horizontally */
+    align-items: center; /* Center the title vertically */
+    font-family: "utopia", serif;
+    font-weight: 600;
+    font-size: clamp(2rem, 4vw, 2.5rem);
+    margin-top: auto;
+    margin-bottom: auto;
+  }
+  
+  .bl-logo-title {
+
+    width: 100%; /* Span the container */
+    text-align: right; /* Center the h1 text */
+  }
+
+  .letter-card-container{
+
+    font-family: "lemonde-sans", sans-serif;
+    font-weight: 500;
+    font-style: normal;
+    font-size: 1.25rem;
+    line-height: 1.5;
+    width: 60%;
+    height: auto;
+    margin-top: 3.5%;
+    margin-bottom: 3.5%;
+  }
+
+  .paper-airplane-card{
+
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+  margin-top: 3.5%;
+    margin-bottom: 3.5%;
+    margin-left: auto;
+    margin-right: auto;
+    
+    
+    }
+
+  .paper-airplane-container{
+   display: flex;
+    width: 50%;
+    height: auto;
+    margin: auto;
+  }
+
+  
 
   .input-field, .tiptap {
     margin-bottom: 1rem;
@@ -72,7 +210,7 @@
 .input-field input{
     width: 100%; /* Make inputs and textarea take up the full width */
     background-color: transparent !important;
-    color: #bbf7d0;
+    color: #f5f5f5;
     border: none;
     outline: none;
     padding-top: 0.4rem; /* Add padding to space the content inside */
@@ -86,8 +224,11 @@
     position: absolute;
     top: 50%;
     left: 1.25rem;
+    width: 4rem;
+    height: auto;
     transform: translateY(-50%);
     transition: all 0.2s ease-in-out;
+    
     color: #6b7280;
     pointer-events: none;
 }
@@ -102,7 +243,7 @@
 
  .tiptap::placeholder {
   
-  color: #6b7280 !important; /* Set placeholder text color */
+  color: #6b7280; /* Set placeholder text color */
     opacity: 1; /* Ensure full opacity for placeholders */
    padding: 0;
 }
@@ -127,19 +268,26 @@
 }
 
 
+.contact-container .editor .ProseMirror {
+  background-color: transparent !important;
+}
 
 
 
 /* Ensure the TipTap editor content is styled properly */
-.editor-two .ProseMirror {
+.editor .ProseMirror {
   position: relative;
   width: 100%;
   min-height: 15rem;
   border: 1px solid #6B7280;
   border-radius: 0.375rem;
+  background-color: transparent, !important;
   padding: 0.25rem 1.25rem; /* Padding matches other input fields */
   box-sizing: border-box;
   overflow: hidden;
+  margin-top: none;
+  margin-bottom: 1rem;
+
 }
 
   
@@ -151,8 +299,10 @@
     left: -0.1rem; /* Matches padding-left of other input fields */
     top: 0.25rem;
     background-color: transparent !important;
-    font-family: "adapt-variable", sans-serif;
-    font-variation-settings: "wdth" 500, "wght" 500;
+    font-family: "lemonde-sans", sans-serif;
+    font-weight: 500;
+    font-size: 1.25rem;
+    line-height: 1.5;
     color: #6b7280;
     pointer-events: none;
     height: 0; /* Ensure it doesn't affect the layout */
@@ -160,20 +310,23 @@
    
 }
 
+ 
 
-
-  .editor-two .ProseMirror p {
+  .editor .ProseMirror p {
     line-height: 1.5rem; /* Adjust the line height to make text more readable */
-    font-size: inherit; /* Make sure the font size inherits from the editor settings */
-    padding-left: 0.75rem;
+    padding-top: 0.25rem;
+    font-size: 1.25; /* Make sure the font size inherits from the editor settings */
+    padding-top: 0.25rem;
+    padding-left: -1rem;
+    background-color: transparent !important;
   }
 
-  .editor-two:focus-within .ProseMirror {
+  .editor:focus-within .ProseMirror {
     color: #bbf7d0; /* Text color when the editor is active */
 }
 
 
-  .editor-two:hover .ProseMirror {
+  .editor:hover .ProseMirror {
 
     border: 3px solid #bbf7d0;
     transition: border 250ms ease-in-out;
@@ -181,7 +334,7 @@
     cursor: pointer;
   }
 
-  .editor-two.input-error .ProseMirror {
+  .editor.input-error .ProseMirror {
 
     border: 2px solid #ff2800;
     border-radius: 0.375rem;
@@ -189,6 +342,41 @@
     
 }
 
+.consent-container {
+  width: 100%;
+  height: auto;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* Space between checkboxes */
+  
+  
+}
+
+.consent-label {
+  display: flex;
+  align-items: flex-start;
+  color: #f5f5f5;
+  font-family: "lemonde-sans", sans-serif;
+  font-weight: 500;
+  font-size: 1.25rem;
+  line-height: 1.5;
+}
+
+.consent-label input[type="checkbox"] {
+  margin-right: 0.5rem;
+  margin-top: 0.2rem; /* Align with text */
+  accent-color: #bbf7d0; /* Checkbox color */
+  width: 1rem;
+  height: 1rem;
+}
+
+.consent-label span {
+  flex: 1; /* Take remaining space */
+}
 
 
 
@@ -213,71 +401,50 @@
 
     color: #ff2800;  }
 
-    .contact-box-text {
 
-      font-family: "utopia-std", serif;
-      font-style: normal;
-      font-weight: 500;
-      font-size: 1.5rem;
-      text-align: left;
-      
-    }
-
-    .contact-friendly-text {
-
-      font-family: "darkmode-off-cc", sans-serif;
-      font-style: italic;
-      font-weight: 500;
-      padding-left: 5rem;
-      padding-right: 3.25rem;
-      width: 100%;
-    }
-    .contact-text-thanks{
-
-      text-align: right;
-    }
-
-    .contact-letter-card {
+    .Contact-Address-Master{
 
       display: flex;
-      flex-direction: column;
-      width: 100%;
-
-    }
-
-    .contact-letter-container {
-
-      display: flex;
-      flex-direction: row;
-      padding-left: 5rem;
-      width: 50%;
-
-    }
-
-    .contact-letter-image{
-      width: 2.5rem;
-      height: auto;
-      margin-left: 0px;
-      padding-right: 0.75rem;
-
-    }
-
-    .paper-airplane-card{
-
-      width: 100%;
-
-    }
-
-    .paper-airplane-container{
-
-      width: 55%;
-      margin-top: 3rem;
+      margin-top: 3.5%;
+      margin-bottom: 3.5%;
       margin-left: auto;
-      margin-right: auto;
+      margin-right: auto ;
+      background-color:  #353941;
+      color: #f5f5f5;
+      width: 100%;
+      height: auto;
+      border-radius: 15px;
+      font-family: "lemonde-sans", sans-serif;
+      font-weight: 500;
+      font-style: normal;
+      font-size: 1.25rem;
+      line-height: 1.5;
     }
+
+    .Contact-Address-Container {
+
+      width: 100%;
+      height: auto;
+      margin: 3.5%;
+    }
+
+    
 
 
     @media (min-width: 768px) and (max-width: 1024px) {
+
+      .create-contact{
+
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: auto;
+        align-items: center;
+        margin-left: auto;
+        margin-right: auto;
+        
+    }
 
 
 
@@ -294,12 +461,7 @@
         width: 100%;
       }
 
-      .contact-friendly-text, .contact-text-thanks {
-
-        width: 100%;
-        padding: 2px;
-      }
-
+    
 
 
     }

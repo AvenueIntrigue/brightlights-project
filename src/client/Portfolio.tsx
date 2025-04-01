@@ -3,10 +3,11 @@ import { Helmet } from 'react-helmet-async';
 import DOMPurify from 'dompurify';
 import { useNavigate } from 'react-router-dom';
 import { useParams } from 'react-router-dom';
-import { Share, BookOpenText} from 'lucide-react';
+import { Share } from 'lucide-react';
+import {  faGithub } from '@fortawesome/free-brands-svg-icons';
 import { XIcon, FaceBookIcon, EmailIcon, CopyLinkIcon, CheckMarkIcon } from './CustomIcons';
 import { ImageSlider } from './ImageSlider';
-import './TopContainer.css';
+import './Portfolio.css';
 import { link } from 'fs';
 interface Post {
   title: string;
@@ -25,7 +26,7 @@ const Portfolio: React.FC<{ type: string }> = ({ type }) => {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/api/portfolio `);
+        const response = await fetch(`http://localhost:3000/api/portfolioposts `);
         if (response.ok) {
           const data = await response.json();
           setPost(data);
@@ -62,15 +63,14 @@ const Portfolio: React.FC<{ type: string }> = ({ type }) => {
     ALLOWED_ATTR: ['style', 'class', 'src', 'href', 'alt', /* other attributes */]
   });
 
- const handleReadMore = () => {
-
-  navigate(`/about`);
- }
+  const handleGitHubNav = () => {
+    window.open('https://github.com/AvenueIntrigue', '_blank');
+  };
   
   
 
   return (
-    <div className='TCPostContainer'>
+    <div className='POPostContainer'>
       <Helmet>
       <link rel="icon" href="/OpenBox.svg" type="image/x-icon" />
         <link rel="icon" href="/favicon.png" type="image/png" sizes="16x16" />
@@ -82,35 +82,37 @@ const Portfolio: React.FC<{ type: string }> = ({ type }) => {
           <meta name="keywords" content={post.keywords.join(', ')} />
         )}
       </Helmet>
-      <div className='TCPost'>
+      <div className='POPost'>
 
-      <div className='TC-container flex'>
-          <div className='tc-img-section'>
+      <div className='po-container flex-col'>
+          <div className='po-img-section'>
             <div>
-            <div className='TCImgContainer'>
+            <div className='POImgContainer'>
               {post.images.length > 1 ? (
-                <div className=''>
+                <div className='POImgSliderContainer'>
                 <ImageSlider images={post.images} />
                 </div>
               ) : (
-                <div className='align-top'>
-                <img className='TCPostImg' src={post.images[0]?.url} alt={post.images[0]?.alt} />
+                <div className='POPostImgContainer'>
+                <img className='POPostImg' src={post.images[0]?.url} alt={post.images[0]?.alt} />
                 </div>
               )}
             </div>
             </div>
           </div>
-          <div className='tc-text-section'>
-            <div className='flex flex-col p-4'>
-            <div className='TCPostTitle'>
+          <div className='po-text-section'>
+            <div className=''>
+            <div className='POPostTitle'>
               <div className='sanitized-title' dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
             </div>
-            <div className='TCPostText'>
-              <div className='TCdescriptionParagraph' dangerouslySetInnerHTML={{ __html: sanitizedDescription }} />
+            <div className='POPostText'>
+              <div className='POdescriptionParagraphContainer'>
+              <div className='POdescriptionParagraph' dangerouslySetInnerHTML={{ __html: sanitizedDescription }} />
+              </div>
               
               </div>
-              <div className='tc-button-container'>
-              <button type="submit" className="tc-button" onClick={handleReadMore}><BookOpenText className="icon"/><span className="tc-button-text">Read More</span></button>
+              <div className='PO-button-container'>
+              <button type="button" className="po-button flex" onClick={handleGitHubNav}><i className="fa-brands fa-github pr-2"></i><span className="tc-button-text">View GitHub Repository</span></button>
               </div>
             </div>
             

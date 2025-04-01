@@ -85,7 +85,7 @@ const Create = () => {
     const fetchPages = async () => {
       try {
         // Hardcoded list of known page types, capitalized here
-        const knownTypes = ['pricing', 'about', 'services', 'web-development', 'app-development', 'graphic-design', 'web3', 'projects'].map(type => 
+        const knownTypes = ['pricing', 'about', 'services', 'web-development', 'app-development', 'graphic-design', 'web3', 'projects',].map(type => 
           type.charAt(0).toUpperCase() + type.slice(1)
         );
         let availablePages: string[] = [];
@@ -305,7 +305,7 @@ const Create = () => {
               </div>
               
             ))}
-            <div className="dropdown-item w-full bg-transparent">
+            <div className="dropdown-item w-full h-auto bg-transparent">
             
             <input
               type="text"
@@ -532,12 +532,15 @@ const Create = () => {
               <div className="">
               <div className="">
               {isImageUploaded && (
-                <div className="create-image-preview-container p-[7%]">
+                <div className="create-image-preview-container p-[7%] w-full h-auto">
+
+                  <div className="flex-row">
                   <img
                     src={imagePreview}
                     alt="Image Preview"
                     className="w-[50px] h-[50px] object-cover rounded-full mr-2 flex"
                   />
+                  </div>
                 </div>
               )}
 

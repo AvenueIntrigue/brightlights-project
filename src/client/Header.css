@@ -6,10 +6,13 @@ Header {
   .nav-container {
   
     /* Grandpa */
-    padding-bottom: 7%;
-    height: 20svh;
-    width: 80%;
+    margin-top: 3.5%;
+    margin-bottom: 3.5%;
+    height: auto;
+    width: 100%;
     z-index: 10;
+    display: flex;
+    
   }
 
   .offcanvas-menu {
@@ -19,7 +22,7 @@ Header {
 
   .menu-close-btn:hover {
 
-    color: aquamarine;
+    color: #bbf7d0;
   }
   
   
@@ -43,72 +46,104 @@ Header {
   }
 
 
+  .MasterContainer {
+    display: flex;
+    width: 80svw;
+    height: auto;
+    align-items: center;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 3.5%;
+    margin-bottom: 3.5%;
+    
+  }
 
-.bl-logo-container {
 
-
-    width: 500px;
+.BLLogoContainer {
+  margin-top: auto;
+  margin-bottom: auto;
+  width: 100%;
+  height: auto;
 
 }
 
-.cls-1 {
+.BLLogo-container {
+  
+  
+  width: 100%;
+  height: auto;
+  max-width: 500px;
+  margin-top: auto;
+  margin-bottom: auto;
 
-  fill: #f5f5f5;
+}
+
+.BLLogo-container:hover svg path,
+.BLLogo-container:hover svg g path,
+.BLLogo-container:hover svg rect,
+.BLLogo-container:hover svg circle {
+  fill: #bbf7d0; /* Matches your desired hover color */
+  transition: fill 250ms ease-in-out;
+
+
+
+
+}
+
+.HamburgerContainer {
+
+  display: flex;
+  margin-top: auto;
+  margin-bottom: auto;
+  justify-content: flex-end;
+  width: 100%;
+  height: auto;
   
 }
-
-.svg-hover .cls-1 {
-  fill: #f5f5f5;
-  stroke-width: 0px;
-  transition: fill 0.3s ease; /* Add smooth transition effect */
-}
-
-.svg-hover:hover .cls-1 {
-  fill: #22d3ee; /* Color change on hover */
-}
-
 
 
 
 .hamburger-icon {
-
+    display: flex;
+    justify-content: flex-end;
     width: 4rem;
-    height: 4rem;
+    height: auto;
+    margin-top: auto;
+    margin-bottom: auto;
 }
 
 .hamburger-icon:hover {
 
-  color:#22d3ee;
+  color:#bbf7d0;
 }
 
-@media (max-width: 1250px) {
+@media (min-width: 768px) and (max-width: 1024px) {
     
 
-    .bl-logo-container {
 
-        width: 400px;
-    }
 
     .hamburger-icon {
 
-        width: 3.5rem;
-        height: 3.5rem;
+        width: 3rem;
+        height: 3rem;
     }
   }
 
-  @media (max-width: 650px) {
-    
+  @media (max-width: 768px) {
 
-    .bl-logo-container {
 
-        width: 275px;
-    }
+
+  .BLLogo-container {
+
+    width: 19rem;
+    height: auto;
+  }
 
     .hamburger-icon {
 
-        width: 2.5rem;
-        height: 2.5rem;
-    }
+      width: 3rem;
+      height: auto;
+  }
 
    .offcanvas-menu {
 
@@ -119,3 +154,4 @@ Header {
   }
   
 
+  

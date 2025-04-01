@@ -7,7 +7,7 @@ import { Share, BookOpenText} from 'lucide-react';
 import { XIcon, FaceBookIcon, EmailIcon, CopyLinkIcon, CheckMarkIcon } from './CustomIcons';
 import { ImageSlider } from './ImageSlider';
 import './Web3Container.css';
-import { link } from 'fs';
+
 interface Post {
   title: string;
   description: string;
@@ -82,12 +82,11 @@ const Web3Container: React.FC<{ type: string }> = ({ type }) => {
           <meta name="keywords" content={post.keywords.join(', ')} />
         )}
       </Helmet>
+      <hr className="line-w3" />
       <div className='W3Post'>
-
-      <div className='W3-container flex'>
-          
-          <div className='w3-text-section'>
-            <div className='flex flex-col p-4'>
+      <div className='W3-container'>
+      <div className='W3-text-section'>
+            <div className='W3TextContainer'>
             <div className='W3PostTitle'>
               <div className='sanitized-title' dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
             </div>
@@ -98,13 +97,11 @@ const Web3Container: React.FC<{ type: string }> = ({ type }) => {
               <div className='w3-button-container'>
               <button type="button" className="w3-button" onClick={handleReadMore}><BookOpenText className="icon"/><span className="w3-button-text">Read More</span></button>
               </div>
-              
             </div>
-            
             
            
           </div>
-          <div className='w3-img-section'>
+          <div className='W3-img-section'>
             <div>
             <div className='W3ImgContainer'>
               {post.images.length > 1 ? (
@@ -112,13 +109,14 @@ const Web3Container: React.FC<{ type: string }> = ({ type }) => {
                 <ImageSlider images={post.images} />
                 </div>
               ) : (
-                <div className='align-top'>
+                <div className='W3PostImgContainer'>
                 <img className='W3PostImg' src={post.images[0]?.url} alt={post.images[0]?.alt} />
                 </div>
               )}
             </div>
             </div>
           </div>
+          
         </div>
        
       </div>

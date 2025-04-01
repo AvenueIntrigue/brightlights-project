@@ -104,24 +104,32 @@ const BulletContainer: React.FC<BulletContainerProps> = ({ keywords, onKeywordsC
 
             return (
               <div key={index} className="bullet-item">
+                <div className='bullet-img-section'>
+                <div className='bullet-img-container'>
                 <img
-                  className="rounded-full w-72 p-14"
+                  className="bullet-img"
                   src={post.images[0]?.url}
                   alt={post.images[0]?.alt}
                 />
+                </div>
+                </div>
+                <div className='bullet-text-section'>
+                <div className='BulletTitle'>
                 <h2 className="bullet-title">{sanitizedTitle}</h2>
+                </div>
+                <div className='BulletText'>
                 <div
     className="bullet-description"
     dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
   />
-                
-                
-                  <div className="">
+  </div>
+  
+  </div>
+  <div className="bc-button-master">
                   <div className='bc-button-container'>
               <button type="button" className="bc-button" onClick={() => handleReadMore(post.pages)}><BookOpenText className="icon"/><span className="bc-button-text">Read More</span></button>
               </div>
                   </div>
-                
               </div>
             );
           })

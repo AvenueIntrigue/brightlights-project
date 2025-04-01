@@ -1,23 +1,47 @@
 import React from "react";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
 import './Footer.css'; // Assuming you have a CSS file for the footer styles
+import { SendHorizonal } from "lucide-react";
+import XSvg from "./XSvg";
+import FBSvg from "./FBSvg";
+import GitHubSvg from "./GitHubSvg";
+import YTSvg from "./YTSvg";
+import UserSvg from "./UserSvg";
 
 function Footer() {
     const today = new Date();
     const year = today.getFullYear();
+    const handleContactNav = () => {
+        window.location.href='/contact';
+      };
+
+      const handleX = () => {
+        window.open('https://x.com/BrightLightsCTV', '_blank');
+      };
+
+      const handleFB = () => {
+        window.open('https://www.facebook.com/profile.php?id=61574722864247', '_blank');
+      };
+
+      const handleGitHub = () => {
+        window.open('https://github.com/AvenueIntrigue', '_blank');
+      };
+
+      const handleYT = () => {
+        window.open('https://www.youtube.com/@BrightLightsCTV', '_blank');
+      };
+
 
     return (
         <div className="footer">
-            <div className="contact">
-                <div className="contact-heading">
-                <h1>Contact Us</h1>
-                </div>
-                <div className="contact-subheadings">
-                <h3>info@brightlightscreative.com</h3>
-                <h3>808.989.1962</h3>
-                </div>
-            </div>
+            <div className="footer-container">
+                <div className="footer-cu-button-grand">
+            <div className="footer-cu-button-container">
+           <button onClick={handleContactNav} className="footer-cu-button"><div className="pr-1"><SendHorizonal/></div><span className="footer-cu-button-text">Contact Us</span></button>
+           </div>
+           </div>
             <div className="footer-icons">
+                <div className="footer-icons-container">
                 
                 
                     <SignedOut>
@@ -29,22 +53,25 @@ function Footer() {
                         </SignInButton>
                     </SignedOut>
                     <SignedIn>
-                        <div className="px-5">
-                        <UserButton/>
+                        <div className="footer-social-icons">
+                        <UserSvg/>
                         </div>
 
                     </SignedIn>
                 
-                <a href=""><i className="fa-brands fa-xl fa-x-twitter px-5"></i></a>
-                <a href=""><i className="fa-brands fa-xl fa-github px-5"></i></a>
-                <a href=""><i className="fa-brands fa-xl fa-youtube px-5"></i></a>
-                <a href=""><i className="fa-brands fa-xl fa-facebook px-5"></i></a>
+
+                <div className="footer-social-icons"><button type="button" onClick={handleX} className="SVG-container"><XSvg/></button></div>
+                <div className="footer-social-icons"><button type="button" onClick={handleFB} className="SVG-container"><FBSvg/></button></div>
+                <div className="footer-social-icons"><button type="button" onClick={handleGitHub} className="SVG-container"><GitHubSvg/></button></div>
+                <div className="footer-social-icons"><button type="button" onClick={handleYT} className="SVG-container"><YTSvg/></button></div>
+                </div>
                 <br />
                 <br />
                 
             </div>
-            <div className="copyright">
-                    <p>Copyright © {year} &nbsp; Bright Lights Creative</p>
+            <div className="copyright-container">
+                    <div className="copyright-text">Copyright © {year} Bright Lights Creative</div>
+                </div>
                 </div>
         </div>
     );

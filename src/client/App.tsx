@@ -14,6 +14,7 @@ import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
 
 import ProfilePage from "./ProfilePage";
 import DynamicPost from "./DynamicPost";
+import Portfolio from "./Portfolio";
 const App: React.FC = () => {
   return (
     <div>
@@ -33,7 +34,7 @@ const App: React.FC = () => {
         <Route path="/graphic-design" element={<DynamicPost type="graphic-design" />} />
         <Route path="/web3" element={<DynamicPost type="web3" />} />
         <Route path="/projects" element={<DynamicPost type="projects" />} />
-        <Route path="/portfolio" element={<DynamicPost type="portfolio" />} />
+        <Route path="/portfolio" element={<Portfolio type="portfolio" />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/create" element={<SignedIn><CreatePricing /></SignedIn>}/>
         <Route path="/create-about" element={<SignedIn><CreatePricing /></SignedIn>}/>

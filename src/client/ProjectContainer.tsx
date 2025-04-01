@@ -82,14 +82,16 @@ const ProjectContainer: React.FC<{ type: string }> = ({ type }) => {
           <meta name="keywords" content={post.keywords.join(', ')} />
         )}
       </Helmet>
+
+      <hr className="line-project" />
       <div className='ProjectPost'>
 
-      <div className='Project-container flex'>
+      <div className='Project-container'>
           <div className='project-img-section'>
             <div>
             <div className='ProjectImgContainer'>
               {post.images.length > 1 ? (
-                <div className=''>
+                <div className='ProjectISContainer'>
                 <ImageSlider images={post.images} />
                 </div>
               ) : (
@@ -101,9 +103,9 @@ const ProjectContainer: React.FC<{ type: string }> = ({ type }) => {
             </div>
           </div>
           <div className='project-text-section'>
-            <div className='flex flex-col p-4'>
+            <div className='ProjectPostTitleContainer'>
             <div className='ProjectPostTitle'>
-              <div className='sanitized-title' dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
+              <div className='sanitizedTitle' dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
             </div>
             <div className='ProjectPostText'>
               <div className='ProjectdescriptionParagraph' dangerouslySetInnerHTML={{ __html: sanitizedDescription }} />
@@ -119,6 +121,7 @@ const ProjectContainer: React.FC<{ type: string }> = ({ type }) => {
         </div>
        
       </div>
+      <hr className="line-project" />
     </div>
   );
 };
