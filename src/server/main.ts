@@ -3,12 +3,36 @@ import mongoose from 'mongoose';
 import ViteExpress from "vite-express";
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
-import { BlogPostModel, BlogPost, PricingPostModel, AboutPostModel, ServicesPostModel, Web3PostModel, TopContainerContentModel, MiddleContainerContentModel, BulletContainerContentModel, web3ContainerContentModel, BulletContainerAboutUsModel, CategoryModel, GraphicDesignPostModel, AppDevelopmentPostModel, WebDevelopmentPostModel, ProjectsPostModel, PortfolioPostModel} from '../shared/interfaces.js';
+import encryptionKey from './generateKey.js'
+import crypto from 'node:crypto';
+import { BlogPostModel, BlogPost, PricingPostModel, AboutPostModel, ServicesPostModel, Web3PostModel, TopContainerContentModel, MiddleContainerContentModel, BulletContainerContentModel, web3ContainerContentModel, BulletContainerAboutUsModel, CategoryModel, GraphicDesignPostModel, AppDevelopmentPostModel, WebDevelopmentPostModel, ProjectsPostModel, PortfolioPostModel, marketingConsentContentModel} from '../shared/interfaces.js';
 
 dotenv.config();
 
 const uri = process.env.VITE_MONGODB_URI || 'defaultMongoUri';
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || encryptionKey; // Fallback to generated key if ENV not set
+if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
+  throw new Error('ENCRYPTION_KEY must be set in .env and be 32 characters long');
+}
+const IV_LENGTH = 16;
+// Explicitly type algorithm as a string to avoid GCM overload
+function encrypt(text: string): string {
+  const iv = crypto.randomBytes(IV_LENGTH);
+  // Type assertion for algorithm and ensure key is Buffer
+  const cipher = crypto.createCipheriv('aes-256-cbc' as const, Buffer.from(ENCRYPTION_KEY, 'utf8') as Buffer, iv);
+  let encrypted = cipher.update(text, 'utf8', 'hex');
+  encrypted += cipher.final('hex');
+  return iv.toString('hex') + ':' + encrypted;
+}
 
+function decrypt(text: string): string {
+  const [iv, encryptedText] = text.split(':').map(part => Buffer.from(part, 'hex'));
+  const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'utf8'), iv);
+  // Use Buffer overload: no inputEncoding since encryptedText is already a Buffer
+  let decrypted = decipher.update(encryptedText); // Returns Buffer
+  decrypted = Buffer.concat([decrypted, decipher.final()]); // Concatenate Buffers
+  return decrypted.toString('utf8'); // Convert to string
+}
 async function startServer() {
   try {
     await mongoose.connect(uri, {
@@ -38,6 +62,58 @@ app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error('Middleware Error:', err);
   res.status(500).json({ message: 'Internal server error', error: err.message });
+});
+
+
+
+
+
+// Rest of your main.ts remains the same...
+// For brevity, I'll only show the updated /api/marketing part:
+
+app.get('/api/marketing', async (req: Request, res: Response) => {
+  console.log('GET /api/marketing hit');
+  try {
+    const content = await marketingConsentContentModel.findOne();
+    if (content) {
+      const decryptedContent = {
+        ...content.toObject(),
+        email: content.email ? decrypt(content.email) : null,
+        phone: content.phone ? decrypt(content.phone) : null,
+      };
+      res.json(decryptedContent);
+    } else {
+      res.status(404).json({ message: 'Marketing consent content not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching marketing consent content:', error);
+    res.status(500).json({ message: 'Error fetching marketing consent content', error });
+  }
+});
+
+app.put('/api/marketing', async (req: Request, res: Response) => {
+  try {
+    const { email, phone, acceptsEmailMarketing, acceptsTextMarketing } = req.body;
+    const encryptedEmail = email && acceptsEmailMarketing ? encrypt(email) : null;
+    const encryptedPhone = phone && acceptsTextMarketing ? encrypt(phone) : null;
+
+    const content = await marketingConsentContentModel.findOneAndUpdate(
+      {},
+      { email: encryptedEmail, phone: encryptedPhone, acceptsEmailMarketing, acceptsTextMarketing },
+      { new: true, upsert: true }
+    );
+
+    const decryptedContent = {
+      ...content.toObject(),
+      email: content.email ? decrypt(content.email) : null,
+      phone: content.phone ? decrypt(content.phone) : null,
+    };
+
+    res.json(decryptedContent);
+  } catch (error) {
+    console.error('Error updating marketing consent content:', error);
+    res.status(500).send({ message: 'Error updating marketing consent content', error });
+  }
 });
 
 app.post('/api/add-category', async (req: Request, res: Response) => {

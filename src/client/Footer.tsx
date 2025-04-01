@@ -47,7 +47,7 @@ function Footer() {
                     <SignedOut>
                         <SignInButton mode="redirect">
 
-                            <button className="btn">
+                            <button type="button" className="sign-in-btn footer-social-icons">
                                 Sign In
                             </button>
                         </SignInButton>

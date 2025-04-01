@@ -14,7 +14,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "types": ["@tiptap/core"], 
+    "types": ["@tiptap/core", "node"], 
     "jsx": "react-jsx" 
   },
   "include": ["src"], 

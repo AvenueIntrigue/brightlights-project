@@ -66,7 +66,7 @@ p {
     width: 100%;
     height: auto;
     margin-top: 3.5%;
-    margin-bottom: 3.5%;
+    margin-bottom: 3.5%; 
     font-family: "lemonde-sans", sans-serif;
     font-weight: 500;
     font-size: 1.25rem;
@@ -90,7 +90,7 @@ p {
 
   .letter-card {
 
-    width: 60%;
+    width: 100%;
     height: auto;
     margin-top: 3.5%;
     margin-bottom: 3.5%;
@@ -105,6 +105,8 @@ p {
     height: auto;
     margin-top: 3.5%;
     margin-bottom: 3.5%;
+    margin-left: auto;
+    margin-right: auto;
     align-items: center;
     justify-content: flex-start;
     
@@ -116,6 +118,9 @@ p {
     width: 100%; /* Take full width of logo-card */
     height: auto;
     align-items: center; /* Center vertically */
+    margin-top: auto;
+    margin-bottom: auto;
+   
   }
 
   
@@ -127,11 +132,15 @@ p {
     max-width: 25%; /* Optional: Limit icon width */
     min-width: 50px;
     height: auto;
+    margin-top: auto;
+    margin-bottom: auto;
+    
   }
 
   .OpenBox-container {
     width: 100%; /* Ensure it takes full space of its parent */
     height: auto;
+    
    
   }
 
@@ -142,19 +151,24 @@ p {
     flex-direction: column;
     width: 100%;
     height: auto;
-    justify-content: flex-end; /* Center the title horizontally */
-    align-items: center; /* Center the title vertically */
+    justify-content: flex-start; /* Center the title horizontally */
+    align-self: center; /* Center the title vertically */
     font-family: "utopia", serif;
     font-weight: 600;
-    font-size: clamp(2rem, 4vw, 2.5rem);
+    font-size: 3rem;
     margin-top: auto;
-    margin-bottom: auto;
+    margin-bottom: 1rem;
   }
   
   .bl-logo-title {
 
     width: 100%; /* Span the container */
-    text-align: right; /* Center the h1 text */
+    height: auto;
+    text-align: left; /* Center the h1 text */
+    margin-left: 4rem;
+    margin-top: auto;
+    margin-bottom: auto;
+   
   }
 
   .letter-card-container{
@@ -164,7 +178,7 @@ p {
     font-style: normal;
     font-size: 1.25rem;
     line-height: 1.5;
-    width: 60%;
+    width: 100%;
     height: auto;
     margin-top: 3.5%;
     margin-bottom: 3.5%;
@@ -411,7 +425,7 @@ p {
       margin-right: auto ;
       background-color:  #353941;
       color: #f5f5f5;
-      width: 100%;
+      width: 66%;
       height: auto;
       border-radius: 15px;
       font-family: "lemonde-sans", sans-serif;
@@ -431,7 +445,7 @@ p {
     
 
 
-    @media (min-width: 768px) and (max-width: 1024px) {
+    @media (min-width: 768px) and (max-width: 1140px) {
 
       .create-contact{
 
@@ -446,20 +460,39 @@ p {
         
     }
 
+    .Contact-Address-Master {
+
+      width: 100%;
+      height: auto;
+    }
+
+    .form-container {
+
+      display: flex;
+      flex-direction: column;
+     
+    }
 
 
-      .contact-letter-card {
+      .letter-card {
 
         display: flex;
         flex-direction: column;
         width: 100%;
+        height: auto;
+       
+        margin-left: 15%;
 
       }
 
-      .contact-letter-container, .paper-airplane-container {
-        padding: 2%;
-        width: 100%;
-      }
+   
+
+      .paper-airplane-container{
+        display: flex;
+         width: 50%;
+         height: 50%;
+         margin: auto;
+       }
 
     
 
@@ -479,6 +512,12 @@ p {
         margin-right:auto;
       }
 
+      .Contact-Address-Master {
+
+        width: 80svw;
+        height: auto;
+      }
+
       .create-contact {
 
         width: 100%;
@@ -490,28 +529,7 @@ p {
         display: flex;
         flex-direction: column;
       }
-      .contact-letter-card {
-
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-  
-      }
-
-      .contact-letter-container{
-
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        
-      }
-
-       .contact-box-text, .contact-friendly-text {
-       
-        width: 100%;
-        
-        
-      }
+     
       
     }
 

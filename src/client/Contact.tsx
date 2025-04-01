@@ -13,6 +13,15 @@ const serviceID = "service_kefq6x7";
 const templateID = "template_y83enxx";
 const userID = "y-Kyq3Fj6epnRRBnp";
 
+interface Post {
+
+    email: string;
+    phone: string;
+    acceptsEmail: boolean;
+    acceptsMarketing: boolean;
+    
+  }
+
 const EmailForm: React.FC = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -76,6 +85,8 @@ const EmailForm: React.FC = () => {
     if (editor?.getText().trim() === '') {
       setIsEditorInvalid(true);
       editor.commands.setContent('<p>Message is required</p>');
+      setIsSubmitting(false);
+      return;
     } else {
       setIsEditorInvalid(false);
     }
@@ -89,6 +100,7 @@ const EmailForm: React.FC = () => {
     console.log("Form Data:", formData);
 
     try {
+      // Send email via EmailJS
       const templateParams = {
         from_name: formData.name,
         from_email: formData.email,
@@ -96,8 +108,27 @@ const EmailForm: React.FC = () => {
         acceptsEmailMarketing: formData.acceptsEmailMarketing,
         acceptsTextMarketing: formData.acceptsTextMarketing,
       };
-
       await emailjs.send(serviceID, templateID, templateParams, userID);
+
+      // If either marketing option is checked, send to backend
+      if (formData.acceptsEmailMarketing || formData.acceptsTextMarketing) {
+        const response = await fetch('http://localhost:3000/api/marketing', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            phone: formData.phone,
+            acceptsEmailMarketing: formData.acceptsEmailMarketing,
+            acceptsTextMarketing: formData.acceptsTextMarketing,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to save marketing consent');
+        }
+      }
 
       setSuccessMessage("Email Sent Successfully!");
       setFormData({
@@ -113,8 +144,8 @@ const EmailForm: React.FC = () => {
       setIsEditorInvalid(false);
       editor?.commands.setContent('');
     } catch (error) {
-      console.error("Failed to send email.", error);
-      setErrorMessage("Failed to send email. Please try again.");
+      console.error("Error during submission:", error);
+      setErrorMessage("Failed to send email or save consent. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -123,8 +154,8 @@ const EmailForm: React.FC = () => {
   return (
     <div className='contact-container mx-auto'>
       <form className='create-contact' onSubmit={handleSubmit}>
-        <div className='form-container flex'>
-          <div className='letter-card w-full h-auto'>
+        <div className='form-container'>
+          <div className='letter-card'>
             <div className='logo-card'>
               <div className='bl-logo-card-img-container'>
                 <div className='bl-logo-img'>

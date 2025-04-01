@@ -81,3 +81,11 @@ export const fetchWeb3ContainerContent = async () => {
   }
   return response.data;
 };
+
+export const marketingConsentContent = async () => {
+  const response = await axios.get('http://localhost:3000/api/marketing');
+  if (response.status !== 200) {
+    throw new Error('Failed to fetch marketing content');
+  }
+  return response.data;
+};

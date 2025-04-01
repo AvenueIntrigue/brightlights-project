@@ -1,13 +1,18 @@
 
 
 // Existing interfaces and schemas
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, type Date as MongooseDate} from "mongoose";
 
 const CategorySchema: Schema = new Schema({
   name: { type: String, unique: true, required: true }
 });
 
+
+
 const CategoryModel = mongoose.model('Category', CategorySchema);
+
+
+
 
 export interface BlogPost extends Document {
   _id?: mongoose.Types.ObjectId; // MongoDB's default unique identifier
@@ -135,9 +140,44 @@ const web3ContainerContentModel = mongoose.model<web3ContainerContent>('web3cont
 export { web3ContainerContentModel };
 
 
+export interface marketingConsentContent extends Document {
+  
+  email: string;
+  phone: string;
+  acceptsEmailMarketing: boolean;
+  acceptsTextMarketing: boolean;
+  createdAt: Date;
+}
+
+const marketingConsentSchema: Schema<marketingConsentContent>= new Schema({
+  email: {
+    type: String,
+    required: false,
+    unique: true, // Prevent duplicate emails
+    sparse: true, // Allow nulls while keeping uniqueness
+  },
+  phone: {
+    type: String,
+    required: false,
+    unique: true, // Prevent duplicate phone numbers
+    sparse: true,
+  },
+  acceptsEmailMarketing: {
+    type: Boolean,
+    default: false,
+  },
+  acceptsTextMarketing: {
+    type: Boolean,
+    default: false,
+  },
+  createdAt: { type: Date, default: Date.now },
+});
 
 
 
+const marketingConsentContentModel = mongoose.model<marketingConsentContent>('marketingConsentContents', marketingConsentSchema);
+
+export {marketingConsentContentModel};
 
 
 
