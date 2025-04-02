@@ -66,7 +66,7 @@ const sanitizeDescription = (description: string) => {
                     </div> 
                     </div>
                     </div>
-                    <hr className="line-middle"/>
+                    <hr className="line"/>
             </div>
             
     );

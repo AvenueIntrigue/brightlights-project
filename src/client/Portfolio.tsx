@@ -56,7 +56,11 @@ const Portfolio: React.FC<{ type: string }> = ({ type }) => {
       ALLOWED_TAGS: []
     }).replace(/<\/?[^>]+(>|$)/g, "");
 
-  const sanitizedTitle = DOMPurify.sanitize(post.title);
+    const sanitizedTitle = DOMPurify.sanitize(post.title, {
+      // Allow specific attributes or tags if needed
+      ALLOWED_TAGS: ['h1','h2','h3','p', 'br', 'span', 'div', 'img', 'a', /* other tags */],
+      ALLOWED_ATTR: ['style', 'class', 'src', 'href', 'alt', /* other attributes */]
+    });
   const sanitizedDescription = DOMPurify.sanitize(post.description, {
     // Allow specific attributes or tags if needed
     ALLOWED_TAGS: ['h1','h2','h3','p', 'br', 'span', 'div', 'img', 'a', /* other tags */],
@@ -70,7 +74,7 @@ const Portfolio: React.FC<{ type: string }> = ({ type }) => {
   
 
   return (
-    <div className='POPostContainer'>
+    <div className='PostContainer'>
       <Helmet>
       <link rel="icon" href="/OpenBox.svg" type="image/x-icon" />
         <link rel="icon" href="/favicon.png" type="image/png" sizes="16x16" />
@@ -84,17 +88,23 @@ const Portfolio: React.FC<{ type: string }> = ({ type }) => {
       </Helmet>
       <div className='POPost'>
 
-      <div className='po-container flex-col'>
+      <div className='po-container'>
           <div className='po-img-section'>
             <div>
             <div className='POImgContainer'>
               {post.images.length > 1 ? (
                 <div className='POImgSliderContainer'>
+                  <div className='PostImgWrap'>
                 <ImageSlider images={post.images} />
                 </div>
+                </div>
               ) : (
-                <div className='POPostImgContainer'>
+                <div className='POImgContainer'>
+                  <div className='POPostImgContainer'>
+                    <div className='PostImgWrap'>
                 <img className='POPostImg' src={post.images[0]?.url} alt={post.images[0]?.alt} />
+                </div>
+                </div>
                 </div>
               )}
             </div>
@@ -106,8 +116,8 @@ const Portfolio: React.FC<{ type: string }> = ({ type }) => {
               <div className='sanitized-title' dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
             </div>
             <div className='POPostText'>
-              <div className='POdescriptionParagraphContainer'>
-              <div className='POdescriptionParagraph' dangerouslySetInnerHTML={{ __html: sanitizedDescription }} />
+              <div className='descriptionParagraphContainer'>
+              <div className='descriptionParagraph' dangerouslySetInnerHTML={{ __html: sanitizedDescription }} />
               </div>
               
               </div>

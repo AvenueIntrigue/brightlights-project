@@ -83,7 +83,7 @@ const ProjectContainer: React.FC<{ type: string }> = ({ type }) => {
         )}
       </Helmet>
 
-      <hr className="line-project" />
+      <hr className="line" />
       <div className='ProjectPost'>
 
       <div className='Project-container'>
@@ -105,7 +105,7 @@ const ProjectContainer: React.FC<{ type: string }> = ({ type }) => {
           <div className='project-text-section'>
             <div className='ProjectPostTitleContainer'>
             <div className='ProjectPostTitle'>
-              <div className='sanitizedTitle' dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
+              <div className='sanitized-title' dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
             </div>
             <div className='ProjectPostText'>
               <div className='ProjectdescriptionParagraph' dangerouslySetInnerHTML={{ __html: sanitizedDescription }} />
@@ -121,7 +121,7 @@ const ProjectContainer: React.FC<{ type: string }> = ({ type }) => {
         </div>
        
       </div>
-      <hr className="line-project" />
+      <hr className="line" />
     </div>
   );
 };

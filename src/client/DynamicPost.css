@@ -1,11 +1,11 @@
-.PricingPostContainer {
+.PostContainer {
  
-  width: 80%;
+  width: 80svw;
   height: auto;
   margin-left: auto;
   margin-right: auto;
-  padding-top: 7%;
-  padding-bottom: 7%;
+  margin-top: 3.5%;
+  margin-bottom: 3.5%;
   display: flex;
   position: relative;
   
@@ -33,31 +33,30 @@
     color: #bbf7d0;
     padding-bottom: 1.25%;
   }
-
-  .pricing-img-section {
-
-    max-width: 25%;
-    height: auto;
-    margin-right: 7%;
-    margin-bottom: 7%;
-  
-  }
  
 
+  .PostImgWrap {
+
+    width: 75%;
+    height: 75%;
+    border-radius: 15px;
+  }
+
   
-  .PricingPostImgContainer{
+  .PostImgContainer{
   
     display: flex;
     justify-content: center;
     align-items: center;
     margin-left: 0px;
-    margin-right: auto;
+    margin-right: 7%;
     margin-bottom: 7%;
-    max-width: 100%;
-    
+    margin-top: 7%;
+    width: 700px;
     aspect-ratio: 1/1 auto;
     overflow: hidden;
     border-radius: 15px;
+    
   
   
   }
@@ -77,15 +76,16 @@
   
       
       width: 100%;
-      aspect-ratio: 1/1 auto;
+      height: auto;
       overflow: hidden;
        border-radius: inherit;
        
   }
   
-  .PricingPostImg, .img-slider-img {
+  .PostImg, .img-slider-img {
     display: flex;
     width: 100%;
+    height: 100%;
     aspect-ratio: 1/1 auto;
      object-fit: cover;
      border-radius: inherit;
@@ -98,132 +98,9 @@
   
   
   
-  .img-slider-btn-l, .img-slider-btn-r {
-  
-      all: unset;
-      display: block;
-      position: absolute;
-      top: 0%;
-      bottom: 0%;
-      padding: 0.5rem;
-      cursor: pointer;
-      
-      
-      transition: background-color 100ms ease-in-out;
-  
-  }
-  
-  .img-slider-btn-l:hover,.img-slider-btn-r:hover,
-  .img-slider-btn-l:focus-visible, .img-slider-btn-r:focus-visible {
-  
-      background-color: rgba(0, 0, 0, 0.25);
-      width: 10%;
-      height: inherit;
-      
-      
-  }
-
-  .img-slider-btn-l:hover,
-  .img-slider-btn-l:focus-visible {
-    border-top-left-radius: inherit;
-    border-bottom-left-radius: inherit;
-  }
-
-  .img-slider-btn-r:hover,
-  .img-slider-btn-r:focus-visible {
-    border-top-right-radius: inherit;
-    border-bottom-right-radius: inherit;
-  }
-
 
   
-
-  
-  .img-slider-btn-l:hover>*, .img-slider-btn-r:hover>*,
-  .img-slider-btn-l:focus-visible, .img-slider-btn-r:focus-visible {
-  
-      animation: squish 200ms ease-in-out;
-  
-  }
-  
-  @keyframes squish {
-  
-      50% {
-          scale: 1.4 0.6;
-      }
-  
-  }
-  
-  .img-slider-btn>* {
-  
-      stroke: #7E7474;
-      fill: none;
-      width: 2rem;
-      height: 2rem;
-  }
-  
-  .img-slider-dot-btn {
-  
-      all: unset;
-      display: flex;
-      position: relative;
-      padding-bottom: 1.5rem;
-      cursor: pointer;
-      width: 1rem;
-      height: 1rem;
-      transition: scale 100ms ease-in-out;
-  
-  }
-  
-  .img-slider-dot-btn:hover,
-  .img-slider-dot-btn:focus-visible {
-  
-      scale: 1.2;
-  }
-  
-  .img-slider-dot-btn>* {
-  
-      stroke: #7E7474;
-      fill: none;
-      height: 100%;
-      width: 100%;
-  }
-  
-  .img-slider-btn:focus-visible,
-  .img-slider-dot-btn:focus-visible {
-  
-      outline: auto;
-  }
-  
-  .skip-link {
-  
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      border: 0;
-      clip: rect(0, 0, 0, 0);
-  }
-  
-  .skip-link:focus-visible {
-  
-      top: 0;
-      left: 0;
-      border: 1px solid black;
-      background-color: white;
-      padding: 0.5rem;
-      width: auto;
-      height: auto;
-      margin: 0;
-      clip: unset;
-      text-decoration: none;
-      color: black;
-      z-index: 100;
-  }
-  
-  .PricingPost {
+  .PostPost {
       
       position: relative;
       align-items: center;
@@ -231,7 +108,7 @@
 
   }
 
-  .pricing-container {
+  .post-container {
 
     
       margin-left: auto;
@@ -252,18 +129,8 @@
   }
   
   
-  
-  .pricing-img-section, .pricing-text-section {
-  
-  
-      box-sizing: border-box;
-      
-  }
-  
-  
 
-
-.pricing-img-section {
+.post-img-section {
 
   /* display: flex; */
   margin-top: auto;
@@ -272,178 +139,56 @@
  
 }
 
-.pricing-text-section {
+.post-text-section {
   
-  margin-top: 0px;
+  margin-top: 7%;
   width: auto;
   height: auto;
   
   
+  
 }
   
-  .DynamicPostTitle {
+  .PostTitle {
   
       padding-top: 0%;
       padding-left: 0%;
       padding-right: 0%;
-      font-family: "utopia", serif;
-      font-weight: 700;
-      font-size: clamp(3rem, 4vw, 2.5rem);
-      font-style: normal;
+
+      font-size: 3rem;
+      font-weight: 600;
       line-height: 1.2;
+      word-wrap: break-word;
       max-width: 100%;
+      overflow-wrap: break-word;
       text-align: right;
       margin-bottom: 4%;
     
   }
   
-  .descriptionParagraphContainer {
+  .PostText {
   
       font-size: 1.5rem;
-      padding-bottom: 7%;
-      padding-left: 0%;
-      padding-right: 0%;
+      font-family: "lemonde-sans", sans-serif;
       font-weight: 300;
       font-style: normal;
       line-height: 2.5rem;
+      text-align: justify;
       word-wrap: break-word;
       width: 100%;
-      max-width: 100%;
-      overflow-wrap:normal;
+      overflow-wrap: break-word;
       
   
   }
-
-
-  .descriptionParagraph {
-
-    font-family: "lemonde-sans", sans-serif;
-
-    
-  }
- 
 
   .descriptionParagraph p{
     width: 100%;
+    height: auto;
     margin-bottom: 2%;
-    text-align: right;
-  
-    
-    
-    
-   
+    text-align: justify;
+    direction: ltr;
   }
 
-  link{
-
-    color: #bbf7d0;
-  }
-
-  .timestamp {
-
-    padding-top: 7%;
-    padding-left: 3.5%;
-    padding-right: 3.5%;
-    font-family: "dejanire-headline", serif;
-      font-weight: 300;
-      font-style: italic;
-      color: #f5f5f5;
-  }
-  
- 
-  
-  .toolbar {
-      align-items: end;
-      justify-content: end;
-      justify-items: end;
-      display: flex;
-      flex-direction: row;
-      padding-top: 3.5%;
-      padding-bottom: 3.5%;
-    }
-  
-    .toolbar-button {
-      display: flex;
-      flex-direction: row;
-      border-radius: 15%;
-    align-items: center;
-    justify-content: center;
-      width: 5%;
-      height: auto;
-      border: transparent;
-      margin-left: 5px;
-      margin-right: 5px;
-      background-color: #353941;
-    }
-  
-
-  
-    .toolbar-button:hover {
-      background-color: #e0e0e0;
-      border-color: #aaa;
-      color: #353941;
-    }
-  
-    .toolbar-button.is-active, .active {
-      border: 2px solid #bbf7d0;
-      
-    }
-  
-    .toolbar-button:focus {
-      outline: none;
-      box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
-    }
-  
-    .icon-toolbar {
-  
-      display: flex;
-      flex-direction: row;
-      justify-content: end;
-      padding-top: 7%;
-      padding-bottom: 7%;
-    }
-  
-    .icon-button {
-  
-      
-    
-      background-color: #353941;
-      border-radius: 15%;
-    align-items: center;
-    justify-content: center;
-      width: 5rem;
-      height: 5rem;
-      border: transparent;
-      margin-left: 5px;
-      margin-right: 5px;
-      /* background-color: #bbf7d0; */
-      margin-top: 5px;
-      margin-bottom: 5px;
-    }
-  
-    
-    .icon-button:hover {
-      
-      
-  
-      border: 3px solid #bbf7d0;
-      transition: border 250ms ease-in-out;
-      color: #bbf7d0;
-      cursor: pointer;
-  
-    }
-  
-    .copy-link-container {
-      position: relative;
-      display: inline-block;
-  }
-  
-  .checkmark {
-      color: green;
-      width: 20px;
-      height: 20px;
-      animation: fadeInOut 2s;
-  }
 
 
  p {
@@ -455,38 +200,19 @@
 }
 
 
-.descriptionParagraph .ProseMirror p {
-
-  color: #f5f5f5 !important;
-}
-
-
-.descriptionParagraph p,
-.descriptionParagraph span,
-.descriptionParagraph div {
-  color: #f5f5f5 !important;
-}
-
-.descriptionParagraph a.extlink {
-
-  color: #bbf7d0 !important;
-}
-
-
-
   @keyframes fadeInOut {
       0% { opacity: 0; }
       50% { opacity: 1; }
       100% { opacity: 0; }
   }
 
-  @media (min-width: 768px) and (max-width: 1024px) {
+  @media (min-width: 768px) and (max-width: 1400px) {
 
 
 
     /* Styles for medium screens */
 
-    .pricing-container {
+    .post-container {
 
       display: flex;
       flex-direction: column;
@@ -499,20 +225,12 @@
       padding-bottom: 1rem;
     }
 
-    .BlogPostImgContainer {
+   
+   
 
-      width: 17rem;
-    }
+    .PostTitle {
 
-    .pricing-text-section {
-
-     text-align: start;
-     
-    }
-
-    .PricingPostTitle {
-
-      text-align: left;
+      text-align: center;
     }
 
    
@@ -522,11 +240,6 @@
       text-align: justify;
       direction: ltr;
       
-      
-      
-      
-
-      
     }
 
     .descriptionParagraph p {
@@ -534,11 +247,11 @@
       margin-bottom: 1.5rem;
     }
 
-    .PricingPostImgContainer {
+    .PostImgContainer {
 
       margin-left: 0px;
       /* margin-right: auto; */
-      width: 35%;
+      width: 100%;
       /* padding: 10%; */
       justify-content: center;
       align-items: center;
@@ -558,7 +271,7 @@
 
 
 
-    .pricing-container {
+    .post-container {
 
       display: flex;
       flex-direction: column;
@@ -571,26 +284,18 @@
   
 
  
-      .pricing-text-section {
+      .post-text-section {
 
         width: inherit;
-        
        padding-top: 4rem;
-        
         position: relative;
         display: flex;
         flex-direction: column;
-        
-        
-       
-        
-       
-        
-
       }
 
-      .PricingPostTitle {
-        font-size: 2rem;
+      .PostTitle {
+        
+        font-size: 3rem;
         padding-left: 5%;
         padding-right: 5%;
         padding-bottom: 0%;
@@ -598,23 +303,14 @@
        
         
       }
-      .PricingPostText {
-        font-size: 1.2rem;
-        padding-top: 7%;
-        padding-left: 5%;
-        padding-right: 5%;
-        
-        
-        
-      }
-      
-   
-  
+     
 
-      .PricingPostImgContainer {
 
-        margin-left: 5%;
-        width: 40%;
+      .PostImgContainer {
+
+        margin-left: auto;
+        margin-right: auto;
+        width: 100%;
 
         
       }
@@ -624,10 +320,6 @@
         flex: 1 1 100%; /* Stacks elements vertically */
         max-width: 100%; /* Takes full width on small screens */
       }
-
-
-
-     
   
       .img-slider-dot-btn {
   
@@ -635,34 +327,11 @@
       }
 
       
-
-      .pricing-text-section {
-        padding-top: 3.5%;
-        padding-bottom: 3.5%;
-        padding-left: 1.25%;
-        padding-right: 1.25%;
-      }
-
-     
-      .sanitized-title {
-
-        text-align: left;
-      }
-
-      .descriptionParagraph {
-
-        text-align: left;
-      }
-
-   
-
-
-      .descriptionParagraph p {
-
-        margin-bottom: 1.5rem;
+      .post-text-section {
+        margin-top: 3.5%;
+        margin-bottom: 3.5%;
         
       }
-
     
     }
     

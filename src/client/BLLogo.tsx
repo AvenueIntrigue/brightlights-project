@@ -3,7 +3,8 @@ import axios from "axios";
 
 const BLLogo: React.FC = () => {
   const [svgContent, setSvgContent] = useState<string | null>(null);
-  const cloudinaryXUrl = "https://res.cloudinary.com/dqltncrkn/image/upload/v1743451017/Bright-Lights-Creative-Logo-Long_deacks.svg";
+  const cloudinaryXUrl =
+    "https://res.cloudinary.com/dqltncrkn/image/upload/v1743451017/Bright-Lights-Creative-Logo-Long_deacks.svg";
 
   useEffect(() => {
     const fetchSvg = async () => {

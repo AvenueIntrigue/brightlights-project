@@ -62,7 +62,7 @@ const DynamicPost: React.FC<{ type: string }> = ({ type }) => {
   
 
   return (
-    <div className='PricingPostContainer w-[80%]'>
+    <div className='PostContainer'>
       <Helmet>
       <link rel="icon" href="/OpenBox.svg" type="image/x-icon" />
         <link rel="icon" href="/favicon.png" type="image/png" sizes="16x16" />
@@ -74,27 +74,27 @@ const DynamicPost: React.FC<{ type: string }> = ({ type }) => {
           <meta name="keywords" content={post.keywords.join(', ')} />
         )}
       </Helmet>
-      <div className='PricingPost w-full'>
+      <div className='PostPost'>
 
-      <div className='pricing-container w-full'>
-          <div className='pricing-img-section'>
-            <div className='PricingPostImgContainer'>
+      <div className='post-container'>
+          <div className='post-img-section'>
+            <div className='PostImgContainer'>
               {post.images.length > 1 ? (
-                <div className=''>
+                <div className='PostImgWrap'>
                 <ImageSlider images={post.images} />
                 </div>
               ) : (
-                <div className='align-top'>
-                <img className='PricingPostImg' src={post.images[0]?.url} alt={post.images[0]?.alt} />
+                <div className='PostImgWrap'>
+                <img className='PostImg' src={post.images[0]?.url} alt={post.images[0]?.alt} />
                 </div>
               )}
             </div>
           </div>
-          <div className='pricing-text-section'>
-            <div className='DynamicPostTitle'>
+          <div className='post-text-section'>
+            <div className='PostTitle'>
               <div className='sanitized-title' dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
             </div>
-            <div className='descriptionParagraphContainer'>
+            <div className='PostText'>
               <div className='descriptionParagraph' dangerouslySetInnerHTML={{ __html: sanitizedDescription }} />
               
             </div>

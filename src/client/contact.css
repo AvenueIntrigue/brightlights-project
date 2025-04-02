@@ -345,7 +345,7 @@ p {
     border: 3px solid #bbf7d0;
     transition: border 250ms ease-in-out;
     color: #bbf7d0;
-    cursor: pointer;
+    /* cursor: pointer; */
   }
 
   .editor.input-error .ProseMirror {
@@ -366,6 +366,7 @@ p {
   display: flex;
   flex-direction: column;
   gap: 1.5rem; /* Space between checkboxes */
+  cursor: pointer !important;
   
   
 }
@@ -378,6 +379,14 @@ p {
   font-weight: 500;
   font-size: 1.25rem;
   line-height: 1.5;
+  cursor: pointer;
+}
+.consent-label:hover {
+  
+  color: #bbf7d0;
+  
+  transition: color 250ms ease-in-out;
+  
 }
 
 .consent-label input[type="checkbox"] {
@@ -386,6 +395,23 @@ p {
   accent-color: #bbf7d0; /* Checkbox color */
   width: 1rem;
   height: 1rem;
+  cursor: pointer !important;
+}
+
+.consent-label input[type="checkbox"]:hover {
+
+  
+
+  box-shadow: 0 0 8px #bbf7d0; /* Glow effect on hover */
+  border: 2px solid #bbf7d0; /* Border change on hover */
+  transition: border 250ms ease-in-out;
+}
+
+.checkbox-marketing:hover {
+
+    background-color: #bbf7d0;
+    cursor: pointer;
+
 }
 
 .consent-label span {
@@ -442,6 +468,8 @@ p {
       margin: 3.5%;
     }
 
+
+    
     
 
 

@@ -82,7 +82,7 @@ const Web3Container: React.FC<{ type: string }> = ({ type }) => {
           <meta name="keywords" content={post.keywords.join(', ')} />
         )}
       </Helmet>
-      <hr className="line-w3" />
+      <hr className="line" />
       <div className='W3Post'>
       <div className='W3-container'>
       <div className='W3-text-section'>

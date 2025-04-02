@@ -1,227 +1,205 @@
-/* <Master Container> */
 
-.bullet-container-grand {
-
-  padding-top: 7%;
-  padding-bottom: 7%;
-  
-}
-
-/* </Master Container> */
-
-/* <Line> */
-
-.line-bullet {
-  border: 0;
-  height: 4px;
-  background: #2B4072; 
-  border-radius: 2px;/* Adjust the color as needed */
-  margin: 20px 0; /* Adjust the spacing as needed */
-  width: 100%; /* Make the line full width */
-  box-shadow: 0 0 10px rgba(48, 58, 82, 0.5);
-  margin-top: 3.5%;
-  margin-bottom: 3.5%;
-}
-
-/* </Line> */
 
 /* <Section Container> */
 
 .bullet-container {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* Ensures 3 equal columns */
-    gap: 3rem; /* Adjust the spacing between columns */
-    /* background-color: #304152; */
-    width: 100%;
-    height: auto;
-    margin: 7% auto;
-    border: 2px transparent;
-    border-radius: 15px;
-    box-shadow: 5px black;
-    text-align: justify;
-    direction: ltr;
-    
-  }
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  /* Ensures 3 equal columns */
+  gap: 3rem;
+  /* Adjust the spacing between columns */
+  /* background-color: #304152; */
+  width: 100%;
+  height: auto;
+  margin: 7% auto;
+  border: 2px transparent;
+  border-radius: 15px;
+  box-shadow: 5px black;
+  text-align: justify;
+  direction: ltr;
 
-  /* </Section Container> */
-  
-  .bullet-item {
-    
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-   
-  }
+}
 
-  /* <Text Section> */
+/* </Section Container> */
 
-  .bullet-text-section {
+.bullet-item {
 
-    margin-top: 3.5%;
-    margin-bottom: 3.5%;
-    text-align: justify;
-    direction: ltr;
-    width: 100%;
-    height: auto;
-  }
-  
-  .BulletTitle{
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
 
-    margin-top: 3.5%;
-    margin-bottom: 3.5%;
-  }
+}
 
-  .bullet-title {
-    font-family: "utopia", serif;
+/* <Text Section> */
+
+.bullet-text-section {
+
+  margin-top: 3.5%;
+  margin-bottom: 3.5%;
+  text-align: justify;
+  direction: ltr;
+  width: 100%;
+  height: auto;
+}
+
+.BulletTitle {
+
+  margin-top: 3.5%;
+  margin-bottom: 3.5%;
+}
+
+.bullet-title {
+  font-family: "utopia", serif;
   font-weight: 700;
   font-size: 2.5rem;
-    text-align: center;
-    margin-top: 3.5%;
-    margin-bottom: 3.5%;
-  
-  }
+  text-align: center;
+  margin-top: 3.5%;
+  margin-bottom: 3.5%;
+  color: #bbf7d0;
+}
 
-  .BulletText {
+.BulletText {
 
-    margin-top: 3.5%;
-    margin-bottom: 3.5%;
-  }
+  margin-top: 3.5%;
+  margin-bottom: 3.5%;
+}
 
-  .bullet-description {
-
-    
-      width: 100%;
-      max-height: 10.5rem;
-      font-family: "lemonde-sans", sans-serif;
-      font-weight: 500;
-      font-style: normal;
-      font-size: 1.5rem;
-      line-height: 1.5;
-      position: relative;
-      -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
-      mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
-      overflow: hidden; /* Ensure overflow text is hidden */
-      margin-bottom: 1rem;
-    
-  }
-
-  .bullet-description p {
-
-    
-    text-align: justify;
-    line-height: 2rem;
-    margin-bottom: 1rem; 
-    
-  }
-  
-
-  /* </Text Section> */
+.bullet-description {
 
 
-  /* <Img Section> */
+  width: 100%;
+  max-height: 10.5rem;
+  font-family: "lemonde-sans", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+  font-size: 1.5rem;
+  line-height: 1.5;
+  position: relative;
+  -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+  overflow: hidden;
+  /* Ensure overflow text is hidden */
+  margin-bottom: 1rem;
+
+}
+
+.bullet-description p {
 
 
-  .bullet-img-section {
+  text-align: justify;
+  line-height: 2rem;
+  margin-bottom: 1rem;
 
-    margin-top: 3.5%;
-    margin-bottom: 3.5%;
-    
-
-  }
-
-  .bullet-img-container {
-
-    border-radius: 9999px;
-    width: 300px;
-    height: 300px;
-    aspect-ratio: 1 / 1;
-    margin-left: auto;
-    margin-right: auto;
-   
-  }
-  
-  .bullet-img {
-   padding: 0%;
-    margin-left: auto;
-    margin-right: auto;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    overflow: hidden;
-    border-radius: 9999px;
-    
-    
-  }
+}
 
 
-  /* </Img Section> */
+/* </Text Section> */
+
+
+/* <Img Section> */
+
+
+.bullet-img-section {
+
+  margin-top: 3.5%;
+  margin-bottom: 3.5%;
+
+
+}
+
+.bullet-img-container {
+
+  border-radius: 9999px;
+  width: 300px;
+  height: 300px;
+  aspect-ratio: 1 / 1;
+  margin-left: auto;
+  margin-right: auto;
+
+}
+
+.bullet-img {
+  padding: 0%;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  overflow: hidden;
+  border-radius: 9999px;
+
+
+}
+
+
+/* </Img Section> */
 
 
 /* <Button Section> */
 
 
-  .bc-button-master {
-    display: flex;
-    margin-top: 3.5%;
-    margin-bottom: 3.5%;
-    
-  }
+.bc-button-master {
+  display: flex;
+  margin-top: 3.5%;
+  margin-bottom: 3.5%;
 
-  .bc-button-container {
-    display: flex;
-    width: 100%;
-    justify-content: flex-end;
-    align-content: flex-end;
-    text-align: center;
-   
-   
-    
-  }
-  
-  
-  
-  .bc-button {
-    
-    display: flex;
-    font-family: "darkmode-off-cc", sans-serif;
-    font-variation-settings: "wdth" 700, "wght" 700;
-    text-transform: uppercase;
-    font-size: 1.5rem;
-    border: none;
-    border-radius: 0.25rem;
-    width: 50%;
-    background-color:  #353941;
-    color: #f5f5f5;
-    height: 3rem;
-    align-items: center;
-    justify-content: center;
-    
-  
-   
-    
-  }
-  
-  .bc-button:hover {
-  
-    border: 3px solid #bbf7d0;
-    transition: border 250ms ease-in-out;
-    color: #bbf7d0;
-    cursor: pointer;
-    font-size: 1.45rem;
-    
-  }
-  
-  .icon {
-  
-    margin-right: 8px;
-    width: 2rem;
-  }
-  
-  .bc-button-text {
-  
+}
+
+.bc-button-container {
+  display: flex;
+  width: 100%;
+  justify-content: flex-end;
+  align-content: flex-end;
+  text-align: center;
+
+
+
+}
+
+
+
+.bc-button {
+
+  display: flex;
+  font-family: "darkmode-off-cc", sans-serif;
+  font-variation-settings: "wdth" 700, "wght" 700;
+  text-transform: uppercase;
+  font-size: 1.5rem;
+  border: none;
+  border-radius: 0.25rem;
+  width: 50%;
+  background-color: #353941;
+  color: #f5f5f5;
+  height: 3rem;
+  align-items: center;
+  justify-content: center;
+
+
+
+
+}
+
+.bc-button:hover {
+
+  border: 3px solid #bbf7d0;
+  transition: border 250ms ease-in-out;
+  color: #bbf7d0;
+  cursor: pointer;
+  font-size: 1.45rem;
+
+}
+
+.icon {
+
+  margin-right: 8px;
+  width: 2rem;
+}
+
+.bc-button-text {
+
   font-size: 1rem;
-  }
-  
+}
+
 
 /* </Button Section> */
 
@@ -239,7 +217,7 @@
   .bc-button:hover {
 
     font-size: 1.55rem;
-    
+
   }
 
   .bullet-container {
@@ -247,10 +225,10 @@
     flex-direction: column;
     width: 100%;
     height: auto;
-    
+
     margin-top: 7%;
 
-    
+
   }
 
   .bullet-item {
@@ -260,7 +238,7 @@
     width: 100%;
     height: auto;
   }
-  
+
 }
 
 
@@ -274,7 +252,7 @@
     margin-bottom: 7%;
   }
 
-  .bullet-container-grand{
+  .bullet-container-grand {
 
     margin-top: 7%;
     margin-bottom: 7%;
@@ -282,7 +260,7 @@
 
 
 
-  .bullet-container{
+  .bullet-container {
     display: flex;
 
     flex-direction: column;
@@ -297,9 +275,9 @@
     order: -1;
   }
 
- 
-  
-  
+
+
+
   .bc-button {
     width: 100%;
     height: 3.5rem;
@@ -309,7 +287,7 @@
   .bc-button:hover {
 
     font-size: 1.2rem;
-    
+
   }
 
 
@@ -326,7 +304,3 @@
 
 
 }
-
-
-  
-  

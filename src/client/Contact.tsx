@@ -236,6 +236,7 @@ const EmailForm: React.FC = () => {
               <label className="consent-label">
                 <input
                   type="checkbox"
+                  className='checkbox-marketing'
                   name="acceptsEmailMarketing"
                   checked={formData.acceptsEmailMarketing}
                   onChange={handleChange}
@@ -247,6 +248,7 @@ const EmailForm: React.FC = () => {
               <label className="consent-label">
                 <input
                   type="checkbox"
+                  className='checkbox-marketing'
                   name="acceptsTextMarketing"
                   checked={formData.acceptsTextMarketing}
                   onChange={handleChange}
