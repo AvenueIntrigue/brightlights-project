@@ -86,23 +86,23 @@ const Portfolio: React.FC<{ type: string }> = ({ type }) => {
           <meta name="keywords" content={post.keywords.join(', ')} />
         )}
       </Helmet>
-      <div className='POPost'>
+      <div className='Grandpa'>
 
-      <div className='po-container'>
-          <div className='po-img-section'>
+      <div className='post-container'>
+          <div className='post-img-section'>
             <div>
-            <div className='POImgContainer'>
+            <div className='ImgContainer'>
               {post.images.length > 1 ? (
                 <div className='POImgSliderContainer'>
-                  <div className='PostImgWrap'>
+                  <div className='ImgWrap'>
                 <ImageSlider images={post.images} />
                 </div>
                 </div>
               ) : (
-                <div className='POImgContainer'>
-                  <div className='POPostImgContainer'>
-                    <div className='PostImgWrap'>
-                <img className='POPostImg' src={post.images[0]?.url} alt={post.images[0]?.alt} />
+                <div className='ImgContainer'>
+                  <div className='PostImgContainer'>
+                    <div className='ImgWrap'>
+                <img className='PostImg' src={post.images[0]?.url} alt={post.images[0]?.alt} />
                 </div>
                 </div>
                 </div>
@@ -110,12 +110,12 @@ const Portfolio: React.FC<{ type: string }> = ({ type }) => {
             </div>
             </div>
           </div>
-          <div className='po-text-section'>
+          <div className='post-text-section'>
             <div className=''>
-            <div className='POPostTitle'>
+            <div className='PostTitle'>
               <div className='sanitized-title' dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
             </div>
-            <div className='POPostText'>
+            <div className='PostText'>
               <div className='descriptionParagraphContainer'>
               <div className='descriptionParagraph' dangerouslySetInnerHTML={{ __html: sanitizedDescription }} />
               </div>

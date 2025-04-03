@@ -74,13 +74,13 @@ const DynamicPost: React.FC<{ type: string }> = ({ type }) => {
           <meta name="keywords" content={post.keywords.join(', ')} />
         )}
       </Helmet>
-      <div className='PostPost'>
+      <div className='Grandpa'>
 
       <div className='post-container'>
           <div className='post-img-section'>
-            <div className='PostImgContainer'>
+            <div className='ImgContainer'>
               {post.images.length > 1 ? (
-                <div className='PostImgWrap'>
+                <div className='ImgWrap'>
                 <ImageSlider images={post.images} />
                 </div>
               ) : (
