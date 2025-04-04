@@ -78,13 +78,14 @@ const DynamicPost: React.FC<{ type: string }> = ({ type }) => {
 
       <div className='post-container'>
           <div className='post-img-section'>
-            <div className='ImgContainer'>
+            <div className='PostImgContainer'>
               {post.images.length > 1 ? (
                 <div className='ImgWrap'>
                 <ImageSlider images={post.images} />
                 </div>
               ) : (
-                <div className='PostImgWrap'>
+                
+                <div className='ImgWrap'>
                 <img className='PostImg' src={post.images[0]?.url} alt={post.images[0]?.alt} />
                 </div>
               )}

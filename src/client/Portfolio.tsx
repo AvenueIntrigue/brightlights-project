@@ -89,28 +89,29 @@ const Portfolio: React.FC<{ type: string }> = ({ type }) => {
       <div className='Grandpa'>
 
       <div className='post-container'>
-          <div className='post-img-section'>
+        <div className=''>
+          <div className='post-img-section mt-0'>
             <div>
-            <div className='ImgContainer'>
+            <div className='PostImgContainer'>
               {post.images.length > 1 ? (
-                <div className='POImgSliderContainer'>
-                  <div className='ImgWrap'>
+                <div className='PostImgContainer m-0'>
+                  
                 <ImageSlider images={post.images} />
-                </div>
+                
                 </div>
               ) : (
-                <div className='ImgContainer'>
-                  <div className='PostImgContainer'>
-                    <div className='ImgWrap'>
+                
+                  <div className='PostImgContainer mt-0'>
+                    
                 <img className='PostImg' src={post.images[0]?.url} alt={post.images[0]?.alt} />
+                
                 </div>
-                </div>
-                </div>
+                
               )}
             </div>
             </div>
           </div>
-          <div className='post-text-section'>
+          <div className='post-text-section mt-0'>
             <div className=''>
             <div className='PostTitle'>
               <div className='sanitized-title' dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
@@ -127,6 +128,7 @@ const Portfolio: React.FC<{ type: string }> = ({ type }) => {
             </div>
             
            
+          </div>
           </div>
         </div>
        
