@@ -101,7 +101,7 @@ const Portfolio: React.FC<{ type: string }> = ({ type }) => {
                 </div>
               ) : (
                 
-                  <div className='PostImgContainer mt-0'>
+                  <div className='PostImgContainer m-0'>
                     
                 <img className='PostImg' src={post.images[0]?.url} alt={post.images[0]?.alt} />
                 
@@ -111,7 +111,7 @@ const Portfolio: React.FC<{ type: string }> = ({ type }) => {
             </div>
             </div>
           </div>
-          <div className='post-text-section mt-0'>
+          <div className='post-text-section'>
             <div className=''>
             <div className='PostTitle'>
               <div className='sanitized-title' dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />

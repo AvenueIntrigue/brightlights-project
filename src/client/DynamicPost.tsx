@@ -80,12 +80,12 @@ const DynamicPost: React.FC<{ type: string }> = ({ type }) => {
           <div className='post-img-section'>
             <div className='PostImgContainer'>
               {post.images.length > 1 ? (
-                <div className='ImgWrap'>
+                <div className='PostImgContainer m-0'>
                 <ImageSlider images={post.images} />
                 </div>
               ) : (
                 
-                <div className='ImgWrap'>
+                <div className='PostImgContainer m-0'>
                 <img className='PostImg' src={post.images[0]?.url} alt={post.images[0]?.alt} />
                 </div>
               )}
@@ -96,8 +96,9 @@ const DynamicPost: React.FC<{ type: string }> = ({ type }) => {
               <div className='sanitized-title' dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
             </div>
             <div className='PostText'>
+              <div className='descriptionParagraphContainer'>
               <div className='descriptionParagraph' dangerouslySetInnerHTML={{ __html: sanitizedDescription }} />
-              
+              </div>
             </div>
             
            
