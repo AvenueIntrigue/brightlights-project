@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
-import DOMPurify from "dompurify"; // Import DOMPurify
-
+import DOMPurify from "dompurify";
 import { useNavigate } from "react-router-dom";
 import "./BulletContainer.css";
 import { BookOpenText } from "lucide-react";
@@ -15,7 +14,7 @@ interface Post {
   keywords?: string[];
 }
 
-interface BulletContainerProps {
+export interface BulletContainerProps {
   keywords: string[];
   onKeywordsChange: (keywords: string[]) => void;
 }
@@ -26,7 +25,6 @@ const BulletContainer: React.FC<BulletContainerProps> = ({
 }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [posts, setPosts] = useState<Post[]>([]);
-
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -52,12 +50,9 @@ const BulletContainer: React.FC<BulletContainerProps> = ({
         );
 
         const combinedPosts = responses.flat();
-        console.log("Combined Posts:", combinedPosts);
         setPosts(combinedPosts);
 
-        const allKeywords = combinedPosts.flatMap(
-          (post) => post.keywords || []
-        );
+        const allKeywords = combinedPosts.flatMap((post) => post.keywords || []);
         onKeywordsChange([...new Set([...keywords, ...allKeywords])]);
       } catch (error) {
         console.error("Error fetching posts:", error);
@@ -67,16 +62,16 @@ const BulletContainer: React.FC<BulletContainerProps> = ({
     };
 
     fetchPosts();
-  }, []); // Empty dependency array
+  }, [keywords, onKeywordsChange]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    throw new Promise(() => {});
   }
 
   const handleReadMore = (pages: string) => {
     if (!pages || pages === "undefined") {
       console.error("Page is undefined, defaulting to /home");
-      navigate("/home"); // Fallback route
+      navigate("/home");
     } else {
       navigate(`/${pages}`);
     }
@@ -84,50 +79,31 @@ const BulletContainer: React.FC<BulletContainerProps> = ({
 
   return (
     <div className="Grandpa">
+      <hr className="line-bullet"/>
       <Helmet>
         <meta
           name="keywords"
-          content={[
-            ...keywords,
-            ...posts.flatMap((post) => post.keywords || []),
-          ].join(", ")}
+          content={[...keywords, ...posts.flatMap((post) => post.keywords || [])].join(", ")}
         />
       </Helmet>
 
-      <hr className="line" />
+      
       <div className="bullet-container">
         {posts.length === 0 ? (
           <p>No posts available.</p>
         ) : (
           posts.map((post, index) => {
-            // Sanitize title and description to strip/escape HTML tags
-            const sanitizedTitle = DOMPurify.sanitize(post.title, {
-              ALLOWED_TAGS: [],
-            }); // No tags allowed
+            const sanitizedTitle = DOMPurify.sanitize(post.title, { ALLOWED_TAGS: [] });
             const sanitizedDescription = DOMPurify.sanitize(post.description, {
-              // Allow specific attributes or tags if needed
-              ALLOWED_TAGS: [
-                "h1",
-                "h2",
-                "h3",
-                "p",
-                "br",
-                "span",
-                "div",
-                "img",
-                "a" /* other tags */,
-              ],
-              ALLOWED_ATTR: [
-                "style",
-                "class",
-                "src",
-                "href",
-                "alt" /* other attributes */,
-              ],
+              ALLOWED_TAGS: ["h1", "h2", "h3", "p", "br", "span", "div", "img", "a"],
+              ALLOWED_ATTR: ["style", "class", "src", "href", "alt"],
             });
 
             return (
+              
               <div key={index} className="bullet-item">
+                
+                <hr className="line-item" /> {/* Line per item */}
                 <div className="bullet-img-section">
                   <div className="bullet-img-container">
                     <img
@@ -160,6 +136,7 @@ const BulletContainer: React.FC<BulletContainerProps> = ({
                     </button>
                   </div>
                 </div>
+                
               </div>
             );
           })

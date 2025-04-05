@@ -6,8 +6,10 @@ Header {
   .nav-container {
   
     /* Grandpa */
-    margin-top: 3.5%;
+    margin-top: 0;
     margin-bottom: 3.5%;
+    margin-left: auto;
+    margin-right: auto;
     height: auto;
     width: 100%;
     z-index: 10;

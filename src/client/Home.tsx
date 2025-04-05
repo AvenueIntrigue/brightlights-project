@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import { Helmet } from 'react-helmet-async';
-import MiddleContainer from "./ProjectContainer";
-import TopContainer from "./TopContainer";
+const TopContainer = lazy(()=> import('./TopContainer'));
+const BulletContainer = lazy(()=> import('./BulletContainer'));
+const Web3Container = lazy(()=> import('./Web3Container'));
+const ProjectContainer = lazy(()=> import('./ProjectContainer'));
 import './Home.css';
-import BulletContainer from './BulletContainer';
-import Web3Container from './Web3Container';
-import ProjectContainer from './ProjectContainer';
+
 import { all } from 'axios';
 
 
@@ -79,11 +79,21 @@ function Home() {
         <title>Bright Lights Creative</title>
         {/* Add additional meta tags here */}
       </Helmet>
-      
-      <TopContainer type='' />
-      <BulletContainer keywords={allKeywords} onKeywordsChange={handleBulletKeywordsChange}/>
-      <Web3Container type=''/>
-      <ProjectContainer type='' />
+      <Suspense fallback={<div className="placeholder">Loading...</div>}>
+        <TopContainer type="top" />
+      </Suspense>
+
+      <Suspense fallback={<div className="placeholder">Loading...</div>}>
+      <BulletContainer keywords={allKeywords} onKeywordsChange={handleBulletKeywordsChange} />
+      </Suspense>
+
+      <Suspense fallback={<div className="placeholder">Loading...</div>}>
+        <Web3Container type="web3" />
+      </Suspense>
+
+      <Suspense fallback={<div className="placeholder">Loading...</div>}>
+        <ProjectContainer type="projects" />
+      </Suspense>
      
       
     </div>

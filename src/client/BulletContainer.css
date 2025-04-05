@@ -204,6 +204,8 @@
 /* </Button Section> */
 
 
+
+
 @media (min-width: 768px) and (max-width:1024px) {
 
   .bc-button {
@@ -239,6 +241,8 @@
     height: auto;
   }
 
+
+
 }
 
 
@@ -247,10 +251,7 @@
 
 @media (max-width: 768px) {
 
-  .line-bullet {
 
-    margin-bottom: 7%;
-  }
 
   .bullet-container-grand {
 
@@ -299,6 +300,8 @@
 
 
 
+  
+  /* </Line> */
 
 
 

@@ -37,7 +37,7 @@ function Footer() {
             <div className="footer-container">
                 <div className="footer-cu-button-grand">
             <div className="footer-cu-button-container">
-           <button onClick={handleContactNav} className="footer-cu-button"><div className="pr-1"><SendHorizonal/></div><span className="footer-cu-button-text">Contact Us</span></button>
+           <button onClick={handleContactNav} className="footer-cu-button"><div className="footer-cu-button-icon"><SendHorizonal/></div><span className="footer-cu-button-text">Contact Us</span></button>
            </div>
            </div>
             <div className="footer-icons">

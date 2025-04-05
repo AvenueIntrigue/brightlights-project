@@ -80,6 +80,11 @@
     
   }
 
+  .footer-cu-button-icon {
+
+    margin-right: 0.25rem;
+  }
+
   .footer-icons {
 
     display: flex;
@@ -382,9 +387,14 @@
     .footer-cu-button {
 
       width: 100%;
-      height: 3rem;
+      height: 3.5rem;
       margin-left: auto;
       margin-right: auto
+    }
+
+    .footer-cu-button-text {
+
+      font-size: 1.2rem;
     }
 
     .copyright-text {
