@@ -20,7 +20,8 @@ h3 {
 
 /* <Line> */
 
-.line, .line-bullet {
+.line,
+.line-bullet {
   border: 0;
   height: 4px;
   background: #2B4072;
@@ -28,8 +29,8 @@ h3 {
   margin: 20px 0;
   width: 100%;
   box-shadow: 0 0 10px rgba(48, 58, 82, 0.5);
-  margin-top: 3.5%;
-  margin-bottom: 3.5%;
+  margin-top: 7%;
+  margin-bottom: 7%;
 }
 
 
@@ -41,9 +42,10 @@ h3 {
 
 /* </Line> */
 
+/* < Master-Container/ Dynamic Post/Portfolio/> */
 
 .PostContainer {
- 
+
   width: 80%;
   height: auto;
   margin-left: auto;
@@ -52,102 +54,168 @@ h3 {
   padding-bottom: 7%;
   display: flex;
   position: relative;
-  
-  }
 
-  .Grandpa {
+}
 
-    padding-top: 7%;
-    padding-bottom: 7%;
-    
-    
-  }
+.Grandpa {
 
-  .home-container {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-  
-  .placeholder {
-    min-height: 200px;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    font-family: 'lemonde-sans', sans-serif;
-    font-weight: 500;
-    color: #f5f5f5;
-    font-size: 1.5rem;
-    border: 4px dashed #f5f5f5;
-    border-radius: 15px;
-  }
-  
-  .error {
-    min-height: 200px;
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #d32f2f;
-    font-size: 1.2rem;
-  }
+  padding-top: 7%;
+  padding-bottom: 7%;
 
-  .post-container {
 
-    
-    
+}
 
-     display: flex;
-      margin-left: auto;
-      margin-right: auto;
-      margin-top: 3.5%;
-      margin-bottom: 3.5%;
-      margin-left: 3.5%;
-      margin-right: 3.5%;
-      
-  }
-     
-  .post-img-section {
-    display: flex;
-    margin-top: 0px !important;
-    margin-bottom: 7%;
-    margin-right: 7%;
-    float: left;
-    
-    
-    }
+/* </ Master-Container/ Dynamic Post/Portfolio> */
 
-    
-    .post-text-section {
-    margin-top: 0px;
-    width: auto;
-    height: auto;
-    
-    }
+/* <Master-Container/Home.TSX> */
 
-.sanitized-title p, .tiptap-title p {
+.home-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* </Master-Container/Home.TSX> */
+
+/* <Loading Placeholder for Lazy Loading/Home.tsx> */
+
+.placeholder {
+  min-height: 200px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  font-family: 'lemonde-sans', sans-serif;
+  font-weight: 500;
+  color: #f5f5f5;
+  font-size: 1.5rem;
+  border: 4px dashed #f5f5f5;
+  border-radius: 15px;
+}
+
+.error {
+  min-height: 200px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #d32f2f;
+  font-size: 1.2rem;
+}
+
+/* </Loading Placeholder for Lazy Loading/Home.tsx> */
+
+/* <Section Container: DynamicPost/PorfolioPost> */
+
+.post-container {
+
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 3.5%;
+  margin-bottom: 3.5%;
+  margin-left: 3.5%;
+  margin-right: 3.5%;
+
+}
+
+/* </Section Container: DynamicPost/PorfolioPost> */
+
+/* <Image Section: DynamicPost/PorfolioPost> */
+
+.post-img-section {
+  display: flex;
+  margin-top: 0px !important;
+  margin-bottom: 7%;
+  margin-right: 7%;
+  float: left;
+
+
+}
+
+/* </Image Section: DynamicPost/PorfolioPost> */
+
+/* <Text Section: DynamicPost/PorfolioPost> */
+
+.post-text-section {
+
+  margin-top: 0px;
+  width: 100%;
+  height: auto;
+
+}
+
+.PostTitle {
+
+  font-size: 3rem;
+  font-weight: 600;
+  line-height: 1.2;
+  word-wrap: break-word;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  text-align: right;
+
+  margin-bottom: 4%;
+
+}
+
+.sanitized-title p,
+.tiptap-title p {
 
   font-family: 'utopia', serif !important;
   color: #bbf7d0;
-  
+
 
 }
 
 .descriptionParagraph {
 
   font-family: "lemonde-sans", sans-serif;
+  text-align: right;
+  margin-bottom: 4rem;
+}
+
+.PostText {
+
+  font-size: 1.5rem;
+  font-family: "lemonde-sans", sans-serif;
+  font-weight: 300;
+  font-style: normal;
+  line-height: 2.5rem;
+  text-align: justify;
+  word-wrap: break-word;
+  width: 100%;
+  overflow-wrap: break-word;
+
+
+}
+
+.descriptionParagraph p {
+  width: 100%;
+  height: auto;
+  margin-bottom: 2%;
+  text-align: justify;
+  direction: ltr;
 }
 
 
 
+p {
+  line-height: 1.5;
+  /* Adjust the line height to make text more readable */
+  font-size: inherit;
+  /* Make sure the font size inherits from the editor settings */
+  margin-bottom: 4rem;
+}
 
-.PostImgContainer{
 
-  
- 
+/* </Text Section: DynamicPost/PorfolioPost> */
+
+/* <Image Container: DynamicPost/PorfolioPost> */
+
+.PostImgContainer {
+
   display: flex;
   justify-content: center;
   align-items: center;
@@ -160,12 +228,15 @@ h3 {
   height: 700px;
   overflow: hidden;
   border-radius: 15px;
-  
+
 }
 
+/* </Image Container: DynamicPost/PorfolioPost> */
 
+/* <Image: DynamicPost/PorfolioPost> */
 
-.PostImg, .img-slider-img {
+.PostImg,
+.img-slider-img {
   width: 100%;
   margin: 0px;
   aspect-ratio: 1/1;
@@ -175,41 +246,15 @@ h3 {
   transition: translate 300ms ease-in-out;
   position: relative;
   z-index: 10;
-   
-   
+
+
 }
 
 
+/* </Image: DynamicPost/PorfolioPost> */
 
 
-
-.descriptionParagraph {
- 
-  text-align: right;
-  margin-bottom: 4rem;
-  
-  
-}
-
-
-
-
-
-.PostTitle {
-
-    font-size: 3rem;
-    font-weight: 600;
-    line-height: 1.2;
-    word-wrap: break-word;
-    max-width: 100%;
-    overflow-wrap: break-word;
-    text-align: right;
-   
-    margin-bottom: 4%;
-  
-}
-
-/* <Image Slider> */
+/* <ImageSlider.tsx  CSS */
 
 .ImageCarousel {
   display: flex;
@@ -218,49 +263,54 @@ h3 {
   position: relative;
   overflow: hidden;
   border-radius: inherit;
-  
+
 }
 
 /* Buttons default state: hidden */
 .ImageCarousel button {
-  opacity: 0; /* Start invisible */
-  transition: opacity 300ms ease-in-out; /* Smooth fade */
+  opacity: 0;
+  /* Start invisible */
+  transition: opacity 300ms ease-in-out;
+  /* Smooth fade */
 }
 
 /* Show buttons when hovering over the entire carousel */
 .ImageCarousel:hover button {
-  opacity: 1; /* Become visible on hover */
+  opacity: 1;
+  /* Become visible on hover */
 }
 
 /* Optional: Enhance button hover effect */
 .ImageCarousel button:hover {
-  background-color: rgba(0, 0, 0, 0.15); /* Darker on direct button hover */
+  background-color: rgba(0, 0, 0, 0.15);
+  /* Darker on direct button hover */
 }
 
 /* Arrow buttons default state: hidden */
-.ImageCarousel > button {
+.ImageCarousel>button {
   opacity: 0;
   transition: opacity 300ms ease-in-out;
 }
 
 /* Show arrow buttons on hover */
-.ImageCarousel:hover > button {
+.ImageCarousel:hover>button {
   opacity: 1;
 }
 
 /* Enhance arrow button hover */
-.ImageCarousel > button:hover {
+.ImageCarousel>button:hover {
   background-color: rgba(0, 0, 0, 0.75);
 }
 
 /* Dot buttons container */
-.ImageCarousel > div {
-  opacity: 0; /* Hidden by default */
+.ImageCarousel>div {
+  opacity: 0;
+  /* Hidden by default */
   transition: opacity 300ms ease-in-out;
 }
 
 /* Show dot buttons on hover */
-.ImageCarousel:hover > div {
+.ImageCarousel:hover>div {
   opacity: 1;
 }
 
@@ -269,7 +319,8 @@ h3 {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1rem; /* 16px */
+  width: 1rem;
+  /* 16px */
   height: 1rem;
   padding: 0;
   background: none;
@@ -284,44 +335,20 @@ h3 {
 
 /* </Image Slider> */
 
-.PostText {
-
-    font-size: 1.5rem;
-    font-family: "lemonde-sans", sans-serif;
-    font-weight: 300;
-    font-style: normal;
-    line-height: 2.5rem;
-    text-align: justify;
-    word-wrap: break-word;
-    width: 100%;
-    overflow-wrap: break-word;
-    
-
-}
-
-.descriptionParagraph p{
-  width: 100%;
-  height: auto;
-  margin-bottom: 2%;
-  text-align: justify;
-  direction: ltr;
-}
-
-
-
-p {
-line-height: 1.5;
-/* Adjust the line height to make text more readable */
-font-size: inherit;
-/* Make sure the font size inherits from the editor settings */
-margin-bottom: 4rem;
-}
 
 
 @keyframes fadeInOut {
-    0% { opacity: 0; }
-    50% { opacity: 1; }
-    100% { opacity: 0; }
+  0% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
 }
 
 @media (min-width: 768px) and (max-width: 1400px) {
@@ -337,31 +364,31 @@ margin-bottom: 4rem;
     width: 100%;
     margin-left: auto;
     margin-right: auto;
-    
-    
+
+
   }
- 
+
 
   .img-slider-dot-btn {
 
     padding-bottom: 1rem;
   }
 
- 
- 
+
+
 
   .PostTitle {
 
     text-align: center;
   }
 
- 
+
 
   .descriptionParagraph {
 
     text-align: justify;
     direction: ltr;
-    
+
   }
 
   .descriptionParagraph p {
@@ -369,41 +396,25 @@ margin-bottom: 4rem;
     margin-bottom: 1.5rem;
   }
 
- .post-img-section {
-
- 
-  
-  margin-left: auto;
-  margin-right: auto;
-  border-radius: 15px;
- }
-
- .PostImgContainer {
-
-  margin: 0;
-  width: 600px;
-  height: 600px;
-  margin-bottom: 14%;
- }
+  .post-img-section {
 
 
-  .line-bullet {
 
-    display: none;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 15px;
   }
 
-  .line-item {
-    border: 0;
-  height: 4px;
-  background: #2B4072;
-  border-radius: 2px;
-  margin: 20px 0;
-  width: 100%;
-  box-shadow: 0 0 10px rgba(48, 58, 82, 0.5);
-  margin-top: 3.5%;
-  margin-bottom: 3.5%;
+  .PostImgContainer {
 
+    margin: 0;
+    width: 600px;
+    height: 600px;
+    margin-bottom: 14%;
   }
+
+
+
 
 
 
@@ -422,33 +433,33 @@ margin-bottom: 4rem;
     margin: 0px;
     margin-left: auto;
     margin-right: auto;
-    
+
   }
 
   .PostTitle {
 
     text-align: center;
   }
-  
+
 
   .post-img-section {
 
     margin: 0;
-    
+
     margin-left: auto;
     margin-right: auto;
     border-radius: 15px;
-   }
-  
-   .PostImgContainer {
-  
+  }
+
+  .PostImgContainer {
+
     width: 80svw;
     height: auto;
     margin-bottom: 14%;
-   }
   }
-  
-  /* <Button Section> */
+}
+
+/* <Button Section> */
 
 .PO-button-container {
   display: flex;
@@ -457,17 +468,17 @@ margin-bottom: 4rem;
   align-content: flex-end;
   margin-top: 0px;
   text-align: center;
-  
-  
- 
- 
-  
+
+
+
+
+
 }
 
 
 
 .po-button {
-  
+
   display: flex;
   font-family: "darkmode-off-cc", sans-serif;
   font-variation-settings: "wdth" 700, "wght" 700;
@@ -475,22 +486,22 @@ margin-bottom: 4rem;
   font-size: 1.5rem;
   border: none;
   border-radius: 0.25rem;
-  
+
   width: 100%;
-  background-color:  #353941;
+  background-color: #353941;
   color: #f5f5f5;
   height: 3.5rem;
   align-items: center;
   justify-content: center;
-  
 
- 
-  
+
+
+
 }
 
 
 
-.po-button svg{
+.po-button svg {
 
   margin-right: 4px;
   width: 1.75rem;
@@ -499,14 +510,14 @@ margin-bottom: 4rem;
 
 .po-button-text {
 
-font-size: 1.2rem;
-margin-right: 3rem;
+  font-size: 1.2rem;
+  margin-right: 3rem;
 }
 
 
 
-  
-  
+
+
 
 
 

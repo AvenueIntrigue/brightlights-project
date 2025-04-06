@@ -52,7 +52,9 @@ const BulletContainer: React.FC<BulletContainerProps> = ({
         const combinedPosts = responses.flat();
         setPosts(combinedPosts);
 
-        const allKeywords = combinedPosts.flatMap((post) => post.keywords || []);
+        const allKeywords = combinedPosts.flatMap(
+          (post) => post.keywords || []
+        );
         onKeywordsChange([...new Set([...keywords, ...allKeywords])]);
       } catch (error) {
         console.error("Error fetching posts:", error);
@@ -84,19 +86,37 @@ const BulletContainer: React.FC<BulletContainerProps> = ({
 
   return (
     <div className="Grandpa">
-      
       <Helmet>
         <meta
+          name="description"
+          content="Explore our web, app, and graphic design services"
+        />
+        <meta
           name="keywords"
-          content={[...keywords, ...posts.flatMap((post) => post.keywords || [])].join(", ")}
+          content={[
+            ...keywords,
+            ...posts.flatMap((post) => post.keywords || []),
+          ].join(", ")}
         />
       </Helmet>
 
       <div className="bullet-container">
         {posts.map((post, index) => {
-          const sanitizedTitle = DOMPurify.sanitize(post.title, { ALLOWED_TAGS: [] });
+          const sanitizedTitle = DOMPurify.sanitize(post.title, {
+            ALLOWED_TAGS: [],
+          });
           const sanitizedDescription = DOMPurify.sanitize(post.description, {
-            ALLOWED_TAGS: ["h1", "h2", "h3", "p", "br", "span", "div", "img", "a"],
+            ALLOWED_TAGS: [
+              "h1",
+              "h2",
+              "h3",
+              "p",
+              "br",
+              "span",
+              "div",
+              "img",
+              "a",
+            ],
             ALLOWED_ATTR: ["style", "class", "src", "href", "alt"],
           });
 

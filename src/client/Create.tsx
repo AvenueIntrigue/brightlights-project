@@ -41,7 +41,7 @@ import {
 } from "lucide-react";
 import { useUser, useSession } from "@clerk/clerk-react";
 import axios from "axios";
-import "./Create.css"
+import "./Create.css";
 import Paragraph from "@tiptap/extension-paragraph";
 import { availableAdobeFonts } from "./Fonts";
 import { FontSize } from "./FontSize";
@@ -73,10 +73,6 @@ const initialValue: CustomElement[] = [
 ];
 
 const Create = () => {
-
-
-
-
   const [pages, setPages] = useState<string[]>([]);
 
   const [selectedPage, setSelectedPage] = useState<string>("");
@@ -85,13 +81,22 @@ const Create = () => {
     const fetchPages = async () => {
       try {
         // Hardcoded list of known page types, capitalized here
-        const knownTypes = ['pricing', 'about', 'services', 'web-development', 'app-development', 'graphic-design', 'web3', 'projects',].map(type => 
-          type.charAt(0).toUpperCase() + type.slice(1)
-        );
+        const knownTypes = [
+          "pricing",
+          "about",
+          "services",
+          "web-development",
+          "app-development",
+          "graphic-design",
+          "web3",
+          "projects",
+        ].map((type) => type.charAt(0).toUpperCase() + type.slice(1));
         let availablePages: string[] = [];
-  
+
         for (const type of knownTypes) {
-          const response = await fetch(`http://localhost:3000/api/${type.toLowerCase()}`);
+          const response = await fetch(
+            `http://localhost:3000/api/${type.toLowerCase()}`
+          );
           if (response.ok) {
             // If the response is OK, we know this type exists, so we add it to our list
             availablePages.push(type);
@@ -99,16 +104,18 @@ const Create = () => {
             // If 404, it means this type doesn't exist or has no posts yet
             console.log(`${type} type not found or has no posts.`);
           } else {
-            throw new Error(`Failed to fetch ${type} page status: ${response.status}`);
+            throw new Error(
+              `Failed to fetch ${type} page status: ${response.status}`
+            );
           }
         }
-  
+
         setPages(availablePages); // Update the state with the types that exist
       } catch (error) {
-        console.error('Error fetching page types:', error);
+        console.error("Error fetching page types:", error);
       }
     };
-  
+
     fetchPages();
   }, []);
 
@@ -228,9 +235,6 @@ const Create = () => {
     const dropdownRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    
-
-    
     const handleDropdownToggle = (e: React.MouseEvent<HTMLDivElement>) => {
       if (e.target !== inputRef.current) {
         setIsDropdownVisible(!isDropdownVisible);
@@ -238,10 +242,9 @@ const Create = () => {
     };
 
     const handlePageSelect = (page: string) => {
-
       onPageSelect(page);
       setIsDropdownVisible(false);
-    }
+    };
 
     const handlePageClick = (page: string) => {
       if (page === "Add New Page") {
@@ -253,7 +256,7 @@ const Create = () => {
     };
 
     const handleAddNewPage = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') {
+      if (e.key === "Enter") {
         e.preventDefault();
         if (newPage.trim() && !pages.includes(newPage.trim())) {
           // Add new page to the list and select it
@@ -266,7 +269,9 @@ const Create = () => {
     };
 
     const handleRemovePage = (pageToRemove: string) => {
-      setPages(prevPages => prevPages.filter(page => page !== pageToRemove));
+      setPages((prevPages) =>
+        prevPages.filter((page) => page !== pageToRemove)
+      );
       if (selectedPage === pageToRemove) {
         setSelectedPage(""); // Reset selection if the removed page was selected
       }
@@ -275,7 +280,11 @@ const Create = () => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as EventTarget;
       if (dropdownRef.current && target instanceof Node) {
-        if (!dropdownRef.current.contains(target as Node) && inputRef.current && !inputRef.current.contains(target as Node)) {
+        if (
+          !dropdownRef.current.contains(target as Node) &&
+          inputRef.current &&
+          !inputRef.current.contains(target as Node)
+        ) {
           setIsDropdownVisible(false);
         }
       }
@@ -289,40 +298,47 @@ const Create = () => {
     }, []);
 
     return (
-      <div ref={dropdownRef} className="create-custom-dropdown" onClick={handleDropdownToggle}>
+      <div
+        ref={dropdownRef}
+        className="create-custom-dropdown"
+        onClick={handleDropdownToggle}
+      >
         <div className="cd-input-field absolute top-0 left-0 right-0 outline-3">
-        <div className="dropdown-selected block w-full">
-          {selectedPage || <div className="create-category-placeholder w-full"><span>Page</span></div>}
-        </div>
-        {isDropdownVisible && (
-          <div className="create-dropdown-menu top-0 w-full h-auto rounded-md">
-            {pages.map((page) => (
-              <div key={page} className="cat-sect w-full h-auto">
-                <div className="dropdown-item w-full h-auto">
-                  
-                  <span className="w-full h-auto " onClick={() => handlePageSelect(page)}>{page}</span>
-                </div>
+          <div className="dropdown-selected block w-full">
+            {selectedPage || (
+              <div className="create-category-placeholder w-full">
+                <span>Page</span>
               </div>
-              
-            ))}
-            <div className="dropdown-item w-full h-auto bg-transparent">
-            
-            <input
-              type="text"
-              ref={inputRef}
-              className="cat-sect w-full h-auto bg-transparent outline-none hover:text-slate-600 text-center"
-              placeholder="Add New Page"
-              value={newPage}
-              onChange={(e) => setNewPage(e.target.value)}
-              onKeyPress={handleAddNewPage}
-              onClick={(e) => e.stopPropagation()}
-            />
-            
-            </div>
-            
+            )}
           </div>
-          
-        )}
+          {isDropdownVisible && (
+            <div className="create-dropdown-menu top-0 w-full h-auto rounded-md">
+              {pages.map((page) => (
+                <div key={page} className="cat-sect w-full h-auto">
+                  <div className="dropdown-item w-full h-auto">
+                    <span
+                      className="w-full h-auto "
+                      onClick={() => handlePageSelect(page)}
+                    >
+                      {page}
+                    </span>
+                  </div>
+                </div>
+              ))}
+              <div className="dropdown-item w-full h-auto bg-transparent">
+                <input
+                  type="text"
+                  ref={inputRef}
+                  className="cat-sect w-full h-auto bg-transparent outline-none hover:text-slate-600 text-center"
+                  placeholder="Add New Page"
+                  value={newPage}
+                  onChange={(e) => setNewPage(e.target.value)}
+                  onKeyPress={handleAddNewPage}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -457,7 +473,6 @@ const Create = () => {
         return;
 
         editorTwo.chain().focus().unsetColor().run();
-
       }
 
       const newPost = {
@@ -513,118 +528,124 @@ const Create = () => {
               setEditorOne={setEditorOne}
             />
 
-            <div title="Choose Desired Page" className="create-input-field relative mb-4 ">
-              
+            <div
+              title="Choose Desired Page"
+              className="create-input-field relative mb-4 "
+            >
               <CustomDropdown
                 pages={pages}
                 selectedPage={selectedPage}
-
                 onPageSelect={handlePageSelect}
                 onPageRemove={handleRemovePage}
-                
               />
-              
             </div>
-          
 
-          <div className="flex w-full h-auto">
-            <div title="Upload Image" className="create-input-field relative mb-4 text-wrap p-3 flex-col">
-              <div className="">
-              <div className="">
-              {isImageUploaded && (
-                <div className="create-image-preview-container p-[7%] w-full h-auto">
+            <div className="flex w-full h-auto">
+              <div
+                title="Upload Image"
+                className="create-input-field relative mb-4 text-wrap p-3 flex-col"
+              >
+                <div className="">
+                  <div className="">
+                    {isImageUploaded && (
+                      <div className="create-image-preview-container p-[7%] w-full h-auto">
+                        <div className="flex-row">
+                          <img
+                            src={imagePreview}
+                            alt="Image Preview"
+                            className="w-[50px] h-[50px] object-cover rounded-full mr-2 flex"
+                          />
+                        </div>
+                      </div>
+                    )}
 
-                  <div className="flex-row">
-                  <img
-                    src={imagePreview}
-                    alt="Image Preview"
-                    className="w-[50px] h-[50px] object-cover rounded-full mr-2 flex"
-                  />
+                    <div className="flex">
+                      {!fileName && focusedField !== "imageURL" && (
+                        <div className="img-label-container">
+                          <label className="img-label">
+                            Image URL: (1/1 Aspect Ratio PDF JPG PNG)
+                          </label>
+                        </div>
+                      )}
+                      {fileName && (
+                        <label className="create-file-name col-y pt-1 pl-5">
+                          {fileName}
+                        </label>
+                      )}
+
+                      <div className="create-file-input-wrapper">
+                        <input
+                          type="file"
+                          className="create-file-input"
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              const alt = prompt(
+                                "Enter alt text for the image:"
+                              );
+                              if (alt) {
+                                uploadImage(e.target.files[0], alt);
+                              }
+                            }
+                          }}
+                          required
+                          onFocus={() => setFocusedField("imageURL")}
+                          onBlur={() => setFocusedField("")}
+                        />
+                        <div className="create-custom-file-label">
+                          <label className="w-full h-auto flex-1">
+                            Choose file
+                          </label>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              )}
 
-              <div className="flex">
-              {!fileName && focusedField !== "imageURL" && (
-                <div className="img-label-container">
-                <label className="img-label">
-                  Image URL: (1/1 Aspect Ratio PDF JPG PNG)
-                </label>
-                </div>
-              )}
-              {fileName && (
-                <label className="create-file-name col-y pt-1 pl-5">{fileName}</label>
-              )}
-              
-              <div className="create-file-input-wrapper">
-              
-                <input
-                  type="file"
-                  className="create-file-input"
-                  onChange={(e) => {
-                    if (e.target.files && e.target.files[0]) {
-                      const alt = prompt("Enter alt text for the image:");
-                      if (alt) {
-                        uploadImage(e.target.files[0], alt);
-                      }
-                    }
-                  }}
-                  required
-                  onFocus={() => setFocusedField("imageURL")}
-                  onBlur={() => setFocusedField("")}
-                />
-             <div className="create-custom-file-label">
-                <label className="w-full h-auto flex-1">Choose file</label>
-                </div>
-                </div>
-                </div>
-                </div>
-                </div>
+                {/* Image Preview Section */}
 
-
-            
-            {/* Image Preview Section */}
-
-            <div className="create-ips-container">
-              {images.map((image, index) => (
-                <div key={index} className="create-image-preview-container flex">
-                  
-                  <div className="create-image-container">
-                    <img
-                      src={image.url}
-                      alt={image.alt}
-                      className="create-image-preview"
-                    />
-                    </div>
-                    <div className="create-image-cancel">
-                    <div className="create-cancel-button-container flex-1">
-                    <button
-                      className="create-cancel-button"
-                      onClick={() => handleCancelImage(index)}
+                <div className="create-ips-container">
+                  {images.map((image, index) => (
+                    <div
+                      key={index}
+                      className="create-image-preview-container flex"
                     >
-                      x
-                    </button>
+                      <div className="create-image-container">
+                        <img
+                          src={image.url}
+                          alt={image.alt}
+                          className="create-image-preview"
+                        />
+                      </div>
+                      <div className="create-image-cancel">
+                        <div className="create-cancel-button-container flex-1">
+                          <button
+                            className="create-cancel-button"
+                            onClick={() => handleCancelImage(index)}
+                          >
+                            x
+                          </button>
+                        </div>
+                      </div>
+                      <div className="create-img-alt-text-container text-wrap">
+                        <label className="create-image-alt-text">
+                          {image.alt}
+                        </label>
+                      </div>
                     </div>
-                  </div>
-                  <div className="create-img-alt-text-container text-wrap">
-                  <label className="create-image-alt-text">{image.alt}</label>
-                  </div>
-                  
+                  ))}
                 </div>
-              ))}
-
               </div>
-            
-            </div>
             </div>
             {/* <Image Preview Section/> */}
-            
-            
+
             <div className="editorContainer" title="Add Your Article">
-            <DescriptionEditor setEditorTwo={setEditorTwo} />
+              <DescriptionEditor setEditorTwo={setEditorTwo} />
             </div>
 
-            <div title="Add Keywords for SEO Optimization" className="create-keywords-section">
+            <div
+              title="Add Keywords for SEO Optimization"
+              className="create-keywords-section"
+            >
               <div className="">
                 <input
                   type="text"
@@ -645,7 +666,7 @@ const Create = () => {
                     className="create-keyword-chip flex items-center px-2 py-2 mr-2 mb-2 rounded"
                   >
                     <button
-                    title="Delete Keyword"
+                      title="Delete Keyword"
                       onClick={() => handleDeleteKeyword(keyword)}
                       className="create-keyword-btn"
                     >

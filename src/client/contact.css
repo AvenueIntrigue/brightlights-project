@@ -7,16 +7,16 @@ p {
 
 
 .contact-container {
-    display: flex;
-    flex-direction: column;
-    width: 80svw;
-    height: auto;
-    padding-top: 7%;
-    padding-bottom: 7%;
-    /* z-index: 101; */
-    margin-left: auto;
-    margin-right: auto;
-   
+  display: flex;
+  flex-direction: column;
+  width: 80svw;
+  height: auto;
+  padding-top: 7%;
+  padding-bottom: 7%;
+  /* z-index: 101; */
+  margin-left: auto;
+  margin-right: auto;
+
 
 }
 
@@ -24,261 +24,284 @@ p {
 
 
 
-.create-contact{
+.create-contact {
 
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    width: 66%;
-    height: auto;
-    align-items: center;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 3.5%;
-    margin-bottom: 3.5%;
-    
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 66%;
+  height: auto;
+  align-items: center;
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 3.5%;
+  margin-bottom: 3.5%;
+
 }
 
 .form-container {
 
-    display: flex;
-    flex-direction: row;
-    
-    border-radius: 15px;
-    width: 100%;
-    height: auto;
-    background-color:  #353941;
-    padding: 1.25rem;
+  display: flex;
+  flex-direction: row;
+
+  border-radius: 15px;
+  width: 100%;
+  height: auto;
+  background-color: #353941;
+  padding: 1.25rem;
 }
 
 .form {
 
-    width: 100%;
-    height: auto;
-    border-radius: 5%;
-  
+  width: 100%;
+  height: auto;
+  border-radius: 5%;
 
-  }
+
+}
 
 .form-content {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: auto;
-    margin-top: 3.5%;
-    margin-bottom: 3.5%; 
-    font-family: "lemonde-sans", sans-serif;
-    font-weight: 500;
-    font-size: 1.25rem;
-    font-style: normal;
-    color: #6B7280;
-    line-height: 1.5rem;
-    
-    
-  }
-
-
-  .letter-container{
-
-    width: 100%;
-    height: auto;
-    margin-top: 3.5%;
-    margin-bottom: 3.5%;
-    
-  }
-
-
-  .letter-card {
-
-    width: 100%;
-    height: auto;
-    margin-top: 3.5%;
-    margin-bottom: 3.5%;
-    
-  }
-
-  .logo-card {
-
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    height: auto;
-    margin-top: 3.5%;
-    margin-bottom: 3.5%;
-    margin-left: auto;
-    margin-right: auto;
-    align-items: center;
-    justify-content: flex-start;
-    
-  }
-
-  .bl-logo-card-img-container {
-    display: flex;
-    flex-direction: row; /* Ensure children are in a row */
-    width: 100%; /* Take full width of logo-card */
-    height: auto;
-    align-items: center; /* Center vertically */
-    margin-top: auto;
-    margin-bottom: auto;
-   
-  }
-
-  
-  .bl-logo-img {
-    
-    display: flex;
-    justify-content: flex-start; /* Center the icon horizontally */
-    align-items: center; /* Center the icon vertically */
-    max-width: 25%; /* Optional: Limit icon width */
-    min-width: 50px;
-    height: auto;
-    margin-top: auto;
-    margin-bottom: auto;
-    
-  }
-
-  .OpenBox-container {
-    width: 100%; /* Ensure it takes full space of its parent */
-    height: auto;
-    
-   
-  }
-
-
-  .bl-logo-title-container {
-    
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: auto;
-    justify-content: flex-start; /* Center the title horizontally */
-    align-self: center; /* Center the title vertically */
-    font-family: "utopia", serif;
-    font-weight: 600;
-    font-size: 3rem;
-    margin-top: auto;
-    margin-bottom: 1rem;
-  }
-  
-  .bl-logo-title {
-
-    width: 100%; /* Span the container */
-    height: auto;
-    text-align: left; /* Center the h1 text */
-    margin-left: 4rem;
-    margin-top: auto;
-    margin-bottom: auto;
-   
-  }
-
-  .letter-card-container{
-
-    font-family: "lemonde-sans", sans-serif;
-    font-weight: 500;
-    font-style: normal;
-    font-size: 1.25rem;
-    line-height: 1.5;
-    width: 100%;
-    height: auto;
-    margin-top: 3.5%;
-    margin-bottom: 3.5%;
-  }
-
-  .paper-airplane-card{
-
-    width: 100%;
-    height: auto;
-    display: flex;
-    flex-direction: row;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: auto;
   margin-top: 3.5%;
-    margin-bottom: 3.5%;
-    margin-left: auto;
-    margin-right: auto;
-    
-    
-    }
+  margin-bottom: 3.5%;
+  font-family: "lemonde-sans", sans-serif;
+  font-weight: 500;
+  font-size: 1.25rem;
+  font-style: normal;
+  color: #6B7280;
+  line-height: 1.5rem;
 
-  .paper-airplane-container{
-   display: flex;
-    width: 50%;
-    height: auto;
-    margin: auto;
-  }
 
-  
+}
 
-  .input-field, .tiptap {
-    margin-bottom: 1rem;
-    position: relative;
-    width: 100%;
-    height: 2.5rem;
-    border: 1px solid #6B7280;
-    border-radius: 0.375rem;
-    background-color: transparent; /* Ensure transparency */
-    color: #6b7280; /* Set text color */
-    outline: none; /* Remove default outline */
+
+.letter-container {
+
+  width: 100%;
+  height: auto;
+  margin-top: 3.5%;
+  margin-bottom: 3.5%;
+
+}
+
+
+.letter-card {
+
+  width: 100%;
+  height: auto;
+  margin-top: 3.5%;
+  margin-bottom: 3.5%;
+
+}
+
+.logo-card {
+
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: auto;
+  margin-top: 3.5%;
+  margin-bottom: 3.5%;
+  margin-left: auto;
+  margin-right: auto;
+  align-items: center;
+  justify-content: flex-start;
+
+}
+
+.bl-logo-card-img-container {
+  display: flex;
+  flex-direction: row;
+  /* Ensure children are in a row */
+  width: 100%;
+  /* Take full width of logo-card */
+  height: auto;
+  align-items: center;
+  /* Center vertically */
+  margin-top: auto;
+  margin-bottom: auto;
+
+}
+
+
+.bl-logo-img {
+
+  display: flex;
+  justify-content: flex-start;
+  /* Center the icon horizontally */
+  align-items: center;
+  /* Center the icon vertically */
+  max-width: 25%;
+  /* Optional: Limit icon width */
+  min-width: 50px;
+  height: auto;
+  margin-top: auto;
+  margin-bottom: auto;
+
+}
+
+.OpenBox-container {
+  width: 100%;
+  /* Ensure it takes full space of its parent */
+  height: auto;
+
+
+}
+
+
+.bl-logo-title-container {
+
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: auto;
+  justify-content: flex-start;
+  /* Center the title horizontally */
+  align-self: center;
+  /* Center the title vertically */
+  font-family: "utopia", serif;
+  font-weight: 600;
+  font-size: 3rem;
+  margin-top: auto;
+  margin-bottom: 1rem;
+}
+
+.bl-logo-title {
+
+  width: 100%;
+  /* Span the container */
+  height: auto;
+  text-align: left;
+  /* Center the h1 text */
+  margin-left: 4rem;
+  margin-top: auto;
+  margin-bottom: auto;
+
+}
+
+.letter-card-container {
+
+  font-family: "lemonde-sans", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+  font-size: 1.25rem;
+  line-height: 1.5;
+  width: 100%;
+  height: auto;
+  margin-top: 3.5%;
+  margin-bottom: 3.5%;
+}
+
+.paper-airplane-card {
+
+  width: 100%;
+  height: auto;
+  display: flex;
+  flex-direction: row;
+  margin-top: 3.5%;
+  margin-bottom: 3.5%;
+  margin-left: auto;
+  margin-right: auto;
+
+
+}
+
+.paper-airplane-container {
+  display: flex;
+  width: 50%;
+  height: auto;
+  margin: auto;
 }
 
 
 
-.input-field input{
-    width: 100%; /* Make inputs and textarea take up the full width */
-    background-color: transparent !important;
-    color: #f5f5f5;
-    border: none;
-    outline: none;
-    padding-top: 0.4rem; /* Add padding to space the content inside */
-    padding-left: 1.25rem;
-    box-sizing: border-box; /* Ensure padding is included in the width calculation */
+.input-field,
+.tiptap {
+  margin-bottom: 1rem;
+  position: relative;
+  width: 100%;
+  height: 2.5rem;
+  border: 1px solid #6B7280;
+  border-radius: 0.375rem;
+  background-color: transparent;
+  /* Ensure transparency */
+  color: #6b7280;
+  /* Set text color */
+  outline: none;
+  /* Remove default outline */
+}
+
+
+
+.input-field input {
+  width: 100%;
+  /* Make inputs and textarea take up the full width */
+  background-color: transparent !important;
+  color: #f5f5f5;
+  border: none;
+  outline: none;
+  padding-top: 0.4rem;
+  /* Add padding to space the content inside */
+  padding-left: 1.25rem;
+  box-sizing: border-box;
+  /* Ensure padding is included in the width calculation */
 }
 
 
 
 .floating-label {
-    position: absolute;
-    top: 50%;
-    left: 1.25rem;
-    width: 4rem;
-    height: auto;
-    transform: translateY(-50%);
-    transition: all 0.2s ease-in-out;
-    
-    color: #6b7280;
-    pointer-events: none;
+  position: absolute;
+  top: 50%;
+  left: 1.25rem;
+  width: 4rem;
+  height: auto;
+  transform: translateY(-50%);
+  transition: all 0.2s ease-in-out;
+
+  color: #6b7280;
+  pointer-events: none;
 }
 
 .floating-label.filled,
-.input-field input:focus + .floating-label {
-    /* top: -10px; */
-    font-size: 0.75rem;
-    color: transparent;
+.input-field input:focus+.floating-label {
+  /* top: -10px; */
+  font-size: 0.75rem;
+  color: transparent;
 }
 
 
- .tiptap::placeholder {
-  
-  color: #6b7280; /* Set placeholder text color */
-    opacity: 1; /* Ensure full opacity for placeholders */
-   padding: 0;
+.tiptap::placeholder {
+
+  color: #6b7280;
+  /* Set placeholder text color */
+  opacity: 1;
+  /* Ensure full opacity for placeholders */
+  padding: 0;
 }
 
-.input-field input:focus + label,
+.input-field input:focus+label,
 .label-active {
-    top: -0.5rem;
-    left: 0.75rem;
-    font-size: 0.85rem;
-    color: #4ade80; /* Example color for active state */
+  top: -0.5rem;
+  left: 0.75rem;
+  font-size: 0.85rem;
+  color: #4ade80;
+  /* Example color for active state */
 }
 
 .input-error label {
-    color: #ff2800; /* Red label for errors */
-    
+  color: #ff2800;
+  /* Red label for errors */
+
 }
 
 .input-error input {
-    
-    border: 2px solid #ff2800; /* Red border for errors */
-    height: 100%;
+
+  border: 2px solid #ff2800;
+  /* Red border for errors */
+  height: 100%;
 }
 
 
@@ -296,7 +319,8 @@ p {
   border: 1px solid #6B7280;
   border-radius: 0.375rem;
   background-color: transparent, !important;
-  padding: 0.25rem 1.25rem; /* Padding matches other input fields */
+  padding: 0.25rem 1.25rem;
+  /* Padding matches other input fields */
   box-sizing: border-box;
   overflow: hidden;
   margin-top: none;
@@ -304,56 +328,61 @@ p {
 
 }
 
-  
-  .ProseMirror p.is-empty::before {
 
-    content: attr(data-placeholder);
+.ProseMirror p.is-empty::before {
 
-    position: absolute;
-    left: -0.1rem; /* Matches padding-left of other input fields */
-    top: 0.25rem;
-    background-color: transparent !important;
-    font-family: "lemonde-sans", sans-serif;
-    font-weight: 500;
-    font-size: 1.25rem;
-    line-height: 1.5;
-    color: #6b7280;
-    pointer-events: none;
-    height: 0; /* Ensure it doesn't affect the layout */
-   
-   
-}
+  content: attr(data-placeholder);
 
- 
+  position: absolute;
+  left: -0.1rem;
+  /* Matches padding-left of other input fields */
+  top: 0.25rem;
+  background-color: transparent !important;
+  font-family: "lemonde-sans", sans-serif;
+  font-weight: 500;
+  font-size: 1.25rem;
+  line-height: 1.5;
+  color: #6b7280;
+  pointer-events: none;
+  height: 0;
+  /* Ensure it doesn't affect the layout */
 
-  .editor .ProseMirror p {
-    line-height: 1.5rem; /* Adjust the line height to make text more readable */
-    padding-top: 0.25rem;
-    font-size: 1.25; /* Make sure the font size inherits from the editor settings */
-    padding-top: 0.25rem;
-    padding-left: -1rem;
-    background-color: transparent !important;
-  }
 
-  .editor:focus-within .ProseMirror {
-    color: #bbf7d0; /* Text color when the editor is active */
 }
 
 
-  .editor:hover .ProseMirror {
 
-    border: 3px solid #bbf7d0;
-    transition: border 250ms ease-in-out;
-    color: #bbf7d0;
-    /* cursor: pointer; */
-  }
+.editor .ProseMirror p {
+  line-height: 1.5rem;
+  /* Adjust the line height to make text more readable */
+  padding-top: 0.25rem;
+  font-size: 1.25;
+  /* Make sure the font size inherits from the editor settings */
+  padding-top: 0.25rem;
+  padding-left: -1rem;
+  background-color: transparent !important;
+}
 
-  .editor.input-error .ProseMirror {
+.editor:focus-within .ProseMirror {
+  color: #bbf7d0;
+  /* Text color when the editor is active */
+}
 
-    border: 2px solid #ff2800;
-    border-radius: 0.375rem;
-    
-    
+
+.editor:hover .ProseMirror {
+
+  border: 3px solid #bbf7d0;
+  transition: border 250ms ease-in-out;
+  color: #bbf7d0;
+  /* cursor: pointer; */
+}
+
+.editor.input-error .ProseMirror {
+
+  border: 2px solid #ff2800;
+  border-radius: 0.375rem;
+
+
 }
 
 .consent-container {
@@ -365,10 +394,11 @@ p {
   margin-right: auto;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem; /* Space between checkboxes */
+  gap: 1.5rem;
+  /* Space between checkboxes */
   cursor: pointer !important;
-  
-  
+
+
 }
 
 .consent-label {
@@ -381,18 +411,21 @@ p {
   line-height: 1.5;
   cursor: pointer;
 }
+
 .consent-label:hover {
-  
+
   color: #bbf7d0;
-  
+
   transition: color 250ms ease-in-out;
-  
+
 }
 
 .consent-label input[type="checkbox"] {
   margin-right: 0.5rem;
-  margin-top: 0.2rem; /* Align with text */
-  accent-color: #bbf7d0; /* Checkbox color */
+  margin-top: 0.2rem;
+  /* Align with text */
+  accent-color: #bbf7d0;
+  /* Checkbox color */
   width: 1rem;
   height: 1rem;
   cursor: pointer !important;
@@ -400,170 +433,167 @@ p {
 
 .consent-label input[type="checkbox"]:hover {
 
-  
 
-  box-shadow: 0 0 8px #bbf7d0; /* Glow effect on hover */
-  border: 2px solid #bbf7d0; /* Border change on hover */
+
+  box-shadow: 0 0 8px #bbf7d0;
+  /* Glow effect on hover */
+  border: 2px solid #bbf7d0;
+  /* Border change on hover */
   transition: border 250ms ease-in-out;
 }
 
 .checkbox-marketing:hover {
 
-    background-color: #bbf7d0;
-    cursor: pointer;
+  background-color: #bbf7d0;
+  cursor: pointer;
 
 }
 
 .consent-label span {
-  flex: 1; /* Take remaining space */
+  flex: 1;
+  /* Take remaining space */
 }
 
 
 
-  .submit-button {
-    
+.submit-button {
 
-    font-family: "adapt-variable", sans-serif;
-    font-variation-settings: "wdth" 700, "wght" 700;
-    text-transform: uppercase;
-    
+
+  font-family: "adapt-variable", sans-serif;
+  font-variation-settings: "wdth" 700, "wght" 700;
+  text-transform: uppercase;
+
+}
+
+.submit-button:hover {
+
+  background-color: mediumspringgreen;
+
+}
+
+
+
+.editor-error p {
+
+  color: #ff2800;
+}
+
+
+.Contact-Address-Master {
+
+  display: flex;
+  margin-top: 3.5%;
+  margin-bottom: 3.5%;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #353941;
+  color: #f5f5f5;
+  width: 66%;
+  height: auto;
+  border-radius: 15px;
+  font-family: "lemonde-sans", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+  font-size: 1.25rem;
+  line-height: 1.5;
+}
+
+.Contact-Address-Container {
+
+  width: 100%;
+  height: auto;
+  margin: 3.5%;
+}
+
+
+
+
+
+
+@media (min-width: 768px) and (max-width: 1140px) {
+
+  .create-contact {
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+    align-items: center;
+    margin-left: auto;
+    margin-right: auto;
+
   }
 
-  .submit-button:hover {
+  .Contact-Address-Master {
 
-    background-color: mediumspringgreen;
-    
+    width: 100%;
+    height: auto;
+  }
+
+  .form-container {
+
+    display: flex;
+    flex-direction: column;
+
+  }
+
+
+  .letter-card {
+
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+
+    margin-left: 15%;
+
   }
 
 
 
-  .editor-error p {
-
-    color: #ff2800;  }
-
-
-    .Contact-Address-Master{
-
-      display: flex;
-      margin-top: 3.5%;
-      margin-bottom: 3.5%;
-      margin-left: auto;
-      margin-right: auto ;
-      background-color:  #353941;
-      color: #f5f5f5;
-      width: 66%;
-      height: auto;
-      border-radius: 15px;
-      font-family: "lemonde-sans", sans-serif;
-      font-weight: 500;
-      font-style: normal;
-      font-size: 1.25rem;
-      line-height: 1.5;
-    }
-
-    .Contact-Address-Container {
-
-      width: 100%;
-      height: auto;
-      margin: 3.5%;
-    }
-
-
-    
-    
-
-
-    @media (min-width: 768px) and (max-width: 1140px) {
-
-      .create-contact{
-
-        position: relative;
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        height: auto;
-        align-items: center;
-        margin-left: auto;
-        margin-right: auto;
-        
-    }
-
-    .Contact-Address-Master {
-
-      width: 100%;
-      height: auto;
-    }
-
-    .form-container {
-
-      display: flex;
-      flex-direction: column;
-     
-    }
-
-
-      .letter-card {
-
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        height: auto;
-       
-        margin-left: 15%;
-
-      }
-
-   
-
-      .paper-airplane-container{
-        display: flex;
-         width: 50%;
-         height: 50%;
-         margin: auto;
-       }
-
-    
-
-
-    }
-
-    @media (max-width: 768px) {
-
-
-      .contact-container {
-
-        
-        padding-left: 1rem;
-        padding-right: 1rem;
-        width: 85svw;
-        margin-left: auto;
-        margin-right:auto;
-      }
-
-      .Contact-Address-Master {
-
-        width: 80svw;
-        height: auto;
-      }
-
-      .create-contact {
-
-        width: 100%;
-      }
-
-
-      .form-container {
-
-        display: flex;
-        flex-direction: column;
-      }
-     
-      
-    }
-
- 
+  .paper-airplane-container {
+    display: flex;
+    width: 50%;
+    height: 50%;
+    margin: auto;
+  }
 
 
 
 
+}
 
+@media (max-width: 768px) {
+
+
+  .contact-container {
+
+
+    padding-left: 1rem;
+    padding-right: 1rem;
+    width: 85svw;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .Contact-Address-Master {
+
+    width: 80svw;
+    height: auto;
+  }
+
+  .create-contact {
+
+    width: 100%;
+  }
+
+
+  .form-container {
+
+    display: flex;
+    flex-direction: column;
+  }
+
+
+}

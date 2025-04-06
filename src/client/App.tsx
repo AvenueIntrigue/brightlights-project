@@ -10,13 +10,19 @@ import CreateBlog from "./CreateBlog";
 import PrivateRoute from "./PrivateRoute";
 import CreatePricing from "./Create";
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
-
+import { Helmet } from "react-helmet-async";
 import ProfilePage from "./ProfilePage";
 import DynamicPost from "./DynamicPost";
 import Portfolio from "./Portfolio";
 const App: React.FC = () => {
   return (
     <div>
+      <Helmet>
+      <meta name="google-site-verification" content="googlefd09adf64001cc42.html" />
+      <meta name="msvalidate.01" content="747DB8DFF5B596B36E56160A4BF8CB35" />
+      </Helmet>
+
+      
       <Header />
       <Routes>
         <Route path="/" element={<Home />} />
