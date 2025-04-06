@@ -23,8 +23,8 @@ const BulletContainer: React.FC<BulletContainerProps> = ({
   keywords,
   onKeywordsChange,
 }) => {
-  const [isLoading, setIsLoading] = useState(true);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -56,16 +56,21 @@ const BulletContainer: React.FC<BulletContainerProps> = ({
         onKeywordsChange([...new Set([...keywords, ...allKeywords])]);
       } catch (error) {
         console.error("Error fetching posts:", error);
-      } finally {
-        setIsLoading(false);
+        setError("Failed to load bullet points.");
       }
     };
 
     fetchPosts();
   }, [keywords, onKeywordsChange]);
 
-  if (isLoading) {
-    throw new Promise(() => {});
+  // If error, show it; no loading state render
+  if (error) {
+    return <div className="error">{error}</div>;
+  }
+
+  // Only render when data is ready; Suspense handles the rest
+  if (posts.length === 0 && !error) {
+    return null; // Wait for data without showing "Loading..."
   }
 
   const handleReadMore = (pages: string) => {
@@ -79,7 +84,7 @@ const BulletContainer: React.FC<BulletContainerProps> = ({
 
   return (
     <div className="Grandpa">
-      <hr className="line-bullet"/>
+      
       <Helmet>
         <meta
           name="keywords"
@@ -87,61 +92,54 @@ const BulletContainer: React.FC<BulletContainerProps> = ({
         />
       </Helmet>
 
-      
       <div className="bullet-container">
-        {posts.length === 0 ? (
-          <p>No posts available.</p>
-        ) : (
-          posts.map((post, index) => {
-            const sanitizedTitle = DOMPurify.sanitize(post.title, { ALLOWED_TAGS: [] });
-            const sanitizedDescription = DOMPurify.sanitize(post.description, {
-              ALLOWED_TAGS: ["h1", "h2", "h3", "p", "br", "span", "div", "img", "a"],
-              ALLOWED_ATTR: ["style", "class", "src", "href", "alt"],
-            });
+        {posts.map((post, index) => {
+          const sanitizedTitle = DOMPurify.sanitize(post.title, { ALLOWED_TAGS: [] });
+          const sanitizedDescription = DOMPurify.sanitize(post.description, {
+            ALLOWED_TAGS: ["h1", "h2", "h3", "p", "br", "span", "div", "img", "a"],
+            ALLOWED_ATTR: ["style", "class", "src", "href", "alt"],
+          });
 
-            return (
-              
-              <div key={index} className="bullet-item">
-                
-                <hr className="line-item" /> {/* Line per item */}
-                <div className="bullet-img-section">
-                  <div className="bullet-img-container">
-                    <img
-                      className="bullet-img"
-                      src={post.images[0]?.url}
-                      alt={post.images[0]?.alt}
-                    />
-                  </div>
+          return (
+            <div key={index} className="bullet-item">
+              <div className="bullet-img-section">
+                <div className="bullet-img-container">
+                  <img
+                    className="bullet-img"
+                    src={post.images[0]?.url}
+                    alt={post.images[0]?.alt}
+                  />
                 </div>
-                <div className="bullet-text-section">
-                  <div className="BulletTitle">
-                    <h2 className="bullet-title">{sanitizedTitle}</h2>
-                  </div>
-                  <div className="BulletText">
-                    <div
-                      className="bullet-description"
-                      dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
-                    />
-                  </div>
-                </div>
-                <div className="bc-button-master">
-                  <div className="bc-button-container">
-                    <button
-                      type="button"
-                      className="bc-button"
-                      onClick={() => handleReadMore(post.pages)}
-                    >
-                      <BookOpenText className="icon" />
-                      <span className="bc-button-text">Read More</span>
-                    </button>
-                  </div>
-                </div>
-                
               </div>
-            );
-          })
-        )}
+              <div className="bullet-text-section">
+                <div className="BulletTitle">
+                  <h2 className="bullet-title">{sanitizedTitle}</h2>
+                </div>
+                <div className="BulletText">
+                  <div
+                    className="bullet-description"
+                    dangerouslySetInnerHTML={{ __html: sanitizedDescription }}
+                  />
+                </div>
+              </div>
+              <div className="bc-button-master">
+                <div className="bc-button-container">
+                  <button
+                    type="button"
+                    className="bc-button"
+                    onClick={() => handleReadMore(post.pages)}
+                  >
+                    <BookOpenText className="icon" />
+                    <span className="bc-button-text">Read More</span>
+                  </button>
+                </div>
+              </div>
+              <hr className="line-item" />
+            </div>
+          );
+        })}
       </div>
+      <hr className="line-bullet" />
     </div>
   );
 };

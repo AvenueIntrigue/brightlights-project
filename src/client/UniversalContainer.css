@@ -1,0 +1,346 @@
+h1, h2, h3 {
+  color: #bbf7d0;
+  padding-top: 7%;
+  padding-bottom: 1.25%;
+}
+
+/* Master Container */
+.UCPostContainer {
+
+  width: 80svw;
+}
+
+/* Section Container */
+.UC-container {
+  margin-top: 3.5%;
+  margin-bottom: 3.5%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%; /* Set to 80% of viewport width */
+  
+  margin-left: auto;
+  margin-right: auto; /* Center the container */
+  gap: 20px; /* Add spacing between image and text */
+}
+
+/* Direction: Left-to-Right (image left, text right) */
+.UC-container.direction-ltr {
+  flex-direction: row;
+}
+
+/* Direction: Right-to-Left (text left, image right) */
+.UC-container.direction-rtl {
+  flex-direction: row-reverse;
+  text-align: justify;
+  direction: ltr;
+  
+  margin-left: 0px;
+}
+
+/* Line */
+.line-middle {
+  border: 0;
+  height: 4px;
+  background: #2B4072;
+  border-radius: 2px;
+  margin: 20px 0;
+  width: 100%;
+  box-shadow: 0 0 10px rgba(48, 58, 82, 0.5);
+  margin-bottom: 7%;
+}
+
+/* Img Section */
+.uc-img-section {
+  flex: 1; /* Grow to fill available space */
+  min-width: 0; /* Prevent overflow */
+  margin-top: 3.5%;
+  margin-bottom: 3.5%;
+}
+
+
+.UCImgContainer {
+  width: 100%;
+  max-width: 400px; /* Limit image size */
+  aspect-ratio: 1/1;
+  border-radius: 15px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.UC-container.direction-rtl .UCImgContainer {
+
+  min-width: 400px;
+  width: 44%;
+  aspect-ratio: 1/1 auto;
+  margin-right: 0;
+  margin-left: auto;
+  /* margin-right: auto; */
+  border-radius: 15px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+
+}
+
+.UCPostImg {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+
+
+/* Text Section */
+.uc-text-section {
+  flex: 1; /* Grow to fill available space */
+  min-width: 0; /* Prevent overflow */
+  text-align: justify;
+  direction: ltr;
+  overflow: visible;
+  margin-top: 3.5%;
+  margin-bottom: 3.5%;
+  
+}
+
+.UC-container.direction-ltr .UCdescriptionParagraph p {
+
+  text-align: justify;
+  direction: ltr;
+  
+}
+
+.UC-container.direction-rtl .UCdescriptionParagraph p {
+
+  text-align: justify;
+  direction: ltr;
+  
+}
+
+
+
+.UCTextContainer {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+}
+
+.UCPostText {
+  width: 100%;
+  max-height: 10.5rem;
+  font-family: "lemonde-sans", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+  font-size: 1.5rem;
+  line-height: 2rem;
+  position: relative;
+  -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+  overflow: hidden;
+  margin-top: 3.5%;
+  margin-bottom: 1rem;
+  color: #bbf7d0;
+}
+
+.UCdescriptionParagraph p {
+  margin-bottom: 1rem;
+  line-height: 2rem;
+}
+
+.UCPostTitle {
+  text-align: right;
+  font-family: "utopia", serif;
+  font-weight: 700;
+  font-size: 2.5rem;
+  margin-bottom: 3.5%;
+  color: #bbf7d0;
+}
+
+.UC-container.direction-rtl .UCPostTitle {
+
+  text-align: left;
+  
+}
+
+/* Button Section */
+.uc-button-container {
+  display: flex;
+  width: 100%;
+  justify-content: flex-end;
+  align-content: flex-end;
+  padding-top: 3.5%;
+  padding-bottom: 3.5%;
+  text-align: center;
+}
+
+.uc-button {
+  display: flex;
+  font-family: "darkmode-off-cc", sans-serif;
+  font-variation-settings: "wdth" 700, "wght" 700;
+  text-transform: uppercase;
+  font-size: 1.5rem;
+  border: none;
+  border-radius: 0.25rem;
+  width: 33.3%;
+  background-color: #353941;
+  color: #f5f5f5;
+  height: 3rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.uc-button:hover {
+  border: 3px solid #bbf7d0;
+  transition: border 250ms ease-in-out;
+  color: #bbf7d0;
+  cursor: pointer;
+  font-size: 1.45rem;
+}
+
+.icon {
+  margin-right: 8px;
+  width: 2rem;
+}
+
+.uc-button-text {
+  font-size: 1rem;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) and (max-width: 1024px) {
+
+
+  .uc-button {
+    width: 50%;
+    height: 3rem;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 1.6rem;
+  }
+
+  .uc-button:hover {
+    font-size: 1.55rem;
+  }
+
+  .uc-text-section {
+    margin-top: 3.5%;
+    margin-bottom: 3.5%;
+    text-align: justify;
+    direction: ltr;
+  }
+
+  .UC-container {
+    flex-direction: column; /* Stack vertically */
+    width: 100%;
+    gap: 10px; /* Smaller gap for stacked layout */
+  }
+
+  .UCPostTitle {
+
+    text-align: center;
+  }
+
+  .UC-container.direction-rtl .UCPostTitle {
+
+    text-align: center;
+    
+  }
+
+  .uc-img-section,
+  .uc-text-section {
+    width: 100%;
+    flex: none; /* Reset flex grow */
+    margin-left: 0; /* Reset margins */
+    margin-right: 0;
+  }
+
+  .UCImgContainer {
+    width: 100%;
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+
+  .UC-container.direction-rtl .UCImgContainer {
+
+    min-width: 400px;
+    width: 44%;
+    aspect-ratio: 1/1 auto;
+    margin-right: auto;
+    margin-left: auto;
+    /* margin-right: auto; */
+    border-radius: 15px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  
+  
+  }
+  /* Direction: Left-to-Right (image left, text right) */
+.UC-container.direction-ltr {
+  flex-direction: column;
+}
+
+/* Direction: Right-to-Left (text left, image right) */
+.UC-container.direction-rtl {
+  flex-direction: column;
+  text-align: justify;
+  direction: ltr;
+  
+  margin-left: 0px;
+}
+
+  }
+
+
+@media (max-width: 768px) {
+  .uc-button {
+    width: 100%;
+    height: 3.5rem;
+    font-size: 1.25rem;
+  }
+
+  .uc-button:hover {
+    font-size: 1.2rem;
+  }
+
+  .uc-text-section {
+    text-align: justify;
+    direction: ltr;
+  }
+
+  .UC-container {
+    flex-direction: column;
+    width: 90vw; /* Adjust for small screens */
+  }
+
+  .uc-img-section,
+  .uc-text-section {
+    width: 100%;
+    flex: none; /* Reset flex grow */
+  }
+
+  .UCImgContainer {
+    width: 100%;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .UCPostTitle {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .UCPostText {
+    text-align: justify;
+    direction: ltr;
+  }
+}

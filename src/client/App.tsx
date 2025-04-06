@@ -6,7 +6,6 @@ import BlogPost from "./BlogPost";
 import EmailForm from "./Contact";
 import Footer from "./Footer";
 import Header from "./Header";
-import ThankYou from "./ThankYou";
 import CreateBlog from "./CreateBlog";
 import PrivateRoute from "./PrivateRoute";
 import CreatePricing from "./Create";
@@ -22,7 +21,6 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/contact" element={<EmailForm />} />
-        <Route path="/thank-you" element={<ThankYou />} />
         <Route path="/blog" element={<BlogPage />} />
         <Route path="/blog/:id" element={<BlogPost />} />
         {/* Dynamic routing for Pricing, About, and Services */}

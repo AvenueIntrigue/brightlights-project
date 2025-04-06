@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom';
 import { Share } from 'lucide-react';
 import { XIcon, FaceBookIcon, EmailIcon, CopyLinkIcon, CheckMarkIcon } from './CustomIcons';
 import { ImageSlider } from './ImageSlider';
-import './DynamicPost.css';
+
 interface Post {
   title: string;
   description: string;
