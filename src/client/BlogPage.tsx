@@ -1,4 +1,4 @@
-import { fetchPosts } from "../server/api";
+import { fetchPosts } from "../client/api";
 import BlogCard from "./BlogCard";
 import { BlogPost } from "../shared/interfaces";
 import DOMPurify from "dompurify";
