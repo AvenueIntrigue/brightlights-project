@@ -1,19 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import DOMPurify from 'dompurify';
+import { fetchPostByType } from './api';
 import { useNavigate } from 'react-router-dom';
 import { BookOpenText } from 'lucide-react';
 import { ImageSlider } from './ImageSlider';
+import { BlogPost } from '../shared/interfaces.js'; // Use shared interface
 import './UniversalContainer.css';
 
-interface Post {
-  title: string;
-  description: string;
-  images: Array<{ url: string; alt: string }>;
-  page: string;
-  createdOn: string;
-  keywords?: string[];
-}
 
 interface UniversalContainerProps {
   type: string;
@@ -22,20 +16,15 @@ interface UniversalContainerProps {
 }
 
 const UniversalContainer: React.FC<UniversalContainerProps> = ({ type, direction, navigateTo }) => {
-  const [post, setPost] = useState<Post | null>(null);
+  const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/api/${type}`);
-        if (response.ok) {
-          const data = await response.json();
-          setPost(data);
-        } else {
-          console.error(`Error fetching ${type} post`);
-        }
+        const data = await fetchPostByType(type); // Fetch from /api/:type in main.ts
+        setPost(data);
       } catch (error) {
         console.error(`Error fetching ${type} post: `, error);
       } finally {
@@ -47,7 +36,7 @@ const UniversalContainer: React.FC<UniversalContainerProps> = ({ type, direction
   }, [type]);
 
   if (loading) {
-    return null;
+    return null; // Matches original behavior
   }
 
   if (!post) {
@@ -67,7 +56,6 @@ const UniversalContainer: React.FC<UniversalContainerProps> = ({ type, direction
 
   return (
     <div className="UCPostContainer">
-      
       <Helmet>
         <link rel="icon" href="/OpenBox.svg" type="image/x-icon" />
         <link rel="icon" href="/favicon.png" type="image/png" sizes="16x16" />

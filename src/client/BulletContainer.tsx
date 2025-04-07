@@ -2,17 +2,28 @@ import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import DOMPurify from "dompurify";
 import { useNavigate } from "react-router-dom";
-import "./BulletContainer.css";
 import { BookOpenText } from "lucide-react";
+import "./BulletContainer.css";
 
+// Define the Post interface locally (or import from ../shared/interfaces.js if specific models are defined)
 interface Post {
   title: string;
   description: string;
   images: Array<{ url: string; alt: string }>;
-  pages: string;
+  pages: string; // Note: 'pages' matches your original interface
   createdOn: string;
   keywords?: string[];
 }
+
+// Fetch function to get a post by type from main.ts
+const fetchPostByType = async (type: string): Promise<Post> => {
+  const API_URL = import.meta.env.VITE_API_URL || ""; // Consistent with api.ts
+  const response = await fetch(`${API_URL}/api/${type}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${type} post: ${response.statusText}`);
+  }
+  return response.json();
+};
 
 export interface BulletContainerProps {
   keywords: string[];
@@ -30,31 +41,25 @@ const BulletContainer: React.FC<BulletContainerProps> = ({
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const endpoints = [
-          "http://localhost:3000/api/web-development",
-          "http://localhost:3000/api/app-development",
-          "http://localhost:3000/api/graphic-design",
-        ];
-
+        const types = ["web-development", "app-development", "graphic-design"];
         const responses = await Promise.all(
-          endpoints.map(async (endpoint) => {
-            const response = await fetch(endpoint);
-            if (response.ok) {
-              const data = await response.json();
-              return Array.isArray(data) ? data : [data];
-            } else {
-              console.error(`Error fetching from ${endpoint}`);
-              return [];
+          types.map(async (type) => {
+            try {
+              const data = await fetchPostByType(type); // Fetch from /api/:type in main.ts
+              return data; // Expecting a single Post object
+            } catch (err) {
+              console.error(`Error fetching ${type} post:`, err);
+              return null; // Return null for failed fetches
             }
           })
         );
 
-        const combinedPosts = responses.flat();
-        setPosts(combinedPosts);
+        // Filter out null responses and set posts
+        const validPosts = responses.filter((post): post is Post => post !== null);
+        setPosts(validPosts);
 
-        const allKeywords = combinedPosts.flatMap(
-          (post) => post.keywords || []
-        );
+        // Update keywords
+        const allKeywords = validPosts.flatMap((post) => post.keywords || []);
         onKeywordsChange([...new Set([...keywords, ...allKeywords])]);
       } catch (error) {
         console.error("Error fetching posts:", error);
@@ -65,12 +70,10 @@ const BulletContainer: React.FC<BulletContainerProps> = ({
     fetchPosts();
   }, [keywords, onKeywordsChange]);
 
-  // If error, show it; no loading state render
   if (error) {
     return <div className="error">{error}</div>;
   }
 
-  // Only render when data is ready; Suspense handles the rest
   if (posts.length === 0 && !error) {
     return null; // Wait for data without showing "Loading..."
   }

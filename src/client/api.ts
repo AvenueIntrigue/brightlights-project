@@ -1,8 +1,17 @@
 import axios from "axios";
-import { BlogPost, BulletContainerContent, BulletContainerAboutUs } from "../shared/interfaces.js";
+import { BlogPost, BulletContainerContent, BulletContainerAboutUs } from "../shared/interfaces";
 
 // Use VITE_API_URL locally, default to relative path on Render
 const API_URL = import.meta.env.VITE_API_URL || "";
+
+// api.ts
+export const fetchPostByType = async (type: string): Promise<BlogPost> => {
+  const response = await fetch(`${API_URL}/api/${type}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${type} post`);
+  }
+  return response.json();
+};
 
 export const fetchPosts = async (): Promise<BlogPost[]> => {
   const response = await fetch(`${API_URL}/api/posts`);
