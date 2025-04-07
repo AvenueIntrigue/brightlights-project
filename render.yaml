@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: brightlights-app
+    env: node
+    buildCommand: npm run build
+    startCommand: npm start
+    nodeVersion: "20" # Set to 20.x
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: NODE_ENV
+        value: production
