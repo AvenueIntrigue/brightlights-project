@@ -5,8 +5,21 @@ import { fetchPostByType } from './api';
 import { useNavigate } from 'react-router-dom';
 import { BookOpenText } from 'lucide-react';
 import { ImageSlider } from './ImageSlider';
-import { BlogPost } from '../shared/interfaces.js'; // Use shared interface
+
 import './UniversalContainer.css';
+
+
+
+
+// Define Post interface to match MongoDB data
+interface Post {
+  title: string;
+  description: string;
+  images: Array<{ url: string; alt: string }>;
+  page: string; // Matches your MongoDB "page" field
+  createdOn: string;
+  keywords?: string[];
+}
 
 
 interface UniversalContainerProps {
@@ -16,7 +29,7 @@ interface UniversalContainerProps {
 }
 
 const UniversalContainer: React.FC<UniversalContainerProps> = ({ type, direction, navigateTo }) => {
-  const [post, setPost] = useState<BlogPost | null>(null);
+  const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 

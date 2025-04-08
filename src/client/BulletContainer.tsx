@@ -5,86 +5,78 @@ import { useNavigate } from "react-router-dom";
 import { BookOpenText } from "lucide-react";
 import "./BulletContainer.css";
 
-// Define the Post interface locally (or import from ../shared/interfaces.js if specific models are defined)
 interface Post {
   title: string;
   description: string;
   images: Array<{ url: string; alt: string }>;
-  pages: string; // Note: 'pages' matches your original interface
+  page: string;
   createdOn: string;
   keywords?: string[];
 }
 
-// Fetch function to get a post by type from main.ts
-const fetchPostByType = async (type: string): Promise<Post> => {
-  const API_URL = import.meta.env.VITE_API_URL || ""; // Consistent with api.ts
-  const response = await fetch(`${API_URL}/api/${type}`);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch ${type} post: ${response.statusText}`);
+const fetchPostByType = async (type: string): Promise<Post | null> => {
+  try {
+    const response = await fetch(`/api/${type}posts`, {
+      method: "GET",
+      headers: { "Content-Type": "application/json" },
+    });
+    if (!response.ok) {
+      console.error(`Fetch failed for ${type}posts: ${response.status}`);
+      return null;
+    }
+    const data = await response.json();
+    console.log(`Fetched ${type}posts:`, data);
+    return {
+      title: data.title,
+      description: data.description,
+      images: data.images,
+      page: data.pages || data.page || type,
+      createdOn: data.createdOn,
+      keywords: data.keywords,
+    };
+  } catch (err) {
+    console.error(`Error fetching ${type}posts:`, err);
+    return null;
   }
-  return response.json();
 };
 
-export interface BulletContainerProps {
-  keywords: string[];
-  onKeywordsChange: (keywords: string[]) => void;
-}
-
-const BulletContainer: React.FC<BulletContainerProps> = ({
-  keywords,
-  onKeywordsChange,
-}) => {
+const BulletContainer: React.FC = React.memo(() => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchPosts = async () => {
-      try {
-        const types = ["web-development", "app-development", "graphic-design"];
-        const responses = await Promise.all(
-          types.map(async (type) => {
-            try {
-              const data = await fetchPostByType(type); // Fetch from /api/:type in main.ts
-              return data; // Expecting a single Post object
-            } catch (err) {
-              console.error(`Error fetching ${type} post:`, err);
-              return null; // Return null for failed fetches
-            }
-          })
-        );
+      console.log("Fetching posts..."); // Debug
+      const types = ["web-development", "app-development", "graphic-design"];
+      const responses = await Promise.all(types.map((type) => fetchPostByType(type)));
+      const validPosts = responses.filter((post): post is Post => post !== null);
 
-        // Filter out null responses and set posts
-        const validPosts = responses.filter((post): post is Post => post !== null);
+      if (isMounted) {
         setPosts(validPosts);
-
-        // Update keywords
-        const allKeywords = validPosts.flatMap((post) => post.keywords || []);
-        onKeywordsChange([...new Set([...keywords, ...allKeywords])]);
-      } catch (error) {
-        console.error("Error fetching posts:", error);
-        setError("Failed to load bullet points.");
+        setLoading(false);
+        if (validPosts.length === 0) setError("No posts available.");
       }
     };
 
     fetchPosts();
-  }, [keywords, onKeywordsChange]);
 
-  if (error) {
-    return <div className="error">{error}</div>;
-  }
+    return () => {
+      isMounted = false;
+    };
+  }, []); // Empty deps - runs once
 
-  if (posts.length === 0 && !error) {
-    return null; // Wait for data without showing "Loading..."
-  }
+  console.log("BulletContainer rendered", { loading, error, posts: posts.length }); // Debug
 
-  const handleReadMore = (pages: string) => {
-    if (!pages || pages === "undefined") {
-      console.error("Page is undefined, defaulting to /home");
-      navigate("/home");
-    } else {
-      navigate(`/${pages}`);
-    }
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div className="error">{error}</div>;
+  if (posts.length === 0) return <div>No posts available yet.</div>;
+
+  const handleReadMore = (page: string) => {
+    navigate(`/${page.toLowerCase()}`);
   };
 
   return (
@@ -96,30 +88,14 @@ const BulletContainer: React.FC<BulletContainerProps> = ({
         />
         <meta
           name="keywords"
-          content={[
-            ...keywords,
-            ...posts.flatMap((post) => post.keywords || []),
-          ].join(", ")}
+          content={posts.flatMap((post) => post.keywords || []).join(", ")}
         />
       </Helmet>
-
       <div className="bullet-container">
         {posts.map((post, index) => {
-          const sanitizedTitle = DOMPurify.sanitize(post.title, {
-            ALLOWED_TAGS: [],
-          });
+          const sanitizedTitle = DOMPurify.sanitize(post.title, { ALLOWED_TAGS: [] });
           const sanitizedDescription = DOMPurify.sanitize(post.description, {
-            ALLOWED_TAGS: [
-              "h1",
-              "h2",
-              "h3",
-              "p",
-              "br",
-              "span",
-              "div",
-              "img",
-              "a",
-            ],
+            ALLOWED_TAGS: ["h1", "h2", "h3", "p", "br", "span", "div", "img", "a"],
             ALLOWED_ATTR: ["style", "class", "src", "href", "alt"],
           });
 
@@ -150,7 +126,7 @@ const BulletContainer: React.FC<BulletContainerProps> = ({
                   <button
                     type="button"
                     className="bc-button"
-                    onClick={() => handleReadMore(post.pages)}
+                    onClick={() => handleReadMore(post.page)}
                   >
                     <BookOpenText className="icon" />
                     <span className="bc-button-text">Read More</span>
@@ -165,6 +141,6 @@ const BulletContainer: React.FC<BulletContainerProps> = ({
       <hr className="line-bullet" />
     </div>
   );
-};
+});
 
 export default BulletContainer;

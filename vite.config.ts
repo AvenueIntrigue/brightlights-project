@@ -4,8 +4,8 @@ import react from "@vitejs/plugin-react";
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  optimizeDeps: { 
-    needsInterop: ['vite-express'],
-    exclude: ["fsevents"] },
-    
+  optimizeDeps: {
+    needsInterop: ["vite-express"],
+    exclude: ["fsevents"],
+  },
 });

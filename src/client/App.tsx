@@ -1,6 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./Home";
+import Home from './Home'
 import BlogPage from "./BlogPage";
 import BlogPost from "./BlogPost";
 import EmailForm from "./Contact";
@@ -8,7 +8,7 @@ import Footer from "./Footer";
 import Header from "./Header";
 import CreateBlog from "./CreateBlog";
 import PrivateRoute from "./PrivateRoute";
-import CreatePricing from "./Create";
+import Create from "./Create";
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
 import { Helmet } from "react-helmet-async";
 import ProfilePage from "./ProfilePage";
@@ -47,21 +47,21 @@ const App: React.FC = () => {
         />
         <Route path="/web3" element={<DynamicPost type="web3" />} />
         <Route path="/projects" element={<DynamicPost type="projects" />} />
-        <Route path="/portfolio" element={<Portfolio type="portfolio" />} />
+        <Route path="/portfolio" element={<Portfolio />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route
           path="/create"
           element={
             <SignedIn>
-              <CreatePricing />
+              <Create />
             </SignedIn>
           }
         />
         <Route
-          path="/create-about"
+          path="/create"
           element={
             <SignedIn>
-              <CreatePricing />
+              <Create />
             </SignedIn>
           }
         />

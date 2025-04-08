@@ -2,23 +2,31 @@ import React, { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import DOMPurify from "dompurify";
 import { ImageSlider } from "./ImageSlider";
-import { BlogPost } from "../shared/interfaces.js"; // Shared interface for post types
 import { fetchPostByType } from "./api";
 
-
-
+// Define Post interface to match MongoDB data
+interface Post {
+  title: string;
+  description: string;
+  images: Array<{ url: string; alt: string }>;
+  page: string; // Matches your MongoDB "page" field
+  createdOn: string;
+  keywords?: string[];
+}
 
 const DynamicPost: React.FC<{ type: string }> = ({ type }) => {
-  const [post, setPost] = useState<BlogPost | null>(null);
+  const [post, setPost] = useState<Post | null>(null); // Use Post here
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchPost = async () => {
       try {
         const data = await fetchPostByType(type);
+        console.log(`Fetched data for ${type}:`, data); // Debug
         setPost(data);
       } catch (error) {
-        console.error(`Error fetching ${type} post: `, error);
+        console.error(`Error fetching ${type} post:`, error);
+        setPost(null); // Ensure null on error
       } finally {
         setLoading(false);
       }

@@ -5,13 +5,28 @@ import { BlogPost, BulletContainerContent, BulletContainerAboutUs } from "../sha
 const API_URL = import.meta.env.VITE_API_URL || "";
 
 // api.ts
-export const fetchPostByType = async (type: string): Promise<BlogPost> => {
-  const response = await fetch(`${API_URL}/api/${type}`);
+interface Post {
+  title: string;
+  description: string;
+  images: Array<{ url: string; alt: string }>;
+  page: string;
+  createdOn: string;
+  keywords?: string[];
+}
+
+export const fetchPostByType = async (type: string): Promise<Post> => {
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000"; // Fallback
+  const response = await fetch(`${API_URL}/api/${type}posts`);
   if (!response.ok) {
-    throw new Error(`Failed to fetch ${type} post`);
+    console.error(`Fetch failed for ${type}posts: ${response.status}`);
+    throw new Error(`Failed to fetch ${type}posts: ${response.statusText}`);
   }
-  return response.json();
+  const data = await response.json();
+  console.log(`Fetched data for ${type}posts:`, data);
+  return data;
 };
+
+
 
 export const fetchPosts = async (): Promise<BlogPost[]> => {
   const response = await fetch(`${API_URL}/api/posts`);
