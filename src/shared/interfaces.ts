@@ -1,51 +1,47 @@
+import mongoose, { Schema, Document } from "mongoose";
 
-
-// Existing interfaces and schemas
-import mongoose, { Schema, Document, type Date as MongooseDate} from "mongoose";
+// Category
+export interface Category extends Document {
+  _id: mongoose.Types.ObjectId;
+  name: string;
+}
 
 const CategorySchema: Schema = new Schema({
-  name: { type: String, unique: true, required: true }
+  name: { type: String, unique: true, required: true },
 });
 
+const CategoryModel = mongoose.model<Category>("Category", CategorySchema);
 
-
-const CategoryModel = mongoose.model('Category', CategorySchema);
-
-
-
-
+// BlogPost
 export interface BlogPost extends Document {
-  _id?: mongoose.Types.ObjectId; // MongoDB's default unique identifier
+  _id: mongoose.Types.ObjectId;
   title: string;
   description: string;
-  images: {
-    url: string;
-    alt: string;
-  }[];
+  images: { url: string; alt: string }[];
   category: string;
   keywords: string[];
   createdOn: Date;
-  
-};
+}
 
 const BlogPostSchema: Schema<BlogPost> = new Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
-  images: [{
-    url: { type: String, required: true },
-    alt: { type: String, required: true }
-  }],
-  category: { 
-    type: String, 
-    required: true,
-  },
+  images: [
+    {
+      url: { type: String, required: true },
+      alt: { type: String, required: true },
+    },
+  ],
+  category: { type: String, required: true },
   createdOn: { type: Date, default: Date.now },
-  keywords: { type: [String], required: false}
+  keywords: { type: [String], required: false },
 });
 
-const BlogPostModel = mongoose.model<BlogPost>('BlogPost', BlogPostSchema);
+const BlogPostModel = mongoose.model<BlogPost>("BlogPost", BlogPostSchema);
 
+// Container Content Interfaces
 export interface TopContainerContent extends Document {
+  _id: mongoose.Types.ObjectId;
   image: string;
   imageAlt: string;
   title: string;
@@ -56,17 +52,18 @@ export interface TopContainerContent extends Document {
 const TopContainerContentSchema: Schema<TopContainerContent> = new Schema({
   image: { type: String, required: true },
   imageAlt: { type: String, required: true },
-  title: { type: String, required: true},
-  description: { type: String, required: true},
-  keywords: { type: [String], required: false }
-
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  keywords: { type: [String], required: false },
 });
 
-const TopContainerContentModel = mongoose.model<TopContainerContent>('topcontainercontents', TopContainerContentSchema);
-
-export { TopContainerContentModel };
+const TopContainerContentModel = mongoose.model<TopContainerContent>(
+  "topcontainercontents",
+  TopContainerContentSchema
+);
 
 export interface MiddleContainerContent extends Document {
+  _id: mongoose.Types.ObjectId;
   image: string;
   imageAlt: string;
   title: string;
@@ -77,19 +74,18 @@ export interface MiddleContainerContent extends Document {
 const MiddleContainerContentSchema: Schema<MiddleContainerContent> = new Schema({
   image: { type: String, required: true },
   imageAlt: { type: String, required: true },
-  title: { type: String, required: true},
-  description: { type: String, required: true},
-  keywords: { type: [String], required: false }
+  title: { type: String, required: true },
+  description: { type: String, required: true },
+  keywords: { type: [String], required: false },
 });
 
-const MiddleContainerContentModel = mongoose.model<MiddleContainerContent>('middlecontainercontents', MiddleContainerContentSchema);
+const MiddleContainerContentModel = mongoose.model<MiddleContainerContent>(
+  "middlecontainercontents",
+  MiddleContainerContentSchema
+);
 
-export { MiddleContainerContentModel };
-// shared/interfaces.ts
-
-
-
-export interface BulletContainerAboutUs {
+export interface BulletContainerAboutUs extends Document {
+  _id: mongoose.Types.ObjectId;
   aboutUs: string;
 }
 
@@ -97,7 +93,8 @@ const BulletContainerAboutUsSchema: Schema<BulletContainerAboutUs> = new Schema(
   aboutUs: { type: String, required: true },
 });
 
-export interface BulletContainerContent {
+export interface BulletContainerContent extends Document {
+  _id: mongoose.Types.ObjectId;
   title: string;
   description: string;
   image: string;
@@ -113,13 +110,17 @@ const BulletContainerContentSchema: Schema<BulletContainerContent> = new Schema(
   keywords: { type: [String], required: true },
 });
 
-const BulletContainerAboutUsModel = mongoose.model<BulletContainerAboutUs>('bulletcontaineraboutus', BulletContainerAboutUsSchema);
-const BulletContainerContentModel = mongoose.model<BulletContainerContent>('bulletcontainercontents', BulletContainerContentSchema);
-
-
-
+const BulletContainerAboutUsModel = mongoose.model<BulletContainerAboutUs>(
+  "bulletcontaineraboutus",
+  BulletContainerAboutUsSchema
+);
+const BulletContainerContentModel = mongoose.model<BulletContainerContent>(
+  "bulletcontainercontents",
+  BulletContainerContentSchema
+);
 
 export interface web3ContainerContent extends Document {
+  _id: mongoose.Types.ObjectId;
   image: string;
   imageAlt: string;
   title: string;
@@ -129,19 +130,19 @@ export interface web3ContainerContent extends Document {
 
 const web3ContainerContentSchema: Schema<web3ContainerContent> = new Schema({
   image: { type: String, required: true },
-  imageAlt: {type: String, required: true},
-  title: {type: String, required: true},
+  imageAlt: { type: String, required: true },
+  title: { type: String, required: true },
   description: { type: String, required: true },
-  keywords: { type: [String], required: true}
+  keywords: { type: [String], required: true },
 });
 
-const web3ContainerContentModel = mongoose.model<web3ContainerContent>('web3containercontents', web3ContainerContentSchema);
-
-export { web3ContainerContentModel };
-
+const web3ContainerContentModel = mongoose.model<web3ContainerContent>(
+  "web3containercontents",
+  web3ContainerContentSchema
+);
 
 export interface marketingConsentContent extends Document {
-  
+  _id: mongoose.Types.ObjectId;
   email: string;
   phone: string;
   acceptsEmailMarketing: boolean;
@@ -149,60 +150,35 @@ export interface marketingConsentContent extends Document {
   createdAt: Date;
 }
 
-const marketingConsentSchema: Schema<marketingConsentContent>= new Schema({
+const marketingConsentSchema: Schema<marketingConsentContent> = new Schema({
   email: {
     type: String,
     required: false,
-    unique: true, // Prevent duplicate emails
-    sparse: true, // Allow nulls while keeping uniqueness
+    unique: true,
+    sparse: true,
   },
   phone: {
     type: String,
     required: false,
-    unique: true, // Prevent duplicate phone numbers
+    unique: true,
     sparse: true,
   },
-  acceptsEmailMarketing: {
-    type: Boolean,
-    default: false,
-  },
-  acceptsTextMarketing: {
-    type: Boolean,
-    default: false,
-  },
+  acceptsEmailMarketing: { type: Boolean, default: false },
+  acceptsTextMarketing: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
 });
 
+const marketingConsentContentModel = mongoose.model<marketingConsentContent>(
+  "marketingConsentContents",
+  marketingConsentSchema
+);
 
-
-const marketingConsentContentModel = mongoose.model<marketingConsentContent>('marketingConsentContents', marketingConsentSchema);
-
-export {marketingConsentContentModel};
-
-
-
-export interface PostSection {
-  _id?: mongoose.Types.ObjectId; // MongoDB's default unique identifier
-  title: string;
-  description: string;
-  images: {
-    url: string;
-    alt: string;
-  }[];
-  pages: string;
-  keywords: string[];
-  createdOn: Date;
-  
-};
-
+// Post Interface (Generic for All Post Types)
 export interface Post extends Document {
-  _id?: mongoose.Types.ObjectId; // MongoDB's default unique identifier
+  _id: mongoose.Types.ObjectId;
   title: string;
   description: string;
-  images: {
-    url: string;
-    alt: string;
-  }[];
+  images: { url: string; alt: string }[];
   pages: string;
   keywords: string[];
   createdOn: Date;
@@ -211,31 +187,57 @@ export interface Post extends Document {
 const PostSchema = new Schema<Post>({
   title: { type: String, required: true },
   description: { type: String, required: true },
-  images: [{
-    url: { type: String, required: true },
-    alt: { type: String, required: true }
-  }],
-  pages: { 
-    type: String, 
-    required: true,
-  },
+  images: [
+    {
+      url: { type: String, required: true },
+      alt: { type: String, required: true },
+    },
+  ],
+  pages: { type: String, required: true },
   createdOn: { type: Date, default: Date.now },
-  keywords: { type: [String], required: false}
+  keywords: { type: [String], required: false },
 });
 
-// Example for Pricing Post
-const PricingPostModel = mongoose.model<Post>('PricingPost', PostSchema);
-const AboutPostModel = mongoose.model<Post>('AboutPost', PostSchema);
-const WebDevelopmentPostModel = mongoose.model<Post>('Web-DevelopmentPost', PostSchema);
-const AppDevelopmentPostModel = mongoose.model<Post>('App-DevelopmentPost', PostSchema);
-const GraphicDesignPostModel = mongoose.model<Post>('Graphic-DesignPost', PostSchema);
-const ServicesPostModel = mongoose.model<Post>('ServicesPost', PostSchema);
-const Web3PostModel = mongoose.model<Post>('Web3Post', PostSchema);
-const ProjectsPostModel = mongoose.model<Post>('ProjectsPost', PostSchema);
-const PortfolioPostModel = mongoose.model<Post>('PortfolioPost', PostSchema);
+// Post Models with Correct Collection Names
+const PricingPostModel = mongoose.model<Post>("pricingposts", PostSchema);
+const AboutPostModel = mongoose.model<Post>("aboutposts", PostSchema);
+const WebDevelopmentPostModel = mongoose.model<Post>(
+  "web-developmentposts",
+  PostSchema
+);
+const AppDevelopmentPostModel = mongoose.model<Post>(
+  "app-developmentposts",
+  PostSchema
+);
+const GraphicDesignPostModel = mongoose.model<Post>(
+  "graphic-designposts",
+  PostSchema
+);
+const ServicesPostModel = mongoose.model<Post>("servicesposts", PostSchema);
+const Web3PostModel = mongoose.model<Post>("web3posts", PostSchema);
+const ProjectsPostModel = mongoose.model<Post>("projectsposts", PostSchema);
+const PortfolioPostModel = mongoose.model<Post>("portfolioposts", PostSchema);
 
+// Remove PostSection if unused
+// export interface PostSection { ... } // Not used in any model, safe to remove unless referenced elsewhere
 
-// You would follow a similar pattern for AboutPost, BlogPost, etc.
-
-export { BulletContainerAboutUsModel, BulletContainerContentModel, BlogPostModel, PricingPostModel, AboutPostModel, WebDevelopmentPostModel, AppDevelopmentPostModel, GraphicDesignPostModel, ServicesPostModel, Web3PostModel,ProjectsPostModel, PortfolioPostModel, CategoryModel, CategorySchema };
-
+// Exports
+export {
+  BlogPostModel,
+  TopContainerContentModel,
+  MiddleContainerContentModel,
+  BulletContainerAboutUsModel,
+  BulletContainerContentModel,
+  web3ContainerContentModel,
+  marketingConsentContentModel,
+  PricingPostModel,
+  AboutPostModel,
+  WebDevelopmentPostModel,
+  AppDevelopmentPostModel,
+  GraphicDesignPostModel,
+  ServicesPostModel,
+  Web3PostModel,
+  ProjectsPostModel,
+  PortfolioPostModel,
+  CategoryModel,
+};
