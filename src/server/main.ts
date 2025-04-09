@@ -47,50 +47,25 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 // API GET routes
 app.get("/api/:typeposts", async (req: Request, res: Response) => {
   const type = req.params.typeposts.replace(/posts$/, "");
-  console.log(`GET /api/${type}posts requested`);
   let Model;
   switch (type) {
-    case "web-development":
-      Model = WebDevelopmentPostModel;
-      break;
-    case "app-development":
-      Model = AppDevelopmentPostModel;
-      break;
-    case "graphic-design":
-      Model = GraphicDesignPostModel;
-      break;
-    case "about":
-      Model = AboutPostModel;
-      break;
-    case "portfolio":
-      Model = PortfolioPostModel;
-      break;
-    case "web3":
-      Model = Web3PostModel;
-      break;
-    case "projects":
-      Model = ProjectsPostModel;
-      break;
-    case "services":
-      Model = ServicesPostModel;
-      break;
-    case "pricing":
-      Model = PricingPostModel;
-      break;
-    default:
-      return res.status(400).send({ message: `Invalid type: ${type}posts` });
+    case "web-development": Model = WebDevelopmentPostModel; break;
+    case "app-development": Model = AppDevelopmentPostModel; break;
+    case "graphic-design": Model = GraphicDesignPostModel; break;
+    case "about": Model = AboutPostModel; break;
+    case "portfolio": Model = PortfolioPostModel; break;
+    case "web3": Model = Web3PostModel; break;
+    case "projects": Model = ProjectsPostModel; break;
+    case "services": Model = ServicesPostModel; break;
+    case "pricing": Model = PricingPostModel; break;
+    default: return res.status(400).send({ message: `Invalid type: ${type}posts` });
   }
   try {
     const post = await Model.findOne();
-    if (post) {
-      console.log(`Returning data for ${type}posts:`, post);
-      res.json(post);
-    } else {
-      console.log(`${type}posts not found`);
-      res.status(404).send({ message: `${type}posts not found` });
-    }
+    console.log(`Result for ${type}posts:`, post ? "Found" : "Not found");
+    if (post) res.json(post);
+    else res.status(404).send({ message: `${type}posts not found` });
   } catch (error) {
-    console.error(`Error fetching ${type}posts:`, error);
     res.status(500).send({ message: `Error fetching ${type}posts`, error });
   }
 });
