@@ -1,24 +1,24 @@
 services:
   - type: web
-    name: brightlights-project  # Match your live URL
+    name: brightlights-project
     env: node
     buildCommand: npm run build
     startCommand: npm start
     nodeVersion: "20"
     envVars:
       - key: MONGODB_URI
-        value: "mongodb+srv://noah:konceq-fojnof-zIwni0@cluster42448.ljqldud.mongodb.net/brightLightsCreative?retryWrites=true&w=majority&appName=Cluster42448"
+        value: "mongodb+srv://noah:konceq-fojnof-zIwni0@cluster42448.ljqldud.mongodb.net/brightLightsCreative?retryWrites=true&w=majority&appName=Cluster42448"  # Already quoted
       - key: ENCRYPTION_KEY
-        value: fc53042b8af3e0a7512b30cfa8a93988
+        value: "fc53042b8af3e0a7512b30cfa8a93988"
       - key: NODE_ENV
-        value: production
+        value: "production"
       - key: VITE_CLERK_PUBLISHABLE_KEY
-        value: pk_live_...your-production-key...  # Replace with your Clerk prod key
+        value: "pk_live_...your-production-key..."  # Ensure this is your real key
       - key: CLOUDINARY_CLOUD_NAME
-        value: dqltncrkn
+        value: "dqltncrkn"
       - key: CLOUDINARY_API_KEY
-        value: 643858963736877
+        value: "643858963736877"
       - key: CLOUDINARY_API_SECRET
-        value: qGB_H5L2ZlYaAq5stws5E2e0xWo
+        value: "qGB_H5L2ZlYaAq5stws5E2e0xWo"
       - key: CLOUDINARY_UPLOAD_PRESET
-        value: blog_images_preset
+        value: "blog_images_preset"
