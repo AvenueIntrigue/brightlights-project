@@ -1,14 +1,24 @@
 services:
   - type: web
-    name: brightlights-app
+    name: brightlights-project  # Match your live URL
     env: node
     buildCommand: npm run build
     startCommand: npm start
-    nodeVersion: "20" # Set to 20.x
+    nodeVersion: "20"
     envVars:
       - key: MONGODB_URI
-        sync: false
+        value: mongodb+srv://noah:konceq-fojnof-zIwni0@cluster42448.ljqldud.mongodb.net/brightLightsCreative?retryWrites=true&w=majority&appName=Cluster42448
       - key: ENCRYPTION_KEY
-        sync: false
+        value: fc53042b8af3e0a7512b30cfa8a93988
       - key: NODE_ENV
         value: production
+      - key: VITE_CLERK_PUBLISHABLE_KEY
+        value: pk_live_...your-production-key...  # Replace with your Clerk prod key
+      - key: CLOUDINARY_CLOUD_NAME
+        value: dqltncrkn
+      - key: CLOUDINARY_API_KEY
+        value: 643858963736877
+      - key: CLOUDINARY_API_SECRET
+        value: qGB_H5L2ZlYaAq5stws5E2e0xWo
+      - key: CLOUDINARY_UPLOAD_PRESET
+        value: blog_images_preset
