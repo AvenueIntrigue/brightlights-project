@@ -84,7 +84,10 @@ h1, h2, h3 {
   height: auto;
   object-fit: cover;
   border-radius: inherit;
+  image-rendering: -webkit-optimize-contrast; /* Chrome */
+  image-rendering: crisp-edges; /* Firefox */
 }
+
 
 
 
@@ -137,6 +140,12 @@ h1, h2, h3 {
   margin-top: 3.5%;
   margin-bottom: 1rem;
   color: #bbf7d0;
+}
+
+.UCdescriptionParagraph {
+
+  -webkit-font-smoothing: antialiased; /* Sharper text */
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .UCdescriptionParagraph p {
