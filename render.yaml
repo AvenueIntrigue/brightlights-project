@@ -7,7 +7,7 @@ services:
     nodeVersion: "20"
     envVars:
       - key: MONGODB_URI
-        value: mongodb+srv://noah:konceq-fojnof-zIwni0@cluster42448.ljqldud.mongodb.net/brightLightsCreative?retryWrites=true&w=majority&appName=Cluster42448
+        value: "mongodb+srv://noah:konceq-fojnof-zIwni0@cluster42448.ljqldud.mongodb.net/brightLightsCreative?retryWrites=true&w=majority&appName=Cluster42448"
       - key: ENCRYPTION_KEY
         value: fc53042b8af3e0a7512b30cfa8a93988
       - key: NODE_ENV

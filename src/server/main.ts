@@ -26,8 +26,8 @@ import {
 
 dotenv.config();
 
-const uri =
-  process.env.MONGODB_URI || "mongodb://localhost:27017/brightLightsCreative";
+const uri = process.env.MONGODB_URI || "mongodb://localhost:27017/brightLightsCreative";
+console.log("Using MONGODB_URI:", uri);
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || encryptionKey;
 if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
   throw new Error("ENCRYPTION_KEY must be set in .env and be 32 characters long");
