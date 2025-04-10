@@ -205,13 +205,19 @@ img {
 
 
 .descriptionParagraph p {
+  margin-bottom: 1rem;
+  line-height: 2rem;
   width: 100%;
-  max-width: 80svw;
+  max-width: 100%;
   height: auto;
   margin-bottom: 2%;
   text-align: justify;
   direction: ltr;
   word-spacing: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  
+  
  
   
   

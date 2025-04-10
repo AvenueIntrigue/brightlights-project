@@ -158,6 +158,10 @@ h1, h2, h3 {
   text-align: justify;
   direction: ltr;
   word-spacing: normal;
+  word-spacing: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  
 }
 
 .UCPostTitle {
@@ -322,6 +326,19 @@ h1, h2, h3 {
     text-align: justify;
     direction: ltr;
   }
+
+  .UCdescriptionParagraph p {
+    margin-bottom: 1rem;
+    line-height: 2rem;
+    width: 100%;
+    max-width: 80svw;
+    height: auto;
+    margin-bottom: 2%;
+    text-align: left;
+    direction: ltr;
+    word-spacing: normal;
+  }
+  
 
   .UC-container {
     flex-direction: column; /* Stack vertically */
