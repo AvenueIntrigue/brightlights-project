@@ -196,17 +196,26 @@ img {
   text-align: justify;
   word-wrap: break-word;
   width: 100%;
+  max-width: 100%;
   overflow-wrap: break-word;
 
 
 }
 
+
+
 .descriptionParagraph p {
   width: 100%;
+  max-width: 80svw;
   height: auto;
   margin-bottom: 2%;
   text-align: justify;
   direction: ltr;
+  word-spacing: normal;
+ 
+  
+  
+  
 }
 
 

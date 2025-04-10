@@ -151,6 +151,13 @@ h1, h2, h3 {
 .UCdescriptionParagraph p {
   margin-bottom: 1rem;
   line-height: 2rem;
+  width: 100%;
+  max-width: 80svw;
+  height: auto;
+  margin-bottom: 2%;
+  text-align: justify;
+  direction: ltr;
+  word-spacing: normal;
 }
 
 .UCPostTitle {
