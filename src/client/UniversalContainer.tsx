@@ -93,7 +93,7 @@ const UniversalContainer: React.FC<UniversalContainerProps> = ({ type, direction
               <div className="UCPostTitle">
                 <div className="sanitized-title" dangerouslySetInnerHTML={{ __html: sanitizedTitle }} />
               </div>
-              <div className="UCPostText">
+              <div className="UCPostText ">
                 <div className="UCdescriptionParagraph" dangerouslySetInnerHTML={{ __html: sanitizedDescription }} />
               </div>
               <div className="uc-button-container">

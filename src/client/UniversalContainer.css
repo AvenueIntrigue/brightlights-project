@@ -1,27 +1,23 @@
+/* Headings */
 h1, h2, h3 {
   color: #bbf7d0;
-  padding-top: 7%;
-  padding-bottom: 1.25%;
+  padding: 7% 0 1.25%;
 }
 
 /* Master Container */
 .UCPostContainer {
-
   width: 80svw;
+  margin: 0 auto;
 }
 
 /* Section Container */
 .UC-container {
-  margin-top: 3.5%;
-  margin-bottom: 3.5%;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%; /* Set to 80% of viewport width */
-  
-  margin-left: auto;
-  margin-right: auto; /* Center the container */
-  gap: 20px; /* Add spacing between image and text */
+  width: 100%;
+  margin: 3.5% auto;
+  gap: 20px;
 }
 
 /* Direction: Left-to-Right (image left, text right) */
@@ -32,36 +28,28 @@ h1, h2, h3 {
 /* Direction: Right-to-Left (text left, image right) */
 .UC-container.direction-rtl {
   flex-direction: row-reverse;
-  text-align: justify;
-  direction: ltr;
-  
-  margin-left: 0px;
 }
 
 /* Line */
-.line-middle {
+.line {
   border: 0;
   height: 4px;
   background: #2B4072;
   border-radius: 2px;
-  margin: 20px 0;
+  margin: 20px 0 7%;
   width: 100%;
   box-shadow: 0 0 10px rgba(48, 58, 82, 0.5);
-  margin-bottom: 7%;
 }
 
-/* Img Section */
+/* Image Section */
 .uc-img-section {
-  flex: 1; /* Grow to fill available space */
-  min-width: 0; /* Prevent overflow */
-  margin-top: 3.5%;
-  margin-bottom: 3.5%;
+  flex: 1;
+  min-width: 0;
+  margin: 3.5% 0;
 }
-
 
 .UCImgContainer {
   width: 100%;
-  max-width: 400px; /* Limit image size */
   aspect-ratio: 1/1;
   border-radius: 15px;
   overflow: hidden;
@@ -71,58 +59,36 @@ h1, h2, h3 {
 }
 
 .UC-container.direction-rtl .UCImgContainer {
-
-  
-  margin-right: 0;
-  margin-left: auto;
-  
-
+  justify-content: flex-end;
 }
 
 .UCPostImg {
-  width: 100%;
+  width: 80%;
   height: auto;
   object-fit: cover;
   border-radius: inherit;
-  image-rendering: -webkit-optimize-contrast; /* Chrome */
-  image-rendering: crisp-edges; /* Firefox */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  margin: 0 auto;
 }
 
-
-
+.UC-container.direction-rtl .UCPostImg {
+  margin: 0;
+}
 
 /* Text Section */
 .uc-text-section {
-  flex: 1; /* Grow to fill available space */
-  min-width: 0; /* Prevent overflow */
-  text-align: justify;
-  direction: ltr;
+  flex: 1;
+  min-width: 0;
+  margin: 3.5% 0;
   overflow: visible;
-  margin-top: 3.5%;
-  margin-bottom: 3.5%;
-  
 }
-
-.UC-container.direction-ltr .UCdescriptionParagraph p {
-
-  text-align: justify;
-  direction: ltr;
-  
-}
-
-.UC-container.direction-rtl .UCdescriptionParagraph p {
-
-  text-align: justify;
-  direction: ltr;
-  
-}
-
-
 
 .UCTextContainer {
   display: flex;
   flex-direction: column;
-  padding: 1rem;
+  align-items: flex-start;
+  width: 100%;
 }
 
 .UCPostText {
@@ -131,52 +97,61 @@ h1, h2, h3 {
   font-family: "lemonde-sans", sans-serif;
   font-weight: 500;
   font-style: normal;
-  font-size: 1.5rem;
-  line-height: 2rem;
   position: relative;
   -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
   mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
   overflow: hidden;
-  margin-top: 3.5%;
-  margin-bottom: 1rem;
-  color: #bbf7d0;
+  margin: 3.5% 0 1rem;
 }
 
 .UCdescriptionParagraph {
-
-  -webkit-font-smoothing: antialiased; /* Sharper text */
+  width: 100%;
+  -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 .UCdescriptionParagraph p {
-  margin-bottom: 1rem;
-  line-height: 2rem;
+  margin: 0 0 1rem;
+  font-family: "lemonde-sans", sans-serif;
+  font-weight: 500;
+  font-size: 2rem;
+  line-height: 1.25;
   width: 100%;
-  max-width: 80svw;
-  height: auto;
-  margin-bottom: 2%;
-  text-align: justify;
-  direction: ltr;
-  word-spacing: normal;
-  word-spacing: normal;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  
+  text-align: left;
+  hyphens: auto;
+  word-break: break-word;
+}
+
+.UC-container.direction-ltr .descriptionParagraph,
+.UC-container.direction-rtl .descriptionParagraph {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.UC-container.direction-ltr .UCdescriptionParagraph p,
+.UC-container.direction-rtl .UCdescriptionParagraph p {
+  text-align: left;
+  max-width: 700px;
 }
 
 .UCPostTitle {
-  text-align: right;
+  text-align: left;
   font-family: "utopia", serif;
   font-weight: 700;
-  font-size: 2.5rem;
+  font-size: 4.5rem;
+  max-width: 650px;
   margin-bottom: 3.5%;
   color: #bbf7d0;
+  text-wrap: balance;
+}
+
+.UC-container.direction-ltr .UCPostTitle {
+  text-align: right;
+  margin: 0 0 3.5% auto;
 }
 
 .UC-container.direction-rtl .UCPostTitle {
-
-  text-align: left;
-  
+  margin: 0 auto 3.5% 0;
 }
 
 /* Button Section */
@@ -184,10 +159,12 @@ h1, h2, h3 {
   display: flex;
   width: 100%;
   justify-content: flex-end;
-  align-content: flex-end;
-  padding-top: 3.5%;
-  padding-bottom: 3.5%;
+  padding: 3.5% 0;
   text-align: center;
+}
+
+.UC-container.direction-rtl .uc-button-container {
+  justify-content: flex-start;
 }
 
 .uc-button {
@@ -223,177 +200,150 @@ h1, h2, h3 {
   font-size: 1rem;
 }
 
-/* Responsive adjustments */
+/* Medium screens (768px - 1024px) */
 @media (min-width: 768px) and (max-width: 1024px) {
-
-
-  .uc-button {
-    width: 50%;
-    height: 3rem;
-    margin-left: auto;
-    margin-right: auto;
-    font-size: 1.6rem;
-  }
-
-  .uc-button:hover {
-    font-size: 1.55rem;
-  }
-
-  .uc-text-section {
-    margin-top: 3.5%;
-    margin-bottom: 3.5%;
-    text-align: justify;
-    direction: ltr;
-  }
-
-  .UC-container {
-    flex-direction: column; /* Stack vertically */
+  .UC-container,
+  .UC-container.direction-ltr,
+  .UC-container.direction-rtl {
+    flex-direction: column;
     width: 100%;
-    gap: 10px; /* Smaller gap for stacked layout */
-  }
-
-  .UCPostTitle {
-
-    text-align: center;
-  }
-
-  .UC-container.direction-rtl .UCPostTitle {
-
-    text-align: center;
-    
+    gap: 10px;
   }
 
   .uc-img-section,
   .uc-text-section {
     width: 100%;
-    flex: none; /* Reset flex grow */
-    margin-left: 0; /* Reset margins */
-    margin-right: 0;
+    max-width: 100%;
+    flex: none;
+    margin: 3.5% 0;
   }
 
-  .UCImgContainer {
-    width: 100%;
-    max-width: 500px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-
+  .UCImgContainer,
   .UC-container.direction-rtl .UCImgContainer {
-
     width: 100%;
-    max-width: 500px;
-    margin-right: auto;
-    margin-left: auto;
-    
-  
-  
-  }
-  /* Direction: Left-to-Right (image left, text right) */
-.UC-container.direction-ltr {
-  flex-direction: column;
-}
-
-/* Direction: Right-to-Left (text left, image right) */
-.UC-container.direction-rtl {
-  flex-direction: column;
-  text-align: justify;
-  direction: ltr;
-  
-  margin-left: 0px;
-}
-
+    margin: 0 auto;
   }
 
-
-@media (max-width: 768px) {
-  .uc-button {
+  .UCPostImg,
+  .UC-container.direction-rtl .UCPostImg {
     width: 100%;
-    height: 3.5rem;
-    font-size: 1.25rem;
-    margin-left: auto;
-    margin-right: auto;
-
+    max-width: 100%;
+    margin: 0 auto;
   }
 
-  .uc-button:hover {
-    font-size: 1.55rem;
+  .uc-text-section,
+  .UCTextContainer {
+    width: 80svw;
   }
 
-  .uc-text-section {
-    margin-top: 3.5%;
-    margin-bottom: 3.5%;
-    text-align: justify;
-    direction: ltr;
+  .UCPostTitle,
+  .UC-container.direction-ltr .UCPostTitle,
+  .UC-container.direction-rtl .UCPostTitle {
+    text-align: center;
+    max-width: 100%;
+    margin: 0 auto 3.5%;
   }
 
-  .UCdescriptionParagraph p {
-    margin-bottom: 1rem;
-    line-height: 2rem;
+  .UCdescriptionParagraph,
+  .UC-container.direction-ltr .UCdescriptionParagraph,
+  .UC-container.direction-rtl .UCdescriptionParagraph {
     width: 100%;
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .UCdescriptionParagraph p,
+  .UC-container.direction-ltr .UCdescriptionParagraph p,
+  .UC-container.direction-rtl .UCdescriptionParagraph p {
     max-width: 80svw;
-    height: auto;
-    margin-bottom: 2%;
-    text-align: left;
-    direction: ltr;
-    word-spacing: normal;
+    font-size: 2.5rem;
+    margin: 0 auto 1rem;
   }
-  
 
-  .UC-container {
-    flex-direction: column; /* Stack vertically */
+  .uc-button {
     width: 100%;
-    gap: 10px; /* Smaller gap for stacked layout */
+    height: 4rem;
+    font-size: 1.6rem;
+    margin: 0 auto;
   }
 
-  .UCPostTitle {
-
-    text-align: center;
+  .uc-button:hover {
+    font-size: 1.55rem;
   }
+}
 
-  .UC-container.direction-rtl .UCPostTitle {
-
-    text-align: center;
-    
+/* Small screens (max-width: 768px) */
+@media (max-width: 768px) {
+  .UC-container,
+  .UC-container.direction-ltr,
+  .UC-container.direction-rtl {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
   }
 
   .uc-img-section,
   .uc-text-section {
     width: 100%;
-    flex: none; /* Reset flex grow */
-    margin-left: 0; /* Reset margins */
-    margin-right: 0;
+    max-width: 100%;
+    flex: none;
+    margin: 3.5% 0;
   }
 
-  .UCImgContainer {
-    width: 100%;
-    max-width: 500px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-
+  .UCImgContainer,
   .UC-container.direction-rtl .UCImgContainer {
-
     width: 100%;
-    max-width: 500px;
-    margin-right: auto;
-    margin-left: auto;
-    
-  
-  
+    margin: 0 auto;
   }
-  /* Direction: Left-to-Right (image left, text right) */
-.UC-container.direction-ltr {
-  flex-direction: column;
-}
 
-/* Direction: Right-to-Left (text left, image right) */
-.UC-container.direction-rtl {
-  flex-direction: column;
-  text-align: justify;
-  direction: ltr;
-  
-  margin-left: 0px;
-}
+  .UCPostImg,
+  .UC-container.direction-rtl .UCPostImg {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  .uc-text-section,
+  .UCTextContainer {
+    width: 80svw;
+    max-width: 80svw;
+  }
+
+  .UCPostTitle,
+  .UC-container.direction-ltr .UCPostTitle,
+  .UC-container.direction-rtl .UCPostTitle {
+    text-align: left;
+    font-size: 3rem;
+    max-width: 100%;
+    margin: 0 auto 3.5%;
+  }
+
+  .UCdescriptionParagraph,
+  .UC-container.direction-ltr .UCdescriptionParagraph,
+  .UC-container.direction-rtl .UCdescriptionParagraph {
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+  }
+
+  .UCdescriptionParagraph p,
+  .UC-container.direction-ltr .UCdescriptionParagraph p,
+  .UC-container.direction-rtl .UCdescriptionParagraph p {
+    max-width: 80svw;
+    font-size: 2rem;
+    text-wrap: wrap;
+    word-break: break-word;
+    margin: 0 auto 1rem;
+  }
+
+  .uc-button {
+    width: 100%;
+    height: 4rem;
+    font-size: 1.25rem;
+    margin: 0 auto;
+  }
+
+  .uc-button:hover {
+    font-size: 1.55rem;
+  }
 }

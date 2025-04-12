@@ -1,81 +1,56 @@
+/* Root */
 #root {
   width: 100svw;
   height: auto;
   background-color: #303A52;
   color: whitesmoke;
   margin: 0 auto;
-
-
 }
 
-
-h1,
-h2,
-h3 {
+/* Headings */
+h1, h2, h3 {
   color: #bbf7d0;
-  padding-top: 7%;
-  padding-bottom: 1.25%;
-
+  padding: 7% 0 1.25%;
 }
 
+/* Body */
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Images */
 img {
-  image-rendering: optimizeQuality; /* General sharpness */
+  image-rendering: optimizeQuality;
 }
 
-/* <Line> */
-
-.line,
-.line-bullet {
+/* Lines */
+.line, .line-bullet {
   border: 0;
   height: 4px;
-  background: #2B4072;
+  background: #353941;
   border-radius: 2px;
-  margin: 20px 0;
+  margin: 7% 0;
   width: 100%;
   box-shadow: 0 0 10px rgba(48, 58, 82, 0.5);
-  margin-top: 7%;
-  margin-bottom: 7%;
 }
 
-
-
 .line-item {
-
   display: none;
 }
 
-/* </Line> */
-
-/* < Master-Container/ Dynamic Post/Portfolio/> */
-
+/* Master Containers */
 .PostContainer {
-
-  width: 80%;
-  height: auto;
-  margin-left: auto;
-  margin-right: auto;
-  padding-top: 7%;
-  padding-bottom: 7%;
+  width: 80svw;
+  margin: 0 auto;
+  padding: 7% 0;
   display: flex;
   position: relative;
-
 }
 
 .Grandpa {
-
-  padding-top: 7%;
-  padding-bottom: 7%;
-
-
+  padding: 7% 0;
 }
-
-/* </ Master-Container/ Dynamic Post/Portfolio> */
-
-/* <Master-Container/Home.TSX> */
 
 .home-container {
   width: 100%;
@@ -84,10 +59,7 @@ img {
   gap: 20px;
 }
 
-/* </Master-Container/Home.TSX> */
-
-/* <Loading Placeholder for Lazy Loading/Home.tsx> */
-
+/* Loading Placeholders */
 .placeholder {
   min-height: 200px;
   width: 100%;
@@ -95,7 +67,7 @@ img {
   align-items: center;
   justify-content: center;
   background: transparent;
-  font-family: 'lemonde-sans', sans-serif;
+  font-family: "lemonde-sans", sans-serif;
   font-weight: 500;
   color: #f5f5f5;
   font-size: 1.5rem;
@@ -113,157 +85,89 @@ img {
   font-size: 1.2rem;
 }
 
-/* </Loading Placeholder for Lazy Loading/Home.tsx> */
-
-/* <Section Container: DynamicPost/PorfolioPost> */
-
+/* Post Section */
 .post-container {
-
-  margin-left: auto;
-  margin-right: auto;
-  margin-top: 3.5%;
-  margin-bottom: 3.5%;
-  margin-left: 3.5%;
-  margin-right: 3.5%;
-
+  margin: 3.5%;
 }
-
-/* </Section Container: DynamicPost/PorfolioPost> */
-
-/* <Image Section: DynamicPost/PorfolioPost> */
 
 .post-img-section {
-  display: flex;
-  margin-top: 0px !important;
-  margin-bottom: 7%;
-  margin-right: 7%;
   float: left;
-
-
+  margin: 0 7% 7% 0;
 }
-
-/* </Image Section: DynamicPost/PorfolioPost> */
-
-/* <Text Section: DynamicPost/PorfolioPost> */
 
 .post-text-section {
-
-  margin-top: 0px;
   width: 100%;
   height: auto;
-
+  text-align: left;
 }
 
+/* Text Elements */
 .PostTitle {
-
-  font-size: 3rem;
-  font-weight: 600;
+  font-size: 4rem;
+  font-weight: 700;
   line-height: 1.2;
-  word-wrap: break-word;
-  max-width: 100%;
+  text-align: left;
   overflow-wrap: break-word;
-  text-align: right;
-
   margin-bottom: 4%;
-
 }
 
-.sanitized-title p,
-.tiptap-title p {
-
-  font-family: 'utopia', serif !important;
+.sanitized-title p, .tiptap-title p {
+  font-family: "utopia", serif;
   color: #bbf7d0;
-
-
 }
 
 .descriptionParagraph {
-
   font-family: "lemonde-sans", sans-serif;
-  text-align: right;
-  margin-bottom: 4rem;
-  -webkit-font-smoothing: antialiased; /* Sharper text */
+  text-align: left;
+  width: 100%;
+  -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-.PostText {
-
-  font-size: 1.5rem;
-  font-family: "lemonde-sans", sans-serif;
-  font-weight: 300;
-  font-style: normal;
-  line-height: 2.5rem;
-  text-align: justify;
-  word-wrap: break-word;
-  width: 100%;
-  max-width: 100%;
-  overflow-wrap: break-word;
-
-
-}
-
-
-
 .descriptionParagraph p {
-  margin-bottom: 1rem;
-  line-height: 2rem;
+  margin: 0 0 2.5rem;
+  line-height: 1.25;
   width: 100%;
-  max-width: 100%;
-  height: auto;
-  margin-bottom: 2%;
-  text-align: justify;
-  direction: ltr;
+  text-align: left;
   word-spacing: normal;
-  word-wrap: break-word;
   overflow-wrap: break-word;
-  
-  
- 
-  
-  
-  
 }
 
+.PostText {
+  font-family: "lemonde-sans", sans-serif;
+  font-size: 2rem;
+  font-weight: 500;
+  line-height: 1.8;
+  text-align: left;
+  word-spacing: 0.25rem;
+  overflow-wrap: break-word;
+  width: 80svw;
+  max-width: 80svw;
+  hyphens: auto;
+  margin: 0 auto;
+}
 
 
 p {
-  line-height: 1.5;
-  /* Adjust the line height to make text more readable */
+  line-height: 2;
   font-size: inherit;
-  /* Make sure the font size inherits from the editor settings */
-  margin-bottom: 4rem;
 }
 
-
-/* </Text Section: DynamicPost/PorfolioPost> */
-
-/* <Image Container: DynamicPost/PorfolioPost> */
-
+/* Image Container */
 .PostImgContainer {
-
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-left: 0px;
-  margin-right: 7%;
-  margin-bottom: 7%;
-  margin-top: 0px;
-  margin: 0px;
   width: 700px;
   height: 700px;
   overflow: hidden;
   border-radius: 15px;
-
 }
 
-/* </Image Container: DynamicPost/PorfolioPost> */
-
-/* <Image: DynamicPost/PorfolioPost> */
-
-.PostImg,
-.img-slider-img {
+/* Images */
+.PostImg, .img-slider-img {
   width: 100%;
-  margin: 0px;
+  height: auto;
   aspect-ratio: 1/1;
   object-fit: cover;
   border-radius: inherit;
@@ -271,22 +175,17 @@ p {
   transition: translate 300ms ease-in-out;
   position: relative;
   z-index: 10;
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-  border-radius: inherit;
-  image-rendering: -webkit-optimize-contrast; /* Chrome */
-  image-rendering: crisp-edges; /* Firefox */
-
-
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
+.ImgWrap {
+  width: 75%;
+  height: 75%;
+  border-radius: 15px;
+}
 
-/* </Image: DynamicPost/PorfolioPost> */
-
-
-/* <ImageSlider.tsx  CSS */
-
+/* Image Slider */
 .ImageCarousel {
   display: flex;
   width: 100%;
@@ -294,64 +193,39 @@ p {
   position: relative;
   overflow: hidden;
   border-radius: inherit;
-
 }
 
-/* Buttons default state: hidden */
-.ImageCarousel button {
+.ImageCarousel button, .ImageCarousel > button {
   opacity: 0;
-  /* Start invisible */
   transition: opacity 300ms ease-in-out;
-  /* Smooth fade */
 }
 
-/* Show buttons when hovering over the entire carousel */
-.ImageCarousel:hover button {
+.ImageCarousel:hover button, .ImageCarousel:hover > button {
   opacity: 1;
-  /* Become visible on hover */
 }
 
-/* Optional: Enhance button hover effect */
 .ImageCarousel button:hover {
   background-color: rgba(0, 0, 0, 0.15);
-  /* Darker on direct button hover */
 }
 
-/* Arrow buttons default state: hidden */
-.ImageCarousel>button {
-  opacity: 0;
-  transition: opacity 300ms ease-in-out;
-}
-
-/* Show arrow buttons on hover */
-.ImageCarousel:hover>button {
-  opacity: 1;
-}
-
-/* Enhance arrow button hover */
-.ImageCarousel>button:hover {
+.ImageCarousel > button:hover {
   background-color: rgba(0, 0, 0, 0.75);
 }
 
-/* Dot buttons container */
-.ImageCarousel>div {
+.ImageCarousel > div {
   opacity: 0;
-  /* Hidden by default */
   transition: opacity 300ms ease-in-out;
 }
 
-/* Show dot buttons on hover */
-.ImageCarousel:hover>div {
+.ImageCarousel:hover > div {
   opacity: 1;
 }
 
-/* Style dot buttons */
 .img-slider-dot-btn {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 1rem;
-  /* 16px */
   height: 1rem;
   padding: 0;
   background: none;
@@ -359,157 +233,19 @@ p {
   cursor: pointer;
 }
 
-/* Optional: Hover effect for dots */
 .img-slider-dot-btn:hover {
   transform: scale(1.2);
 }
 
-/* </Image Slider> */
-
-
-
-@keyframes fadeInOut {
-  0% {
-    opacity: 0;
-  }
-
-  50% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-  }
-}
-
-@media (min-width: 768px) and (max-width: 1400px) {
-
-
-
-  /* Styles for medium screens */
-
-  .post-container {
-
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-
-
-  }
-
-
-  .img-slider-dot-btn {
-
-    padding-bottom: 1rem;
-  }
-
-
-
-
-  .PostTitle {
-
-    text-align: center;
-  }
-
-
-
-  .descriptionParagraph {
-
-    text-align: justify;
-    direction: ltr;
-
-  }
-
-  .descriptionParagraph p {
-
-    margin-bottom: 1.5rem;
-  }
-
-  .post-img-section {
-
-
-
-    margin-left: auto;
-    margin-right: auto;
-    border-radius: 15px;
-  }
-
-  .PostImgContainer {
-
-    margin: 0;
-    width: 600px;
-    height: 600px;
-    margin-bottom: 14%;
-  }
-
-
-
-
-
-
-}
-
-
-@media (max-width: 768px) {
-
-
-
-  .post-container {
-
-    display: flex;
-    flex-direction: column;
-    width: 80svw;
-    margin: 0px;
-    margin-left: auto;
-    margin-right: auto;
-
-  }
-
-  .PostTitle {
-
-    text-align: center;
-  }
-
-
-  .post-img-section {
-
-    margin: 0;
-
-    margin-left: auto;
-    margin-right: auto;
-    border-radius: 15px;
-  }
-
-  .PostImgContainer {
-
-    width: 80svw;
-    height: auto;
-    margin-bottom: 14%;
-  }
-}
-
-/* <Button Section> */
-
+/* Button Section */
 .PO-button-container {
   display: flex;
   width: 100%;
   justify-content: flex-end;
-  align-content: flex-end;
-  margin-top: 0px;
   text-align: center;
-
-
-
-
-
 }
 
-
-
 .po-button {
-
   display: flex;
   font-family: "darkmode-off-cc", sans-serif;
   font-variation-settings: "wdth" 700, "wght" 700;
@@ -517,44 +253,101 @@ p {
   font-size: 1.5rem;
   border: none;
   border-radius: 0.25rem;
-
   width: 100%;
   background-color: #353941;
   color: #f5f5f5;
   height: 3.5rem;
   align-items: center;
   justify-content: center;
-
-
-
-
 }
 
-
-
 .po-button svg {
-
   margin-right: 4px;
   width: 1.75rem;
-
 }
 
 .po-button-text {
-
   font-size: 1.2rem;
   margin-right: 3rem;
 }
 
+/* Animations */
+@keyframes fadeInOut {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
 
+/* Medium screens (768px - 1400px) */
+@media (min-width: 768px) and (max-width: 1400px) {
+  .post-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    margin: 0 auto;
+  }
 
+  .PostTitle {
+    text-align: center;
+  }
 
+  .descriptionParagraph, .descriptionParagraph p {
+    text-align: left;
+    margin-bottom: 1.5rem;
+  }
 
+  .post-img-section {
+    margin: 0 auto 14%;
+    border-radius: 15px;
+  }
 
+  .PostImgContainer {
+    width: 600px;
+    height: 600px;
+    margin: 0;
+  }
 
+  .PostText {
+    font-size: 2.25rem;
+    line-height: 2;
+  }
 
-.ImgWrap {
+  .img-slider-dot-btn {
+    padding-bottom: 1rem;
+  }
+}
 
-  width: 75%;
-  height: 75%;
-  border-radius: 15px;
+/* Small screens (max-width: 768px) */
+@media (max-width: 768px) {
+  .post-container {
+    display: flex;
+    flex-direction: column;
+    width: 80svw;
+    margin: 0 auto;
+  }
+
+  .PostTitle {
+    text-align: center;
+  }
+
+  .descriptionParagraph, .descriptionParagraph p {
+    text-align: left;
+  }
+
+  .PostText {
+    font-size: 2.5rem;
+    line-height: 2;
+    word-spacing: 0.25rem;
+  }
+
+  .post-img-section {
+    margin: 0 auto 14%;
+    border-radius: 15px;
+  }
+
+  .PostImgContainer {
+    width: 80svw;
+    height: auto;
+    margin: 0;
+  }
 }

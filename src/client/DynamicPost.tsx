@@ -84,7 +84,7 @@ const DynamicPost: React.FC<{ type: string }> = ({ type }) => {
               )}
             </div>
           </div>
-          <div className="post-text-section">
+          <div className="post-text-section text-pretty">
             <div className="PostTitle">
               <div
                 className="sanitized-title"
