@@ -64,7 +64,7 @@ const App: React.FC = () => {
             }
           />
           {/* Catch-all for unmatched routes */}
-          <Route path="*" element={<Home />} /> {/* Or a NotFound component */}
+          <Route path="*" element={<Home />} /> {/* Or <NotFound /> if you have one */}
         </Routes>
         <Footer />
       </Router>
