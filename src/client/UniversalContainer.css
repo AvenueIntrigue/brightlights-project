@@ -118,8 +118,8 @@ h1, h2, h3 {
   line-height: 1.25;
   width: 100%;
   text-align: left;
-  hyphens: auto;
-  word-break: break-word;
+  /* hyphens: auto;
+  word-break: break-word; */
 }
 
 .UC-container.direction-ltr .descriptionParagraph,

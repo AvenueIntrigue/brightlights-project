@@ -44,7 +44,7 @@ const BlogPost = () => {
   const [isCopied, setIsCopied] = useState(false);
 
   useEffect(() => {
-    const fetchPost = async () => {
+    const fetchBlogPost = async () => {
       try {
         const response = await fetch(`/api/blogposts/${id}`);
         if (response.ok) {
@@ -61,7 +61,7 @@ const BlogPost = () => {
       }
     };
 
-    fetchPost();
+    fetchBlogPost();
   }, [id]);
 
   if (loading) {

@@ -1,8 +1,12 @@
 import axios from "axios";
 import { BlogPost, BulletContainerContent, BulletContainerAboutUs } from "../shared/interfaces";
 
-// Use VITE_API_URL locally, default to relative path on Render
-const API_URL = import.meta.env.VITE_API_URL || "";
+// Use VITE_API_URL for Vite, fallback to empty string for Node.js/Render
+const API_URL =
+  typeof import.meta !== "undefined" && import.meta.env?.VITE_API_URL
+    ? import.meta.env.VITE_API_URL
+    : process.env.VITE_API_URL || "";
+
 
 // api.ts
 interface Post {
@@ -29,10 +33,16 @@ export const fetchPostByType = async (type: string): Promise<Post> => {
 
 
 
-export const fetchPosts = async (): Promise<BlogPost[]> => {
-  const response = await fetch("/api/posts");
-  if (!response.ok) throw new Error("Failed to fetch posts");
-  return response.json();
+export const fetchBlogPosts = async (): Promise<BlogPost[]> => {
+  const url = `${API_URL}/api/blogposts`; // Use API_URL if set, else relative
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch posts: ${response.statusText}`);
+    return response.json();
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+    throw error;
+  }
 };
 
 export const fetchTopContainerContent = async () => {

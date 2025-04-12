@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon -w src/server -x tsx src/server/main.ts",
     "start": "NODE_ENV=production tsx src/server/main.ts",
-    "build": "vite build"
+    "generate-sitemap": "tsx scripts/generateSitemap.ts",
+    "build": "npm run generate-sitemap && vite build"
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.2.4",
@@ -47,7 +48,7 @@
     "@types/lodash": "^4.17.13",
     "@types/react-resizable": "^3.0.8",
     "@types/slate": "^0.47.16",
-    "axios": "^1.6.8",
+    "axios": "^1.8.4",
     "bootstrap": "^5.3.3",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
@@ -77,6 +78,7 @@
     "react-quill": "^2.0.0",
     "react-router-dom": "^6.26.1",
     "setprototypeof": "^1.2.0",
+    "sitemap": "^8.0.0",
     "slate": "^0.103.0",
     "slate-history": "^0.109.0",
     "slate-react": "^0.109.0",

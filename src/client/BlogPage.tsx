@@ -1,4 +1,4 @@
-import { fetchPosts } from "../client/api";
+import { fetchBlogPosts } from "../client/api";
 import BlogCard from "./BlogCard";
 import { BlogPost } from "../shared/interfaces";
 import DOMPurify from "dompurify";
@@ -19,7 +19,7 @@ const BlogPage: React.FC<BlogPageProps> = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const data = await fetchPosts();
+        const data = await fetchBlogPosts();
         setPosts(data);
         setLoading(false);
       } catch (error) {

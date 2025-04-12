@@ -130,7 +130,7 @@ img {
   width: 100%;
   text-align: left;
   word-spacing: normal;
-  overflow-wrap: break-word;
+  /* overflow-wrap: break-word; */
 }
 
 .PostText {
@@ -140,10 +140,10 @@ img {
   line-height: 1.8;
   text-align: left;
   word-spacing: 0.25rem;
-  overflow-wrap: break-word;
+  /* overflow-wrap: break-word; */
   width: 80svw;
   max-width: 80svw;
-  hyphens: auto;
+  /* hyphens: auto; */
   margin: 0 auto;
 }
 

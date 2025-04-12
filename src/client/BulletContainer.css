@@ -71,8 +71,8 @@
   width: 100%;
   text-align: left;
   word-spacing: 0.25rem;
-  hyphens: auto;
-  word-break: break-word;
+  /* hyphens: auto;
+  word-break: break-word; */
   text-wrap: pretty;
 }
 
