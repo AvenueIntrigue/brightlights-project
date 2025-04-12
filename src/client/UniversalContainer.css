@@ -131,14 +131,15 @@ h1, h2, h3 {
 .UC-container.direction-ltr .UCdescriptionParagraph p,
 .UC-container.direction-rtl .UCdescriptionParagraph p {
   text-align: left;
-  max-width: 700px;
+  
 }
 
 .UCPostTitle {
   text-align: left;
   font-family: "utopia", serif;
   font-weight: 700;
-  font-size: 4.5rem;
+  font-size: 4rem;
+  width: 100%;
   max-width: 650px;
   margin-bottom: 3.5%;
   color: #bbf7d0;
@@ -236,10 +237,12 @@ h1, h2, h3 {
     width: 80svw;
   }
 
+
   .UCPostTitle,
   .UC-container.direction-ltr .UCPostTitle,
   .UC-container.direction-rtl .UCPostTitle {
-    text-align: center;
+    text-align: left;
+    width: 100%;
     max-width: 100%;
     margin: 0 auto 3.5%;
   }
@@ -256,7 +259,7 @@ h1, h2, h3 {
   .UC-container.direction-ltr .UCdescriptionParagraph p,
   .UC-container.direction-rtl .UCdescriptionParagraph p {
     max-width: 80svw;
-    font-size: 2.5rem;
+    font-size: 1.75rem;
     margin: 0 auto 1rem;
   }
 
@@ -313,7 +316,7 @@ h1, h2, h3 {
   .UC-container.direction-ltr .UCPostTitle,
   .UC-container.direction-rtl .UCPostTitle {
     text-align: left;
-    font-size: 3rem;
+    font-size: 2.5rem;
     max-width: 100%;
     margin: 0 auto 3.5%;
   }
@@ -330,7 +333,7 @@ h1, h2, h3 {
   .UC-container.direction-ltr .UCdescriptionParagraph p,
   .UC-container.direction-rtl .UCdescriptionParagraph p {
     max-width: 80svw;
-    font-size: 2rem;
+    font-size: 1.5rem;
     text-wrap: wrap;
     word-break: break-word;
     margin: 0 auto 1rem;

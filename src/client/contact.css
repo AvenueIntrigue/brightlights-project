@@ -595,5 +595,10 @@ p {
     flex-direction: column;
   }
 
+  .bl-logo-title {
+
+    font-size: 2rem;
+  }
+
 
 }
