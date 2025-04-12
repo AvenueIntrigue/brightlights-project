@@ -1,5 +1,6 @@
 import express, { NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
+import path from "path";
 import ViteExpress from "vite-express";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
@@ -42,6 +43,11 @@ app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error("Middleware Error:", err);
   res.status(500).json({ message: "Internal server error", error: err.message });
+});
+
+// Serve robots.txt for /public/robots.txt
+app.get("/public/robots.txt", (req, res) => {
+  res.sendFile(path.resolve("public/robots.txt"));
 });
 
 // API GET routes
