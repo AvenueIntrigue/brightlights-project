@@ -14,6 +14,8 @@ import { Helmet } from "react-helmet-async";
 import ProfilePage from "./ProfilePage";
 import DynamicPost from "./DynamicPost";
 import Portfolio from "./Portfolio";
+import BibleLessonsForm from "./BibleLessonsForm";
+
 const App: React.FC = () => {
   return (
     <div>
@@ -48,6 +50,7 @@ const App: React.FC = () => {
         <Route path="/web3" element={<DynamicPost type="web3" />} />
         <Route path="/projects" element={<DynamicPost type="projects" />} />
         <Route path="/portfolio" element={<Portfolio />} />
+        <Route path="/blform" element={<BibleLessonsForm />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="*" element={<Home />} /> {/* Or <NotFound /> if you have one */}
         <Route

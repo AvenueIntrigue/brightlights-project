@@ -7,6 +7,14 @@
   margin: 0 auto;
 }
 
+/* Links */
+
+.tiptap a, .PostText a, .descriptionParagraph a {
+  color: #bbf7d0 !important; 
+  font-style: italic;
+  
+}
+
 /* Headings */
 h1, h2, h3 {
   color: #bbf7d0;

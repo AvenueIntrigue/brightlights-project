@@ -23,6 +23,7 @@ import {
   ProjectsPostModel,
   PortfolioPostModel,
   marketingConsentContentModel,
+  LessonsModel
 } from "../shared/interfaces.js";
 
 dotenv.config();
@@ -44,6 +45,8 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error("Middleware Error:", err);
   res.status(500).json({ message: "Internal server error", error: err.message });
 });
+
+
 
 // Serve robots.txt for /public/robots.txt
 app.get("/public/robots.txt", (req, res) => {
@@ -128,6 +131,75 @@ app.put("/api/:typeposts", async (req: Request, res: Response) => {
   } catch (error) {
     console.error(`Error saving ${type}posts:`, error);
     res.status(500).send({ message: `Error saving ${type}posts`, error });
+  }
+});
+
+
+
+// Lesson routes
+app.get('/api/lessons/:fruit/:order', async (req: Request, res: Response) => {
+  const { fruit, order } = req.params;
+  const fruitsOfTheSpirit = [
+    'love',
+    'joy',
+    'peace',
+    'patience',
+    'kindness',
+    'goodness',
+    'faithfulness',
+    'gentleness',
+    'self-control',
+  ];
+  if (!fruitsOfTheSpirit.includes(fruit)) {
+    return res.status(400).json({ message: `Invalid fruit: ${fruit}` });
+  }
+  const orderNum = parseInt(order, 10);
+  if (isNaN(orderNum) || orderNum < 1) {
+    return res.status(400).json({ message: `Invalid order: ${order}` });
+  }
+  try {
+    const lesson = await LessonsModel.findOne({ fruit, order: orderNum });
+    if (lesson) {
+      res.json(lesson);
+    } else {
+      res.status(404).json({ message: `Lesson not found for ${fruit} order ${order}` });
+    }
+  } catch (error) {
+    console.error(`Error fetching lesson ${fruit}/${order}:`, error);
+    res.status(500).json({ message: 'Error fetching lesson', error });
+  }
+});
+
+app.post('/api/lessons', async (req: Request, res: Response) => {
+  const fruitsOfTheSpirit = [
+    'love',
+    'joy',
+    'peace',
+    'patience',
+    'kindness',
+    'goodness',
+    'faithfulness',
+    'gentleness',
+    'self-control',
+  ];
+  const { fruit, order, book, chapter, verses, prayer, quiz } = req.body;
+  if (!fruitsOfTheSpirit.includes(fruit)) {
+    return res.status(400).json({ message: `Invalid fruit: ${fruit}` });
+  }
+  if (!Number.isInteger(order) || order < 1) {
+    return res.status(400).json({ message: `Invalid order: ${order}` });
+  }
+  if (!book || !chapter || !verses || !prayer || !quiz || !quiz.question || !quiz.options || quiz.options.length < 3 || !Number.isInteger(quiz.correctAnswer)) {
+    return res.status(400).json({ message: 'Missing or invalid required fields' });
+  }
+  try {
+    const lesson = new LessonsModel(req.body);
+    await lesson.save();
+    console.log(`Created lesson: ${fruit}/${order}`);
+    res.status(201).json(lesson);
+  } catch (error) {
+    console.error('Error saving lesson:', error);
+    res.status(500).json({ message: 'Error saving lesson', error });
   }
 });
 
