@@ -6,6 +6,10 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import encryptionKey from "./generateKey.js";
 import crypto from "node:crypto";
+
+import cors from "cors";
+
+
 import {
   PricingPostModel,
   AboutPostModel,
@@ -37,6 +41,29 @@ if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
 }
 
 const app = express();
+
+// Configure CORS to allow requests from www.brightlightscreative.com
+app.use(
+  cors({
+    origin: 'https://www.brightlightscreative.com', // Allow frontend origin
+    methods: ['GET', 'POST', 'PUT', 'OPTIONS'], // Allow necessary methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allow headers used by axios
+    credentials: true, // Support cookies or auth headers (optional)
+  })
+);
+
+// Handle preflight requests for all routes
+app.options('*', cors());
+
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+
+// Error handling middleware
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+  console.error('Middleware Error:', err);
+  res.status(500).json({ message: 'Internal server error', error: err.message });
+});
+
 
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
