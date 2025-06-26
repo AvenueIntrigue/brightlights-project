@@ -9,7 +9,7 @@ interface LessonFormData {
   order: number;
   book: string;
   chapter: number;
-  verses: string; // String input, converted to number[] on submit
+  verses: string;
   prayer: string;
   quiz: {
     question: string;
@@ -36,7 +36,7 @@ const BibleLessonForm: React.FC = () => {
     order: 1,
     book: '',
     chapter: 0,
-    verses: '', // Changed to string for input
+    verses: '',
     prayer: '',
     quiz: { question: '', options: ['', '', ''], correctAnswer: 0 },
   });
@@ -81,7 +81,7 @@ const BibleLessonForm: React.FC = () => {
         },
       };
 
-      const response = await axios.post('https://brightlightscreative.com/api/lessons', payload);
+      const response = await axios.post('https://www.brightlightscreative.com/api/lessons', payload);
       alert('Lesson saved successfully!');
       setLesson({
         fruit: 'love',
