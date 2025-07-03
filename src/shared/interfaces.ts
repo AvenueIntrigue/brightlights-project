@@ -174,18 +174,18 @@ const marketingConsentContentModel = mongoose.model<marketingConsentContent>(
 );
 
 // Lesson Schema
+
 export interface Lesson extends Document {
-  _id: mongoose.Types.ObjectId;
-  fruit: string; // e.g., "love", "joy", "peace"
-  order: number; // e.g., 1 for first love lesson
-  book: string; // e.g., "John"
-  chapter: number; // e.g., 1
-  verses: number[]; // e.g., [1, 2, 3]
-  prayer: string; // e.g., "Lord, fill me with Your love."
+  fruit: string;
+  order: number;
+  book: string;
+  chapter: number;
+  verses: { verse: number; text: string; modern_text?: string }[];
+  prayer: string;
   quiz: {
-    question: string; // e.g., "What does John 3:16 show about love?"
-    options: string[]; // e.g., ["God's love", "Human love", "Sacrifice"]
-    correctAnswer: number; // e.g., 0
+    question: string;
+    options: string[];
+    correctAnswer: number;
   };
 }
 
@@ -198,7 +198,13 @@ const LessonSchema: Schema<Lesson> = new Schema({
   order: { type: Number, required: true, min: 1 }, // Ensure positive integer
   book: { type: String, required: true },
   chapter: { type: Number, required: true, min: 1 },
-  verses: { type: [Number], required: true },
+  verses: [
+    {
+      verse: { type: Number, required: true, min: 1 }, // Ensure positive integer
+      text: { type: String, required: true },
+      modern_text: { type: String, required: false }, // Optional modern text
+    },
+  ],
   prayer: { type: String, required: true },
   quiz: {
     question: { type: String, required: true },
