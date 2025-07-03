@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { Lesson } from '../shared/interfaces';
 
@@ -107,28 +107,6 @@ const BibleLessonForm: React.FC = () => {
     prayer: '',
     quiz: { question: '', options: ['', '', ''], correctAnswer: 0 },
   });
-  const [verseTexts, setVerseTexts] = useState<Map<number, { text: string; modern_text?: string }>>(new Map());
-
-  // Fetch verse texts when book and chapter change
-  useEffect(() => {
-    const fetchVerseTexts = async () => {
-      if (lesson.book && lesson.chapter > 0) {
-        try {
-          const response = await axios.post('https://www.brightlightscreative.com/api/verses', {
-            version: 'WEB',
-            book: lesson.book,
-            chapter: lesson.chapter,
-          });
-          const verseData = response.data as { verse: number; text: string; modern_text?: string }[];
-          setVerseTexts(new Map(verseData.map((v) => [v.verse, { text: v.text, modern_text: v.modern_text }])));
-        } catch (error) {
-          console.error('Error fetching verse texts:', error);
-          alert('Failed to fetch verse texts.');
-        }
-      }
-    };
-    fetchVerseTexts();
-  }, [lesson.book, lesson.chapter]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -153,24 +131,11 @@ const BibleLessonForm: React.FC = () => {
         return;
       }
 
-      // Create verses payload with all verses for the chapter
-      const versesPayload = Array.from(verseTexts.entries()).map(([verseNum, data]) => ({
-        verse: verseNum,
-        text: data.text,
-        modern_text: data.modern_text || data.text,
-      }));
-
-      if (versesPayload.length === 0) {
-        alert('No verses found for the selected chapter. Please ensure the chapter is valid.');
-        return;
-      }
-
       const payload: Omit<Lesson, keyof import('mongoose').Document> = {
         fruit: lesson.fruit,
         order: Number(lesson.order),
         book: bookAbbrev,
         chapter: Number(lesson.chapter),
-        verses: versesPayload,
         prayer: lesson.prayer,
         quiz: {
           ...lesson.quiz,
@@ -189,9 +154,8 @@ const BibleLessonForm: React.FC = () => {
         prayer: '',
         quiz: { question: '', options: ['', '', ''], correctAnswer: 0 },
       });
-      setVerseTexts(new Map());
-    } catch (error) {
-      console.error('Error saving lesson:', error);
+    } catch (error: any) {
+      console.error(`Form: Error saving lesson: ${error.message}`);
       alert('Failed to save lesson.');
     }
   };
@@ -313,7 +277,6 @@ const BibleLessonForm: React.FC = () => {
                 }
               }}
               onBlur={() => {
-                // Ensure value is within bounds on blur
                 const value = lesson.quiz.correctAnswer;
                 if (isNaN(value) || value < 0 || value >= lesson.quiz.options.length) {
                   setLesson({

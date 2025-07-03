@@ -180,7 +180,6 @@ export interface Lesson extends Document {
   order: number;
   book: string;
   chapter: number;
-  verses: { verse: number; text: string; modern_text?: string }[];
   prayer: string;
   quiz: {
     question: string;
@@ -189,35 +188,20 @@ export interface Lesson extends Document {
   };
 }
 
-const LessonSchema: Schema<Lesson> = new Schema({
-  fruit: {
-    type: String,
-    required: true,
-    enum: ['love', 'joy', 'peace', 'patience', 'kindness', 'goodness', 'faithfulness', 'gentleness', 'self-control'], // Restrict to 9 fruits
-  },
-  order: { type: Number, required: true, min: 1 }, // Ensure positive integer
+const lessonSchema: Schema = new Schema({
+  fruit: { type: String, required: true },
+  order: { type: Number, required: true },
   book: { type: String, required: true },
-  chapter: { type: Number, required: true, min: 1 },
-  verses: [
-    {
-      verse: { type: Number, required: true, min: 1 }, // Ensure positive integer
-      text: { type: String, required: true },
-      modern_text: { type: String, required: false }, // Optional modern text
-    },
-  ],
+  chapter: { type: Number, required: true },
   prayer: { type: String, required: true },
   quiz: {
     question: { type: String, required: true },
-    options: { type: [String], required: true, minlength: 3 }, // At least 3 options
-    correctAnswer: { type: Number, required: true, min: 0 },
+    options: { type: [String], required: true },
+    correctAnswer: { type: Number, required: true },
   },
 });
 
-// Index for efficient retrieval
-LessonSchema.index({ fruit: 1, order: 1 });
-
-export const LessonsModel = mongoose.model<Lesson>('lessons', LessonSchema); // Lowercase collection name for consistency
-
+const LessonsModel = mongoose.model<Lesson>('Lesson', lessonSchema);
 
 // Post Interface (Generic for All Post Types)
 export interface Post extends Document {
@@ -286,4 +270,5 @@ export {
   ProjectsPostModel,
   PortfolioPostModel,
   CategoryModel,
+  LessonsModel
 };

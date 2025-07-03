@@ -27,7 +27,7 @@ import {
   ProjectsPostModel,
   PortfolioPostModel,
   marketingConsentContentModel,
-  LessonsModel
+  LessonsModel,
 } from "../shared/interfaces.js";
 
 dotenv.config();
@@ -162,20 +162,20 @@ app.put("/api/:typeposts", async (req: Request, res: Response) => {
 
 
 
-// Lesson routes
+const fruitsOfTheSpirit = [
+  'love',
+  'joy',
+  'peace',
+  'patience',
+  'kindness',
+  'goodness',
+  'faithfulness',
+  'gentleness',
+  'self-control',
+];
+
 app.get('/api/lessons/:fruit/:order', async (req: Request, res: Response) => {
   const { fruit, order } = req.params;
-  const fruitsOfTheSpirit = [
-    'love',
-    'joy',
-    'peace',
-    'patience',
-    'kindness',
-    'goodness',
-    'faithfulness',
-    'gentleness',
-    'self-control',
-  ];
   if (!fruitsOfTheSpirit.includes(fruit)) {
     return res.status(400).json({ message: `Invalid fruit: ${fruit}` });
   }
@@ -190,42 +190,32 @@ app.get('/api/lessons/:fruit/:order', async (req: Request, res: Response) => {
     } else {
       res.status(404).json({ message: `Lesson not found for ${fruit} order ${order}` });
     }
-  } catch (error) {
-    console.error(`Error fetching lesson ${fruit}/${order}:`, error);
-    res.status(500).json({ message: 'Error fetching lesson', error });
+  } catch (error: any) {
+    console.error(`Error fetching lesson ${fruit}/${order}: ${error.message}`);
+    res.status(500).json({ message: 'Error fetching lesson', error: error.message });
   }
 });
 
 app.post('/api/lessons', async (req: Request, res: Response) => {
-  const fruitsOfTheSpirit = [
-    'love',
-    'joy',
-    'peace',
-    'patience',
-    'kindness',
-    'goodness',
-    'faithfulness',
-    'gentleness',
-    'self-control',
-  ];
-  const { fruit, order, book, chapter, verses, prayer, quiz } = req.body;
+  const { fruit, order, book, chapter, prayer, quiz } = req.body;
+  console.log(`API: Received lesson POST: ${JSON.stringify(req.body)}`);
   if (!fruitsOfTheSpirit.includes(fruit)) {
     return res.status(400).json({ message: `Invalid fruit: ${fruit}` });
   }
   if (!Number.isInteger(order) || order < 1) {
     return res.status(400).json({ message: `Invalid order: ${order}` });
   }
-  if (!book || !chapter || !verses || !prayer || !quiz || !quiz.question || !quiz.options || quiz.options.length < 3 || !Number.isInteger(quiz.correctAnswer)) {
+  if (!book || !chapter || !prayer || !quiz || !quiz.question || !quiz.options || quiz.options.length < 3 || !Number.isInteger(quiz.correctAnswer)) {
     return res.status(400).json({ message: 'Missing or invalid required fields' });
   }
   try {
-    const lesson = new LessonsModel(req.body);
+    const lesson = new LessonsModel({ fruit, order, book, chapter, prayer, quiz });
     await lesson.save();
-    console.log(`Created lesson: ${fruit}/${order}`);
-    res.status(201).json(lesson);
-  } catch (error) {
-    console.error('Error saving lesson:', error);
-    res.status(500).json({ message: 'Error saving lesson', error });
+    console.log(`API: Lesson saved: ${fruit}/${order}, book=${book}, chapter=${chapter}`);
+    res.status(201).json({ message: 'Lesson saved successfully', lesson });
+  } catch (error: any) {
+    console.error(`API: Error saving lesson: ${error.message}`);
+    res.status(500).json({ message: 'Error saving lesson', error: error.message });
   }
 });
 
