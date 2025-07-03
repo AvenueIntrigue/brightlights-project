@@ -298,20 +298,34 @@ const BibleLessonForm: React.FC = () => {
             ))}
           </div>
           <div>
-            <label className="create-label">Correct Answer (index, 0-based):</label>
+            <label className="create-label">Correct Answer (0-based index):</label>
             <input
               className="create-input-field relative h-10 mb-4 bg-transparent"
               type="number"
-              value={lesson.quiz.correctAnswer || ''}
-              onChange={(e) =>
-                setLesson({
-                  ...lesson,
-                  quiz: { ...lesson.quiz, correctAnswer: parseInt(e.target.value, 10) || 0 },
-                })
-              }
-              placeholder="e.g., 1"
+              value={lesson.quiz.correctAnswer}
+              onChange={(e) => {
+                const value = e.target.value === '' ? 0 : parseInt(e.target.value, 10);
+                if (!isNaN(value) && value >= 0 && value < lesson.quiz.options.length) {
+                  setLesson({
+                    ...lesson,
+                    quiz: { ...lesson.quiz, correctAnswer: value },
+                  });
+                }
+              }}
+              onBlur={() => {
+                // Ensure value is within bounds on blur
+                const value = lesson.quiz.correctAnswer;
+                if (isNaN(value) || value < 0 || value >= lesson.quiz.options.length) {
+                  setLesson({
+                    ...lesson,
+                    quiz: { ...lesson.quiz, correctAnswer: 0 },
+                  });
+                }
+              }}
+              placeholder="e.g., 0"
               min="0"
               max={lesson.quiz.options.length - 1}
+              step="1"
               required
             />
           </div>
