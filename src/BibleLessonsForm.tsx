@@ -96,7 +96,7 @@ const BibleLessonsForm: React.FC = () => {
     }
 
     try {
-      const response = await axios.post('https://brightlightscreative.com/api/lessons', formData);
+      const response = await axios.post('https://brightlightscreative.com/api/lessons/', formData);
       setSuccess('Lesson saved successfully!');
       console.log('Saved lesson:', response.data);
 
