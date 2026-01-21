@@ -164,7 +164,7 @@ app.post("/api/lessons", async (req: Request, res: Response) => {
       .select('order')
       .exec();
 
-    const nextOrder = lastLesson && lastLesson.order ? lastLesson.order + 1 : 1;
+    const nextOrder = lastLesson && typeof lastLesson.order === 'number' ? lastLesson.order + 1 : 1;
 
     console.log(`Assigned order ${nextOrder} for topic "${topic}"`);
 
@@ -198,12 +198,14 @@ app.post("/api/lessons", async (req: Request, res: Response) => {
 
     res.status(201).json({
       message: "Lesson saved successfully",
-      lesson: lesson.toObject(), // Include the auto-assigned order
+      lesson: lesson.toObject(), // Include the auto-assigned order in response
     });
   } catch (error: any) {
     console.error("Error saving lesson:");
     console.error("Message:", error.message);
     console.error("Stack:", error.stack);
+    console.error("Full error:", JSON.stringify(error, null, 2));
+
     res.status(500).json({
       message: "Error saving lesson",
       error: error.message,
