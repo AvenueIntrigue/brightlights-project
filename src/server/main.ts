@@ -43,18 +43,34 @@ if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
 
 const app = express();
 
-// === CORS Configuration ===
-app.use(
-  cors({
-    origin: ["https://www.brightlightscreative.com", "http://localhost:5173"], // Allow local dev too
-    methods: ["GET", "POST", "PUT", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  })
-);
+// === CORS & Preflight Handling FIRST (critical for fixing 307 on OPTIONS) ===
+app.use(cors({
+  origin: [
+    "https://www.brightlightscreative.com",
+    "https://brightlightscreative.com", // added non-www
+    "http://localhost:5173" // local dev
+  ],
+  methods: ["GET", "POST", "PUT", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
+}));
 
-// Handle preflight requests
-app.options("*", cors());
+// Explicitly handle ALL OPTIONS requests early and return 204 directly
+app.options("*", (req: Request, res: Response) => {
+  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
+  res.sendStatus(204);
+});
+
+// Prevent any trailing-slash or other redirects from affecting API/OPTIONS
+app.use((req: Request, res: Response, next: NextFunction) => {
+  if (req.method === "OPTIONS" || req.path.startsWith("/api/")) {
+    return next(); // Skip redirect logic for API routes and preflights
+  }
+  next();
+});
 
 // === Middleware ===
 app.use(bodyParser.json({ limit: "50mb" }));
@@ -67,7 +83,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 });
 
 // === Serve static files (robots.txt, etc.) ===
-app.get("/public/robots.txt", (req, res) => {
+app.get("/public/robots.txt", (req: Request, res: Response) => {
   res.sendFile(path.resolve("public/robots.txt"));
 });
 
@@ -104,16 +120,13 @@ const dailyTopics = [
 // === GET /api/lessons/:topic/:order ===
 app.get("/api/lessons/:topic/:order", async (req: Request, res: Response) => {
   const { topic, order } = req.params;
-
   if (!dailyTopics.includes(topic as any)) {
     return res.status(400).json({ message: `Invalid topic: ${topic}` });
   }
-
   const orderNum = parseInt(order, 10);
   if (isNaN(orderNum) || orderNum < 1) {
     return res.status(400).json({ message: `Invalid order: ${order}` });
   }
-
   try {
     const lesson = await LessonsModel.findOne({ topic, order: orderNum });
     if (lesson) {
@@ -171,11 +184,8 @@ app.post("/api/lessons", async (req: Request, res: Response) => {
       action_item,
       prayer,
     });
-
     await lesson.save();
-
     console.log(`API: Lesson saved: ${topic}/${order}`);
-
     res.status(201).json({
       message: "Lesson saved successfully",
       lesson,
@@ -189,7 +199,7 @@ app.post("/api/lessons", async (req: Request, res: Response) => {
   }
 });
 
-// === Legacy GET /api/:typeposts (your original routes) ===
+// === Legacy GET /api/:typeposts ===
 app.get("/api/:typeposts", async (req: Request, res: Response) => {
   const type = req.params.typeposts.replace(/posts$/, "");
   let Model;
@@ -205,7 +215,6 @@ app.get("/api/:typeposts", async (req: Request, res: Response) => {
     case "pricing": Model = PricingPostModel; break;
     default: return res.status(400).json({ message: `Invalid type: ${type}posts` });
   }
-
   try {
     const post = await Model.findOne();
     if (post) res.json(post);
@@ -231,7 +240,6 @@ app.put("/api/:typeposts", async (req: Request, res: Response) => {
     case "pricing": Model = PricingPostModel; break;
     default: return res.status(400).json({ message: `Invalid type: ${type}posts` });
   }
-
   try {
     const postData = req.body;
     const existingPost = await Model.findOne();
