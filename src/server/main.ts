@@ -4,12 +4,11 @@ import path from "path";
 import ViteExpress from "vite-express";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
+import cors from "cors";
 import encryptionKey from "./generateKey.js";
 import crypto from "node:crypto";
 
-import cors from "cors";
-
-
+// Import your models
 import {
   PricingPostModel,
   AboutPostModel,
@@ -30,11 +29,13 @@ import {
   LessonsModel,
 } from "../shared/interfaces.js";
 
+// Load environment variables
 dotenv.config();
 
 const rawUri = process.env.MONGODB_URI || "mongodb://localhost:27017/brightLightsCreative";
 const uri = rawUri.startsWith("MONGODB_URI=") ? rawUri.replace("MONGODB_URI=", "") : rawUri;
 console.log("Using MONGODB_URI:", uri);
+
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || encryptionKey;
 if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
   throw new Error("ENCRYPTION_KEY must be set in .env and be 32 characters long");
@@ -42,44 +43,153 @@ if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
 
 const app = express();
 
-// Configure CORS to allow requests from www.brightlightscreative.com
+// === CORS Configuration ===
 app.use(
   cors({
-    origin: 'https://www.brightlightscreative.com', // Allow frontend origin
-    methods: ['GET', 'POST', 'PUT', 'OPTIONS'], // Allow necessary methods
-    allowedHeaders: ['Content-Type', 'Authorization'], // Allow headers used by axios
-    credentials: true, // Support cookies or auth headers (optional)
+    origin: ["https://www.brightlightscreative.com", "http://localhost:5173"], // Allow local dev too
+    methods: ["GET", "POST", "PUT", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   })
 );
 
-// Handle preflight requests for all routes
-app.options('*', cors());
+// Handle preflight requests
+app.options("*", cors());
 
-
-
-// Error handling middleware
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error('Middleware Error:', err);
-  res.status(500).json({ message: 'Internal server error', error: err.message });
-});
-
-
+// === Middleware ===
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
+// Global error handler (should be last middleware)
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error("Middleware Error:", err);
+  console.error("Global Error Handler:", err);
   res.status(500).json({ message: "Internal server error", error: err.message });
 });
 
-
-
-// Serve robots.txt for /public/robots.txt
+// === Serve static files (robots.txt, etc.) ===
 app.get("/public/robots.txt", (req, res) => {
   res.sendFile(path.resolve("public/robots.txt"));
 });
 
-// API GET routes
+// === Valid topics for Lessons ===
+const dailyTopics = [
+  "love",
+  "joy",
+  "peace",
+  "patience",
+  "kindness",
+  "goodness",
+  "faithfulness",
+  "gentleness",
+  "self-control",
+  "family",
+  "faith",
+  "forgiveness",
+  "repentance",
+  "gratitude",
+  "hope",
+  "humility",
+  "obedience",
+  "called_to_create",
+  "honor_god_in_your_work",
+  "liberty",
+  "bread_of_life",
+  "living_water",
+  "provision",
+  "holy_spirit_guidance",
+  "follower_of_christ",
+  "salvation",
+] as const;
+
+// === GET /api/lessons/:topic/:order ===
+app.get("/api/lessons/:topic/:order", async (req: Request, res: Response) => {
+  const { topic, order } = req.params;
+
+  if (!dailyTopics.includes(topic as any)) {
+    return res.status(400).json({ message: `Invalid topic: ${topic}` });
+  }
+
+  const orderNum = parseInt(order, 10);
+  if (isNaN(orderNum) || orderNum < 1) {
+    return res.status(400).json({ message: `Invalid order: ${order}` });
+  }
+
+  try {
+    const lesson = await LessonsModel.findOne({ topic, order: orderNum });
+    if (lesson) {
+      res.json(lesson);
+    } else {
+      res.status(404).json({ message: `Lesson not found for ${topic} order ${order}` });
+    }
+  } catch (error: any) {
+    console.error(`Error fetching lesson ${topic}/${order}: ${error.message}`);
+    res.status(500).json({ message: "Error fetching lesson", error: error.message });
+  }
+});
+
+// === POST /api/lessons ===
+app.post("/api/lessons", async (req: Request, res: Response) => {
+  const {
+    topic,
+    title,
+    scripture,
+    order,
+    reflection,
+    action_item,
+    prayer,
+  } = req.body;
+
+  console.log(`API: Received lesson POST: ${JSON.stringify(req.body)}`);
+
+  // Validate topic
+  if (!dailyTopics.includes(topic as any)) {
+    return res.status(400).json({ message: `Invalid topic: ${topic}` });
+  }
+
+  // Validate order
+  if (!Number.isInteger(order) || order < 1) {
+    return res.status(400).json({ message: `Invalid order: ${order}` });
+  }
+
+  // Validate required fields
+  if (!topic || !title || !scripture || !reflection || !action_item || !prayer) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
+
+  // Ensure scripture is long enough (full chapter)
+  if (scripture.length < 1000) {
+    return res.status(400).json({ message: "Scripture chapter text seems too short" });
+  }
+
+  try {
+    const lesson = new LessonsModel({
+      topic,
+      title,
+      scripture,
+      order,
+      reflection,
+      action_item,
+      prayer,
+    });
+
+    await lesson.save();
+
+    console.log(`API: Lesson saved: ${topic}/${order}`);
+
+    res.status(201).json({
+      message: "Lesson saved successfully",
+      lesson,
+    });
+  } catch (error: any) {
+    console.error(`API: Error saving lesson: ${error.message}`);
+    res.status(500).json({
+      message: "Error saving lesson",
+      error: error.message,
+    });
+  }
+});
+
+// === Legacy GET /api/:typeposts (your original routes) ===
 app.get("/api/:typeposts", async (req: Request, res: Response) => {
   const type = req.params.typeposts.replace(/posts$/, "");
   let Model;
@@ -93,132 +203,52 @@ app.get("/api/:typeposts", async (req: Request, res: Response) => {
     case "projects": Model = ProjectsPostModel; break;
     case "services": Model = ServicesPostModel; break;
     case "pricing": Model = PricingPostModel; break;
-    default: return res.status(400).send({ message: `Invalid type: ${type}posts` });
+    default: return res.status(400).json({ message: `Invalid type: ${type}posts` });
   }
+
   try {
     const post = await Model.findOne();
-    console.log(`Result for ${type}posts:`, post ? "Found" : "Not found");
     if (post) res.json(post);
-    else res.status(404).send({ message: `${type}posts not found` });
-  } catch (error) {
-    res.status(500).send({ message: `Error fetching ${type}posts`, error });
+    else res.status(404).json({ message: `${type}posts not found` });
+  } catch (error: any) {
+    res.status(500).json({ message: `Error fetching ${type}posts`, error: error.message });
   }
 });
 
-// API PUT routes
+// === Legacy PUT /api/:typeposts ===
 app.put("/api/:typeposts", async (req: Request, res: Response) => {
   const type = req.params.typeposts.replace(/posts$/, "");
-  console.log(`PUT /api/${type}posts requested with data:`, req.body);
   let Model;
   switch (type) {
-    case "web-development":
-      Model = WebDevelopmentPostModel;
-      break;
-    case "app-development":
-      Model = AppDevelopmentPostModel;
-      break;
-    case "graphic-design":
-      Model = GraphicDesignPostModel;
-      break;
-    case "about":
-      Model = AboutPostModel;
-      break;
-    case "portfolio":
-      Model = PortfolioPostModel;
-      break;
-    case "web3":
-      Model = Web3PostModel;
-      break;
-    case "projects":
-      Model = ProjectsPostModel;
-      break;
-    case "services":
-      Model = ServicesPostModel;
-      break;
-    case "pricing":
-      Model = PricingPostModel;
-      break;
-    default:
-      return res.status(400).send({ message: `Invalid type: ${type}posts` });
+    case "web-development": Model = WebDevelopmentPostModel; break;
+    case "app-development": Model = AppDevelopmentPostModel; break;
+    case "graphic-design": Model = GraphicDesignPostModel; break;
+    case "about": Model = AboutPostModel; break;
+    case "portfolio": Model = PortfolioPostModel; break;
+    case "web3": Model = Web3PostModel; break;
+    case "projects": Model = ProjectsPostModel; break;
+    case "services": Model = ServicesPostModel; break;
+    case "pricing": Model = PricingPostModel; break;
+    default: return res.status(400).json({ message: `Invalid type: ${type}posts` });
   }
+
   try {
     const postData = req.body;
     const existingPost = await Model.findOne();
     if (existingPost) {
       await Model.updateOne({}, postData);
-      console.log(`Updated ${type}posts:`, postData);
       res.json({ message: `${type}posts updated`, data: postData });
     } else {
       const newPost = new Model(postData);
       await newPost.save();
-      console.log(`Created ${type}posts:`, newPost);
       res.status(201).json({ message: `${type}posts created`, data: newPost });
     }
-  } catch (error) {
-    console.error(`Error saving ${type}posts:`, error);
-    res.status(500).send({ message: `Error saving ${type}posts`, error });
-  }
-});
-
-
-
-const fruitsOfTheSpirit = [
-  'love',
-  'joy',
-  'peace',
-  'patience',
-  'kindness',
-  'goodness',
-  'faithfulness',
-  'gentleness',
-  'self-control',
-];
-
-app.get('/api/lessons/:fruit/:order', async (req: Request, res: Response) => {
-  const { fruit, order } = req.params;
-  if (!fruitsOfTheSpirit.includes(fruit)) {
-    return res.status(400).json({ message: `Invalid fruit: ${fruit}` });
-  }
-  const orderNum = parseInt(order, 10);
-  if (isNaN(orderNum) || orderNum < 1) {
-    return res.status(400).json({ message: `Invalid order: ${order}` });
-  }
-  try {
-    const lesson = await LessonsModel.findOne({ fruit, order: orderNum });
-    if (lesson) {
-      res.json(lesson);
-    } else {
-      res.status(404).json({ message: `Lesson not found for ${fruit} order ${order}` });
-    }
   } catch (error: any) {
-    console.error(`Error fetching lesson ${fruit}/${order}: ${error.message}`);
-    res.status(500).json({ message: 'Error fetching lesson', error: error.message });
+    res.status(500).json({ message: `Error saving ${type}posts`, error: error.message });
   }
 });
 
-app.post('/api/lessons', async (req: Request, res: Response) => {
-  const { fruit, order, book, chapter, prayer, quiz } = req.body;
-  console.log(`API: Received lesson POST: ${JSON.stringify(req.body)}`);
-  if (!fruitsOfTheSpirit.includes(fruit)) {
-    return res.status(400).json({ message: `Invalid fruit: ${fruit}` });
-  }
-  if (!Number.isInteger(order) || order < 1) {
-    return res.status(400).json({ message: `Invalid order: ${order}` });
-  }
-  if (!book || !chapter || !prayer || !quiz || !quiz.question || !quiz.options || quiz.options.length < 3 || !Number.isInteger(quiz.correctAnswer)) {
-    return res.status(400).json({ message: 'Missing or invalid required fields' });
-  }
-  try {
-    const lesson = new LessonsModel({ fruit, order, book, chapter, prayer, quiz });
-    await lesson.save();
-    console.log(`API: Lesson saved: ${fruit}/${order}, book=${book}, chapter=${chapter}`);
-    res.status(201).json({ message: 'Lesson saved successfully', lesson });
-  } catch (error: any) {
-    console.error(`API: Error saving lesson: ${error.message}`);
-    res.status(500).json({ message: 'Error saving lesson', error: error.message });
-  }
-});
-
+// === Start Server ===
 async function startServer() {
   try {
     await mongoose.connect(uri);
@@ -229,8 +259,9 @@ async function startServer() {
   }
 }
 
-// Use Render's PORT or fallback to 3000 for local dev
+// Use Render's PORT or fallback to 3000
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+
 startServer()
   .then(() => {
     ViteExpress.listen(app, port, () => {
