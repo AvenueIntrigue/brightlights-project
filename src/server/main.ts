@@ -158,17 +158,24 @@ app.post("/api/lessons", async (req: Request, res: Response) => {
       return res.status(400).json({ message: `Invalid topic: ${topic}` });
     }
 
-    // Automatically assign next order for this topic
-    const lastLesson = await LessonsModel.findOne({ topic })
-      .sort({ order: -1 }) // Highest order first
-      .select('order')
-      .exec();
+    // Automatically assign next order
+    let nextOrder = 1;
+    try {
+      const lastLesson = await LessonsModel.findOne({ topic })
+        .sort({ order: -1 })
+        .select('order')
+        .exec();
 
-    const nextOrder = lastLesson && typeof lastLesson.order === 'number' ? lastLesson.order + 1 : 1;
+      if (lastLesson && typeof lastLesson.order === 'number') {
+        nextOrder = lastLesson.order + 1;
+      }
+      console.log(`Assigned order ${nextOrder} for topic "${topic}"`);
+    } catch (queryError: any) {
+      console.error("Error querying last lesson for topic:", queryError.message);
+      // Fallback to 1 if query fails
+    }
 
-    console.log(`Assigned order ${nextOrder} for topic "${topic}"`);
-
-    // Validate required fields (no order needed)
+    // Validate required fields
     if (!topic || !title || !scripture || !reflection || !action_item || !prayer) {
       return res.status(400).json({ 
         message: "Missing required fields",
@@ -187,7 +194,7 @@ app.post("/api/lessons", async (req: Request, res: Response) => {
       topic,
       title,
       scripture,
-      order: nextOrder,  // ← Auto-assigned!
+      order: nextOrder,
       reflection,
       action_item,
       prayer,
@@ -198,17 +205,19 @@ app.post("/api/lessons", async (req: Request, res: Response) => {
 
     res.status(201).json({
       message: "Lesson saved successfully",
-      lesson: lesson.toObject(), // Include the auto-assigned order in response
+      lesson: lesson.toObject(),
     });
   } catch (error: any) {
     console.error("Error saving lesson:");
     console.error("Message:", error.message);
+    console.error("Name:", error.name);
     console.error("Stack:", error.stack);
     console.error("Full error:", JSON.stringify(error, null, 2));
 
     res.status(500).json({
       message: "Error saving lesson",
-      error: error.message,
+      error: error.message || "Unknown server error",
+      details: error.name === 'ValidationError' ? error.errors : null,
     });
   }
 });
