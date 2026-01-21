@@ -43,19 +43,18 @@ if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
 
 const app = express();
 
-// === CORS & Preflight Handling FIRST (critical for fixing 307 on OPTIONS) ===
+// === CORS & Preflight Handling FIRST ===
 app.use(cors({
   origin: [
     "https://www.brightlightscreative.com",
-    "https://brightlightscreative.com", // added non-www
-    "http://localhost:5173" // local dev
+    "https://brightlightscreative.com",
+    "http://localhost:5173"
   ],
   methods: ["GET", "POST", "PUT", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
 }));
 
-// Explicitly handle ALL OPTIONS requests early and return 204 directly
 app.options("*", (req: Request, res: Response) => {
   res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS");
@@ -64,30 +63,30 @@ app.options("*", (req: Request, res: Response) => {
   res.sendStatus(204);
 });
 
-// Prevent any trailing-slash or other redirects from affecting API/OPTIONS
+// Prevent redirects for API/OPTIONS
 app.use((req: Request, res: Response, next: NextFunction) => {
   if (req.method === "OPTIONS" || req.path.startsWith("/api/")) {
-    return next(); // Skip redirect logic for API routes and preflights
+    return next();
   }
   next();
 });
 
-// === Middleware ===
+// Middleware
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
-// Global error handler (should be last middleware)
+// Global error handler
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   console.error("Global Error Handler:", err);
   res.status(500).json({ message: "Internal server error", error: err.message });
 });
 
-// === Serve static files (robots.txt, etc.) ===
+// Serve static files
 app.get("/public/robots.txt", (req: Request, res: Response) => {
   res.sendFile(path.resolve("public/robots.txt"));
 });
 
-// === Valid topics for Lessons ===
+// Valid topics
 const dailyTopics = [
   "love",
   "joy",
@@ -117,7 +116,7 @@ const dailyTopics = [
   "salvation",
 ] as const;
 
-// === GET /api/lessons/:topic/:order ===
+// GET /api/lessons/:topic/:order
 app.get("/api/lessons/:topic/:order", async (req: Request, res: Response) => {
   const { topic, order } = req.params;
   if (!dailyTopics.includes(topic as any)) {
@@ -140,58 +139,71 @@ app.get("/api/lessons/:topic/:order", async (req: Request, res: Response) => {
   }
 });
 
-// === POST /api/lessons ===
+// === POST /api/lessons (Auto-assign order) ===
 app.post("/api/lessons", async (req: Request, res: Response) => {
-  const {
-    topic,
-    title,
-    scripture,
-    order,
-    reflection,
-    action_item,
-    prayer,
-  } = req.body;
-
-  console.log(`API: Received lesson POST: ${JSON.stringify(req.body)}`);
-
-  // Validate topic
-  if (!dailyTopics.includes(topic as any)) {
-    return res.status(400).json({ message: `Invalid topic: ${topic}` });
-  }
-
-  // Validate order
-  if (!Number.isInteger(order) || order < 1) {
-    return res.status(400).json({ message: `Invalid order: ${order}` });
-  }
-
-  // Validate required fields
-  if (!topic || !title || !scripture || !reflection || !action_item || !prayer) {
-    return res.status(400).json({ message: "Missing required fields" });
-  }
-
-  // Ensure scripture is long enough (full chapter)
-  if (scripture.length < 1000) {
-    return res.status(400).json({ message: "Scripture chapter text seems too short" });
-  }
-
   try {
+    const {
+      topic,
+      title,
+      scripture,
+      reflection,
+      action_item,
+      prayer,
+    } = req.body;
+
+    console.log("POST /api/lessons received - Body:", JSON.stringify(req.body, null, 2));
+
+    // Validate topic
+    if (!dailyTopics.includes(topic as any)) {
+      return res.status(400).json({ message: `Invalid topic: ${topic}` });
+    }
+
+    // Automatically assign next order for this topic
+    const lastLesson = await LessonsModel.findOne({ topic })
+      .sort({ order: -1 }) // Highest order first
+      .select('order')
+      .exec();
+
+    const nextOrder = lastLesson && lastLesson.order ? lastLesson.order + 1 : 1;
+
+    console.log(`Assigned order ${nextOrder} for topic "${topic}"`);
+
+    // Validate required fields (no order needed)
+    if (!topic || !title || !scripture || !reflection || !action_item || !prayer) {
+      return res.status(400).json({ 
+        message: "Missing required fields",
+        receivedKeys: Object.keys(req.body)
+      });
+    }
+
+    if (typeof scripture !== 'string' || scripture.length < 1000) {
+      return res.status(400).json({ 
+        message: "Scripture must be a string with at least 1000 characters",
+        length: scripture?.length ?? "undefined"
+      });
+    }
+
     const lesson = new LessonsModel({
       topic,
       title,
       scripture,
-      order,
+      order: nextOrder,  // ← Auto-assigned!
       reflection,
       action_item,
       prayer,
     });
+
     await lesson.save();
-    console.log(`API: Lesson saved: ${topic}/${order}`);
+    console.log(`Lesson saved successfully: ${topic}/${nextOrder}`);
+
     res.status(201).json({
       message: "Lesson saved successfully",
-      lesson,
+      lesson: lesson.toObject(), // Include the auto-assigned order
     });
   } catch (error: any) {
-    console.error(`API: Error saving lesson: ${error.message}`);
+    console.error("Error saving lesson:");
+    console.error("Message:", error.message);
+    console.error("Stack:", error.stack);
     res.status(500).json({
       message: "Error saving lesson",
       error: error.message,
@@ -199,7 +211,7 @@ app.post("/api/lessons", async (req: Request, res: Response) => {
   }
 });
 
-// === Legacy GET /api/:typeposts ===
+// Legacy GET /api/:typeposts
 app.get("/api/:typeposts", async (req: Request, res: Response) => {
   const type = req.params.typeposts.replace(/posts$/, "");
   let Model;
@@ -224,7 +236,7 @@ app.get("/api/:typeposts", async (req: Request, res: Response) => {
   }
 });
 
-// === Legacy PUT /api/:typeposts ===
+// Legacy PUT /api/:typeposts
 app.put("/api/:typeposts", async (req: Request, res: Response) => {
   const type = req.params.typeposts.replace(/posts$/, "");
   let Model;
@@ -256,7 +268,7 @@ app.put("/api/:typeposts", async (req: Request, res: Response) => {
   }
 });
 
-// === Start Server ===
+// Start Server
 async function startServer() {
   try {
     await mongoose.connect(uri);
@@ -267,7 +279,6 @@ async function startServer() {
   }
 }
 
-// Use Render's PORT or fallback to 3000
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 startServer()

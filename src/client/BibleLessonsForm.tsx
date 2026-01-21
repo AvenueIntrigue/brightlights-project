@@ -1,13 +1,12 @@
-// src/components/BibleLessonsForm.tsx (or wherever you want to put it)
+// src/AdminForm.tsx (or wherever your form lives)
 import React, { useState } from 'react';
 import axios from 'axios';
 
-// Interface matching the backend schema
+// Define the interface to match the backend schema (no order!)
 interface LessonFormData {
   topic: string;
   title: string;
-  scripture: string;       // Full chapter text
-  order: number;
+  scripture: string; // Full chapter text
   reflection: string;
   action_item: string;
   prayer: string;
@@ -24,10 +23,9 @@ const dailyTopics = [
 
 const BibleLessonsForm: React.FC = () => {
   const [formData, setFormData] = useState<LessonFormData>({
-    topic: 'love',
+    topic: '',
     title: '',
     scripture: '',
-    order: 1,
     reflection: '',
     action_item: '',
     prayer: '',
@@ -43,7 +41,7 @@ const BibleLessonsForm: React.FC = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === 'order' ? Number(value) : value,
+      [name]: value,
     }));
   };
 
@@ -53,7 +51,7 @@ const BibleLessonsForm: React.FC = () => {
     setError(null);
     setSuccess(null);
 
-    // Client-side validation
+    // Basic client-side validation
     if (!formData.topic) {
       setError('Please select a topic');
       setLoading(false);
@@ -65,7 +63,7 @@ const BibleLessonsForm: React.FC = () => {
       return;
     }
     if (!formData.title) {
-      setError('Title is required (e.g., "John 4 – The Woman at the Well")');
+      setError('Title is required');
       setLoading(false);
       return;
     }
@@ -75,7 +73,7 @@ const BibleLessonsForm: React.FC = () => {
       return;
     }
     if (!formData.reflection) {
-      setError('Reflection is required (~300 words)');
+      setError('Reflection is required');
       setLoading(false);
       return;
     }
@@ -89,23 +87,19 @@ const BibleLessonsForm: React.FC = () => {
       setLoading(false);
       return;
     }
-    if (!Number.isInteger(formData.order) || formData.order < 1) {
-      setError('Order must be a positive integer');
-      setLoading(false);
-      return;
-    }
 
     try {
       const response = await axios.post('https://www.brightlightscreative.com/api/lessons', formData);
-      setSuccess('Lesson saved successfully!');
+      const savedLesson = response.data.lesson;
+      
+      setSuccess(`Lesson saved successfully as #${savedLesson.order} for "${savedLesson.topic}"!`);
       console.log('Saved lesson:', response.data);
 
-      // Reset form, auto-increment order for next lesson
+      // Reset form (keep the same topic for convenience)
       setFormData({
         topic: formData.topic,
         title: '',
         scripture: '',
-        order: formData.order + 1,
         reflection: '',
         action_item: '',
         prayer: '',
@@ -119,125 +113,109 @@ const BibleLessonsForm: React.FC = () => {
   };
 
   return (
-    <div className="create-grandpa mx-auto max-w-4xl p-6">
-      <form className="create-form space-y-6" onSubmit={handleSubmit}>
-        <div className="create-form-container text-center">
-          <h1 className="create-box-text text-3xl font-bold">Create Daily Bible Lesson</h1>
+    <div className="create-grandpa">
+      <form className="create-form" onSubmit={handleSubmit}>
+        <div className="create-form-container">
+          <h1 className="create-form-box-text">Create Daily Bible Lesson</h1>
         </div>
 
-        {success && <div className="text-green-600 bg-green-100 p-4 rounded">{success}</div>}
-        {error && <div className="text-red-600 bg-red-100 p-4 rounded">{error}</div>}
+        {success && <div style={{ color: 'green', marginBottom: '1rem' }}>{success}</div>}
+        {error && <div style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
 
-        {/* Topic */}
-        <div>
-          <label className="create-label block text-lg font-medium">Topic:</label>
-          <select
-            name="topic"
-            value={formData.topic}
-            onChange={handleChange}
-            required
-            className="create-input-field w-full h-12 px-4 border rounded bg-white"
-          >
-            <option value="">-- Select Topic --</option>
-            {dailyTopics.map((t) => (
-              <option key={t} value={t}>
-                {t.charAt(0).toUpperCase() + t.slice(1).replace(/_/g, ' ')}
-              </option>
-            ))}
-          </select>
+        <div className="create-form-content">
+          {/* Topic Dropdown */}
+          <div>
+            <label htmlFor="topic">Topic (Fruit/Theme):</label>
+            <select
+              id="topic"
+              name="topic"
+              value={formData.topic}
+              onChange={handleChange}
+              required
+            >
+              <option value="">-- Select Topic --</option>
+              {dailyTopics.map((t) => (
+                <option key={t} value={t}>
+                  {t.charAt(0).toUpperCase() + t.slice(1).replace(/_/g, ' ')}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Title */}
+          <div>
+            <label htmlFor="title">Title (e.g., "John 4 – The Woman at the Well"):</label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              required
+              placeholder="Enter lesson title"
+            />
+          </div>
+
+          {/* Scripture (Full Chapter Text) */}
+          <div>
+            <label htmlFor="scripture">Full Chapter Scripture (WEB Version):</label>
+            <textarea
+              id="scripture"
+              name="scripture"
+              value={formData.scripture}
+              onChange={handleChange}
+              rows={20}
+              required
+              placeholder="Paste the full chapter text here..."
+            />
+          </div>
+
+          {/* Reflection */}
+          <div>
+            <label htmlFor="reflection">Reflection (~300 words):</label>
+            <textarea
+              id="reflection"
+              name="reflection"
+              value={formData.reflection}
+              onChange={handleChange}
+              rows={10}
+              required
+              placeholder="Write your ~300-word reflection here..."
+            />
+          </div>
+
+          {/* Action Item */}
+          <div>
+            <label htmlFor="action_item">Action Item:</label>
+            <textarea
+              id="action_item"
+              name="action_item"
+              value={formData.action_item}
+              onChange={handleChange}
+              rows={3}
+              required
+              placeholder="Describe the daily practical challenge..."
+            />
+          </div>
+
+          {/* Prayer */}
+          <div>
+            <label htmlFor="prayer">Prayer:</label>
+            <textarea
+              id="prayer"
+              name="prayer"
+              value={formData.prayer}
+              onChange={handleChange}
+              rows={5}
+              required
+              placeholder="Write the closing prayer..."
+            />
+          </div>
+
+          <button type="submit" disabled={loading}>
+            {loading ? 'Saving...' : 'Save Lesson'}
+          </button>
         </div>
-
-        {/* Title */}
-        <div>
-          <label className="create-label block text-lg font-medium">Title:</label>
-          <input
-            type="text"
-            name="title"
-            value={formData.title}
-            onChange={handleChange}
-            required
-            placeholder="e.g., John 4 – The Woman at the Well"
-            className="create-input-field w-full h-12 px-4 border rounded bg-white"
-          />
-        </div>
-
-        {/* Order */}
-        <div>
-          <label className="create-label block text-lg font-medium">Order (Lesson Number):</label>
-          <input
-            type="number"
-            name="order"
-            value={formData.order}
-            onChange={handleChange}
-            min="1"
-            required
-            className="create-input-field w-full h-12 px-4 border rounded bg-white"
-          />
-        </div>
-
-        {/* Scripture */}
-        <div>
-          <label className="create-label block text-lg font-medium">Full Chapter Scripture (WEB Version):</label>
-          <textarea
-            name="scripture"
-            value={formData.scripture}
-            onChange={handleChange}
-            rows={20}
-            required
-            placeholder="Paste the full chapter text here..."
-            className="create-input-field w-full px-4 py-3 border rounded bg-white font-mono text-sm"
-          />
-        </div>
-
-        {/* Reflection */}
-        <div>
-          <label className="create-label block text-lg font-medium">Reflection (~300 words):</label>
-          <textarea
-            name="reflection"
-            value={formData.reflection}
-            onChange={handleChange}
-            rows={10}
-            required
-            placeholder="Write your reflection here..."
-            className="create-input-field w-full px-4 py-3 border rounded bg-white"
-          />
-        </div>
-
-        {/* Action Item */}
-        <div>
-          <label className="create-label block text-lg font-medium">Action Item:</label>
-          <textarea
-            name="action_item"
-            value={formData.action_item}
-            onChange={handleChange}
-            rows={4}
-            required
-            placeholder="Describe the daily challenge..."
-            className="create-input-field w-full px-4 py-3 border rounded bg-white"
-          />
-        </div>
-
-        {/* Prayer */}
-        <div>
-          <label className="create-label block text-lg font-medium">Prayer:</label>
-          <textarea
-            name="prayer"
-            value={formData.prayer}
-            onChange={handleChange}
-            rows={6}
-            required
-            placeholder="Write the closing prayer..."
-            className="create-input-field w-full px-4 py-3 border rounded bg-white"
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="create-button w-full py-3 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 disabled:opacity-50"
-        >
-          {loading ? 'Saving...' : 'Save Lesson'}
-        </button>
       </form>
     </div>
   );
