@@ -182,9 +182,9 @@ app.post("/api/lessons", async (req: Request, res: Response) => {
       });
     }
 
-    if (typeof scripture !== 'string' || scripture.length < 1000) {
+    if (typeof scripture !== 'string' || scripture.length < 100) {
       return res.status(400).json({
-        message: "Scripture must be a string with at least 1000 characters",
+        message: "Scripture must be a string with at least 100 characters",
         length: scripture?.length ?? "undefined"
       });
     }
