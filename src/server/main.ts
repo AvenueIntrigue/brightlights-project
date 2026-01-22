@@ -102,7 +102,7 @@ const dailyTopics = [
   "gentleness",
   "self-control",
   "family",
-  "faith",
+  "christian_living",
   "forgiveness",
   "repentance",
   "gratitude",
