@@ -68,8 +68,8 @@ const BibleLessonsForm: React.FC = () => {
       setLoading(false);
       return;
     }
-    if (!formData.scripture || formData.scripture.length < 1000) {
-      setError('Please paste the full chapter scripture (at least 1000 characters)');
+    if (!formData.scripture || formData.scripture.length < 100) {
+      setError('Please paste the full chapter scripture (at least 100 characters)');
       setLoading(false);
       return;
     }
