@@ -240,9 +240,9 @@ const BibleLessonsForm: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="create-submit-button w-full py-3 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="create-submit-button bg-green-200 border-none text-slate-700 h-10 rounded w-full mt-4 mx-auto"
           >
-            {loading ? 'Saving...' : 'Save Lesson'}
+            {loading ? 'Saving...' : 'Jesus Saves'}
           </button>
         </div>
       </form>
