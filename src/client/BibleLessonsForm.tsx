@@ -16,7 +16,7 @@ interface LessonFormData {
 // List of valid topics (same as backend)
 const dailyTopics = [
   'love', 'joy', 'peace', 'patience', 'kindness', 'goodness', 'faithfulness',
-  'gentleness', 'self-control', 'family', 'christian living', 'forgiveness', 'repentance',
+  'gentleness', 'self-control', 'family', 'christian_living', 'forgiveness', 'repentance',
   'gratitude', 'hope', 'humility', 'obedience', 'called_to_create',
   'honor_god_in_your_work', 'liberty', 'bread_of_life', 'living_water',
   'provision', 'holy_spirit_guidance', 'follower_of_christ', 'salvation'
