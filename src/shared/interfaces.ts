@@ -187,15 +187,7 @@ const lessonSchema: Schema<Lesson> = new Schema({
   action_item: { type: String, required: true },
   prayer: { type: String, required: true },
   order: { type: Number, required: true, min: 1 },
-  // Optional fields
-  book: { type: String, required: false },
-  chapter: { type: Number, required: false },
-  fruit: { type: String, required: false },
-  quiz: {
-    question: { type: String, required: false },
-    options: { type: [String], required: false },
-    correctAnswer: { type: Number, required: false },
-  },
+
 }, { timestamps: true });
 
 const LessonsModel = mongoose.model<Lesson>('Lesson', lessonSchema);

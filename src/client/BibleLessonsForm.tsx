@@ -1,5 +1,5 @@
-// src/AdminForm.tsx (or wherever your form lives)
 import React, { useState } from 'react';
+import "./Create.css";
 import axios from 'axios';
 
 // Define the interface to match the backend schema (no order!)
@@ -91,7 +91,6 @@ const BibleLessonsForm: React.FC = () => {
     try {
       const response = await axios.post('https://www.brightlightscreative.com/api/lessons', formData);
       const savedLesson = response.data.lesson;
-      
       setSuccess(`Lesson saved successfully as #${savedLesson.order} for "${savedLesson.topic}"!`);
       console.log('Saved lesson:', response.data);
 
@@ -113,25 +112,36 @@ const BibleLessonsForm: React.FC = () => {
   };
 
   return (
-    <div className="create-grandpa">
-      <form className="create-form" onSubmit={handleSubmit}>
-        <div className="create-form-container">
-          <h1 className="create-form-box-text">Create Daily Bible Lesson</h1>
+    <div className="create-grandpa mx-auto max-w-4xl p-6">
+      <form className="create-form space-y-6" onSubmit={handleSubmit}>
+        <div className="create-form-container text-center">
+          <h1 className="create-form-box-text text-3xl font-bold">Create Daily Bible Lesson</h1>
         </div>
 
-        {success && <div style={{ color: 'green', marginBottom: '1rem' }}>{success}</div>}
-        {error && <div style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
+        {success && (
+          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+            <span className="block sm:inline">{success}</span>
+          </div>
+        )}
+        {error && (
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
 
-        <div className="create-form-content">
+        <div className="create-form-content space-y-6">
           {/* Topic Dropdown */}
           <div>
-            <label htmlFor="topic">Topic (Fruit/Theme):</label>
+            <label htmlFor="topic" className="create-label block text-lg font-medium mb-2">
+              Topic (Fruit/Theme):
+            </label>
             <select
               id="topic"
               name="topic"
               value={formData.topic}
               onChange={handleChange}
               required
+              className="create-input-field w-full h-12 px-4 border rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">-- Select Topic --</option>
               {dailyTopics.map((t) => (
@@ -144,7 +154,9 @@ const BibleLessonsForm: React.FC = () => {
 
           {/* Title */}
           <div>
-            <label htmlFor="title">Title (e.g., "John 4 – The Woman at the Well"):</label>
+            <label htmlFor="title" className="create-label block text-lg font-medium mb-2">
+              Title (e.g., "John 4 – The Woman at the Well"):
+            </label>
             <input
               type="text"
               id="title"
@@ -153,12 +165,15 @@ const BibleLessonsForm: React.FC = () => {
               onChange={handleChange}
               required
               placeholder="Enter lesson title"
+              className="create-input-field w-full h-12 px-4 border rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           {/* Scripture (Full Chapter Text) */}
           <div>
-            <label htmlFor="scripture">Full Chapter Scripture (WEB Version):</label>
+            <label htmlFor="scripture" className="create-label block text-lg font-medium mb-2">
+              Full Chapter Scripture (WEB Version):
+            </label>
             <textarea
               id="scripture"
               name="scripture"
@@ -167,12 +182,15 @@ const BibleLessonsForm: React.FC = () => {
               rows={20}
               required
               placeholder="Paste the full chapter text here..."
+              className="create-input-field w-full px-4 py-3 border rounded bg-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
             />
           </div>
 
           {/* Reflection */}
           <div>
-            <label htmlFor="reflection">Reflection (~300 words):</label>
+            <label htmlFor="reflection" className="create-label block text-lg font-medium mb-2">
+              Reflection (~300 words):
+            </label>
             <textarea
               id="reflection"
               name="reflection"
@@ -181,38 +199,49 @@ const BibleLessonsForm: React.FC = () => {
               rows={10}
               required
               placeholder="Write your ~300-word reflection here..."
+              className="create-input-field w-full px-4 py-3 border rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
             />
           </div>
 
           {/* Action Item */}
           <div>
-            <label htmlFor="action_item">Action Item:</label>
+            <label htmlFor="action_item" className="create-label block text-lg font-medium mb-2">
+              Action Item:
+            </label>
             <textarea
               id="action_item"
               name="action_item"
               value={formData.action_item}
               onChange={handleChange}
-              rows={3}
+              rows={4}
               required
               placeholder="Describe the daily practical challenge..."
+              className="create-input-field w-full px-4 py-3 border rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
             />
           </div>
 
           {/* Prayer */}
           <div>
-            <label htmlFor="prayer">Prayer:</label>
+            <label htmlFor="prayer" className="create-label block text-lg font-medium mb-2">
+              Prayer:
+            </label>
             <textarea
               id="prayer"
               name="prayer"
               value={formData.prayer}
               onChange={handleChange}
-              rows={5}
+              rows={6}
               required
               placeholder="Write the closing prayer..."
+              className="create-input-field w-full px-4 py-3 border rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
             />
           </div>
 
-          <button type="submit" disabled={loading}>
+          <button
+            type="submit"
+            disabled={loading}
+            className="create-submit-button w-full py-3 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
             {loading ? 'Saving...' : 'Save Lesson'}
           </button>
         </div>

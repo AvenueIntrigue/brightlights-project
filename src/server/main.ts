@@ -7,6 +7,10 @@ import dotenv from "dotenv";
 import cors from "cors";
 import encryptionKey from "./generateKey.js";
 import crypto from "node:crypto";
+import { fileURLToPath } from 'url';  // For ESM-safe __dirname
+
+// ESM-safe __dirname
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Import your models
 import {
@@ -81,7 +85,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   res.status(500).json({ message: "Internal server error", error: err.message });
 });
 
-// Serve static files
+// Serve static files (e.g., robots.txt)
 app.get("/public/robots.txt", (req: Request, res: Response) => {
   res.sendFile(path.resolve("public/robots.txt"));
 });
@@ -139,7 +143,7 @@ app.get("/api/lessons/:topic/:order", async (req: Request, res: Response) => {
   }
 });
 
-// === POST /api/lessons (Auto-assign order) ===
+// POST /api/lessons (Auto-assign order)
 app.post("/api/lessons", async (req: Request, res: Response) => {
   try {
     const {
@@ -153,38 +157,33 @@ app.post("/api/lessons", async (req: Request, res: Response) => {
 
     console.log("POST /api/lessons received - Body:", JSON.stringify(req.body, null, 2));
 
-    // Validate topic
     if (!dailyTopics.includes(topic as any)) {
       return res.status(400).json({ message: `Invalid topic: ${topic}` });
     }
 
-    // Automatically assign next order
     let nextOrder = 1;
     try {
       const lastLesson = await LessonsModel.findOne({ topic })
         .sort({ order: -1 })
         .select('order')
         .exec();
-
       if (lastLesson && typeof lastLesson.order === 'number') {
         nextOrder = lastLesson.order + 1;
       }
       console.log(`Assigned order ${nextOrder} for topic "${topic}"`);
     } catch (queryError: any) {
       console.error("Error querying last lesson for topic:", queryError.message);
-      // Fallback to 1 if query fails
     }
 
-    // Validate required fields
     if (!topic || !title || !scripture || !reflection || !action_item || !prayer) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Missing required fields",
         receivedKeys: Object.keys(req.body)
       });
     }
 
     if (typeof scripture !== 'string' || scripture.length < 1000) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         message: "Scripture must be a string with at least 1000 characters",
         length: scripture?.length ?? "undefined"
       });
@@ -213,7 +212,6 @@ app.post("/api/lessons", async (req: Request, res: Response) => {
     console.error("Name:", error.name);
     console.error("Stack:", error.stack);
     console.error("Full error:", JSON.stringify(error, null, 2));
-
     res.status(500).json({
       message: "Error saving lesson",
       error: error.message || "Unknown server error",
@@ -279,6 +277,18 @@ app.put("/api/:typeposts", async (req: Request, res: Response) => {
   }
 });
 
+// === IMPORTANT: Serve Vite frontend static files and SPA routing (LAST!) ===
+const distPath = path.join(__dirname, '../../dist');
+console.log(`Serving static files from: ${distPath}`);
+app.use(express.static(distPath));
+
+// Catch-all route for React Router (SPA) - serves index.html for all non-API routes
+app.get('*', (req, res) => {
+  const indexPath = path.join(distPath, 'index.html');
+  console.log(`Serving index.html from: ${indexPath}`);
+  res.sendFile(indexPath);
+});
+
 // Start Server
 async function startServer() {
   try {
@@ -295,7 +305,9 @@ const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 startServer()
   .then(() => {
     ViteExpress.listen(app, port, () => {
-      console.log(`Server is listening on port ${port}...`);
+      console.log("main.ts file started executing...");
+      console.log(`✅ Server is listening on http://localhost:${port}`);
+      console.log("Open this in your browser: http://localhost:3000");
     });
   })
   .catch((error) => {
