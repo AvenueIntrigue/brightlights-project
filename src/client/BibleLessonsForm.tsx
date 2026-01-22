@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
-import "./Create.css";
 import axios from 'axios';
+import "./Create.css";
 
 // Define the interface to match the backend schema (no order!)
 interface LessonFormData {
@@ -141,7 +142,7 @@ const BibleLessonsForm: React.FC = () => {
               value={formData.topic}
               onChange={handleChange}
               required
-              className="create-input-field w-full h-12 px-4 border rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="create-input-field w-full h-12 px-4 border rounded bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">-- Select Topic --</option>
               {dailyTopics.map((t) => (
@@ -165,7 +166,7 @@ const BibleLessonsForm: React.FC = () => {
               onChange={handleChange}
               required
               placeholder="Enter lesson title"
-              className="create-input-field w-full h-12 px-4 border rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="create-input-field w-full h-12 px-4 border rounded bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
@@ -182,7 +183,7 @@ const BibleLessonsForm: React.FC = () => {
               rows={20}
               required
               placeholder="Paste the full chapter text here..."
-              className="create-input-field w-full px-4 py-3 border rounded bg-white font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+              className="create-input-field w-full px-4 py-3 border rounded bg-white text-gray-900 font-mono text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
             />
           </div>
 
@@ -199,7 +200,7 @@ const BibleLessonsForm: React.FC = () => {
               rows={10}
               required
               placeholder="Write your ~300-word reflection here..."
-              className="create-input-field w-full px-4 py-3 border rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+              className="create-input-field w-full px-4 py-3 border rounded bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
             />
           </div>
 
@@ -216,7 +217,7 @@ const BibleLessonsForm: React.FC = () => {
               rows={4}
               required
               placeholder="Describe the daily practical challenge..."
-              className="create-input-field w-full px-4 py-3 border rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+              className="create-input-field w-full px-4 py-3 border rounded bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
             />
           </div>
 
@@ -233,16 +234,16 @@ const BibleLessonsForm: React.FC = () => {
               rows={6}
               required
               placeholder="Write the closing prayer..."
-              className="create-input-field w-full px-4 py-3 border rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+              className="create-input-field w-full px-4 py-3 border rounded bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="create-submit-button bg-green-200 border-none text-slate-700 h-10 rounded w-full mt-4 mx-auto"
+            className="create-submit-button w-full py-3 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? 'Saving...' : 'Jesus Saves'}
+            {loading ? 'Saving...' : 'Save Lesson'}
           </button>
         </div>
       </form>
