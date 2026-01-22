@@ -2,11 +2,12 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-// Define the interface to match the backend schema (no order!)
+// Define the interface to match the backend schema
 interface LessonFormData {
   topic: string;
   title: string;
-  scripture: string; // Full chapter text
+  scripture: string;       // Full chapter text
+  order: number;
   reflection: string;
   action_item: string;
   prayer: string;
@@ -26,6 +27,7 @@ const BibleLessonsForm: React.FC = () => {
     topic: '',
     title: '',
     scripture: '',
+    order: 1,
     reflection: '',
     action_item: '',
     prayer: '',
@@ -41,7 +43,7 @@ const BibleLessonsForm: React.FC = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: name === 'order' ? Number(value) : value,
     }));
   };
 
@@ -87,19 +89,23 @@ const BibleLessonsForm: React.FC = () => {
       setLoading(false);
       return;
     }
+    if (!Number.isInteger(formData.order) || formData.order < 1) {
+      setError('Order must be a positive integer');
+      setLoading(false);
+      return;
+    }
 
     try {
-      const response = await axios.post('https://www.brightlightscreative.com/api/lessons', formData);
-      const savedLesson = response.data.lesson;
-      
-      setSuccess(`Lesson saved successfully as #${savedLesson.order} for "${savedLesson.topic}"!`);
+      const response = await axios.post('https://www.brightlightscreative.com/api/lessons/', formData);
+      setSuccess('Lesson saved successfully!');
       console.log('Saved lesson:', response.data);
 
-      // Reset form (keep the same topic for convenience)
+      // Reset form
       setFormData({
-        topic: formData.topic,
+        topic: '',
         title: '',
         scripture: '',
+        order: formData.order + 1, // auto-increment for next lesson
         reflection: '',
         action_item: '',
         prayer: '',
@@ -153,6 +159,20 @@ const BibleLessonsForm: React.FC = () => {
               onChange={handleChange}
               required
               placeholder="Enter lesson title"
+            />
+          </div>
+
+          {/* Order */}
+          <div>
+            <label htmlFor="order">Order (Lesson Number):</label>
+            <input
+              type="number"
+              id="order"
+              name="order"
+              value={formData.order}
+              onChange={handleChange}
+              min="1"
+              required
             />
           </div>
 
