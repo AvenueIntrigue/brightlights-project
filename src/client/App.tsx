@@ -15,6 +15,7 @@ import ProfilePage from "./ProfilePage";
 import DynamicPost from "./DynamicPost";
 import Portfolio from "./Portfolio";
 import BibleLessonsForm from "./BibleLessonsForm";
+import MusicTrackForm from "./MusicTrackForm";
 
 const App: React.FC = () => {
   return (
@@ -40,7 +41,7 @@ const App: React.FC = () => {
         <Route path="/portfolio" element={<Portfolio />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route
-          path="/blform"
+          path="/admin/lessons"
           element={
             <SignedIn>
               <BibleLessonsForm />
@@ -48,7 +49,23 @@ const App: React.FC = () => {
           }
         />
         <Route
-          path="/blform"
+          path="/admin/lessons"
+          element={
+            <SignedOut>
+              <RedirectToSignIn />
+            </SignedOut>
+          }
+        />
+          <Route
+          path="/admin/music"
+          element={
+            <SignedIn>
+              <MusicTrackForm />
+            </SignedIn>
+          }
+        />
+        <Route
+          path="/admin/music"
           element={
             <SignedOut>
               <RedirectToSignIn />

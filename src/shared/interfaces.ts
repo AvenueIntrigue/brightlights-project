@@ -99,7 +99,6 @@ const BulletContainerContentSchema: Schema<BulletContainerContent> = new Schema(
   description: { type: String, required: true },
   keywords: { type: [String], required: true },
 });
-
 const BulletContainerAboutUsModel = mongoose.model<BulletContainerAboutUs>(
   "bulletcontaineraboutus",
   BulletContainerAboutUsSchema
@@ -159,26 +158,24 @@ const marketingConsentContentModel = mongoose.model<marketingConsentContent>(
   marketingConsentSchema
 );
 
-// Lesson Schema (updated to match frontend data + make extra fields optional)
+// Lesson Schema
 export interface Lesson extends Document {
-  topic: string;          // renamed from fruit
+  topic: string;
   title: string;
   scripture: string;
   reflection: string;
   action_item: string;
   prayer: string;
   order: number;
-  // Optional fields (not sent by frontend yet)
   book?: string;
   chapter?: number;
-  fruit?: string;         // kept as optional if you still want it
+  fruit?: string;
   quiz?: {
     question?: string;
     options?: string[];
     correctAnswer?: number;
   };
 }
-
 const lessonSchema: Schema<Lesson> = new Schema({
   topic: { type: String, required: true },
   title: { type: String, required: true },
@@ -187,10 +184,37 @@ const lessonSchema: Schema<Lesson> = new Schema({
   action_item: { type: String, required: true },
   prayer: { type: String, required: true },
   order: { type: Number, required: true, min: 1 },
-
 }, { timestamps: true });
-
 const LessonsModel = mongoose.model<Lesson>('Lesson', lessonSchema);
+
+// Music Track Schema
+export interface MusicTrack extends Document {
+  title: string;
+  artist: string;
+  album: string;
+  track_number: number;
+  duration_seconds?: number;
+  is_premium: boolean;
+  cover_url: string;
+  audio_url: string;
+  bunny_path: string;
+  created_at: Date;
+  updated_at: Date;
+  status?: 'active' | 'draft' | 'archived';
+}
+const musicTrackSchema: Schema<MusicTrack> = new Schema({
+  title: { type: String, required: true },
+  artist: { type: String, default: 'Great Light' },
+  album: { type: String, required: true },
+  track_number: { type: Number, required: true, min: 1 },
+  duration_seconds: Number,
+  is_premium: { type: Boolean, default: true },
+  cover_url: { type: String, required: true },
+  audio_url: { type: String, required: true },
+  bunny_path: { type: String, required: true },
+  status: { type: String, default: 'active' },
+}, { timestamps: true });
+const MusicTrackModel = mongoose.model<MusicTrack>('MusicTrack', musicTrackSchema);
 
 // Post Interface (Generic for All Post Types)
 export interface Post extends Document {
@@ -219,18 +243,9 @@ const PostSchema = new Schema<Post>({
 // Post Models with Correct Collection Names
 const PricingPostModel = mongoose.model<Post>("pricingposts", PostSchema);
 const AboutPostModel = mongoose.model<Post>("aboutposts", PostSchema);
-const WebDevelopmentPostModel = mongoose.model<Post>(
-  "web-developmentposts",
-  PostSchema
-);
-const AppDevelopmentPostModel = mongoose.model<Post>(
-  "app-developmentposts",
-  PostSchema
-);
-const GraphicDesignPostModel = mongoose.model<Post>(
-  "graphic-designposts",
-  PostSchema
-);
+const WebDevelopmentPostModel = mongoose.model<Post>("web-developmentposts", PostSchema);
+const AppDevelopmentPostModel = mongoose.model<Post>("app-developmentposts", PostSchema);
+const GraphicDesignPostModel = mongoose.model<Post>("graphic-designposts", PostSchema);
 const ServicesPostModel = mongoose.model<Post>("servicesposts", PostSchema);
 const Web3PostModel = mongoose.model<Post>("web3posts", PostSchema);
 const ProjectsPostModel = mongoose.model<Post>("projectsposts", PostSchema);
@@ -255,5 +270,6 @@ export {
   ProjectsPostModel,
   PortfolioPostModel,
   CategoryModel,
-  LessonsModel
+  LessonsModel,
+  MusicTrackModel
 };

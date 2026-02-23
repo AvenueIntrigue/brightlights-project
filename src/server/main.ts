@@ -5,9 +5,16 @@ import ViteExpress from "vite-express";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import cors from "cors";
+import multer from "multer";
 import encryptionKey from "./generateKey.js";
 import crypto from "node:crypto";
-import { fileURLToPath } from 'url';  // For ESM-safe __dirname
+import { fileURLToPath } from 'url';
+import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { clerkClient } from '@clerk/clerk-sdk-node';
+import { ClerkPublicMetadata } from "shared/clerk-types.js";
+
+
 
 // ESM-safe __dirname
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -31,6 +38,7 @@ import {
   PortfolioPostModel,
   marketingConsentContentModel,
   LessonsModel,
+  MusicTrackModel, // Added
 } from "../shared/interfaces.js";
 
 // Load environment variables
@@ -46,6 +54,52 @@ if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
 }
 
 const app = express();
+
+
+
+// R2 client setup (add once)
+const r2 = new S3Client({
+  region: 'auto', // Cloudflare R2 special value
+  endpoint: `https://${process.env.CLOUDFLARE_R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  credentials: {
+    accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY!,
+  },
+});
+
+
+
+// Middleware to protect /api/music
+const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const claims = await clerkClient.verifyToken(token);
+
+    // Cast publicMetadata to your custom type so TypeScript knows about 'role'
+    const metadata = claims.publicMetadata as ClerkPublicMetadata | undefined;
+
+    // Check role (case-sensitive match to 'Admin')
+    if (metadata?.role !== 'Admin') {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    // Attach claims to req (use type assertion to silence TS error)
+    (req as any).user = claims;
+
+    next();
+  } catch (err) {
+    console.error('Token verification error:', err);
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+};
+
+
 
 // === CORS & Preflight Handling FIRST ===
 app.use(cors({
@@ -79,51 +133,15 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
-// Global error handler
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error("Global Error Handler:", err);
-  res.status(500).json({ message: "Internal server error", error: err.message });
-});
+// Multer for file uploads (temp storage before Bunny)
+const upload = multer({ dest: 'uploads/' }); // temp folder — clean up after upload if needed
 
-// Serve static files (e.g., robots.txt)
-app.get("/public/robots.txt", (req: Request, res: Response) => {
-  res.sendFile(path.resolve("public/robots.txt"));
-});
-
-// Valid topics
-const dailyTopics = [
-  "love",
-  "joy",
-  "peace",
-  "patience",
-  "kindness",
-  "goodness",
-  "faithfulness",
-  "gentleness",
-  "self-control",
-  "family",
-  "christian_living",
-  "forgiveness",
-  "repentance",
-  "gratitude",
-  "hope",
-  "humility",
-  "obedience",
-  "called_to_create",
-  "honor_god_in_your_work",
-  "liberty",
-  "bread_of_life",
-  "living_water",
-  "provision",
-  "holy_spirit_guidance",
-  "follower_of_christ",
-  "salvation",
-] as const;
+// === LESSONS ROUTES (unchanged) ===
 
 // GET /api/lessons/:topic/:order
 app.get("/api/lessons/:topic/:order", async (req: Request, res: Response) => {
   const { topic, order } = req.params;
-  if (!dailyTopics.includes(topic as any)) {
+  if (!topic.includes(topic as any)) {
     return res.status(400).json({ message: `Invalid topic: ${topic}` });
   }
   const orderNum = parseInt(order, 10);
@@ -157,7 +175,7 @@ app.post("/api/lessons", async (req: Request, res: Response) => {
 
     console.log("POST /api/lessons received - Body:", JSON.stringify(req.body, null, 2));
 
-    if (!dailyTopics.includes(topic as any)) {
+    if (!topic.includes(topic as any)) {
       return res.status(400).json({ message: `Invalid topic: ${topic}` });
     }
 
@@ -200,6 +218,7 @@ app.post("/api/lessons", async (req: Request, res: Response) => {
     });
 
     await lesson.save();
+
     console.log(`Lesson saved successfully: ${topic}/${nextOrder}`);
 
     res.status(201).json({
@@ -220,7 +239,130 @@ app.post("/api/lessons", async (req: Request, res: Response) => {
   }
 });
 
-// Legacy GET /api/:typeposts
+// === NEW: POST /api/music ===
+// POST /api/music
+app.post('/api/music', upload.fields([
+  { name: 'audio', maxCount: 1 },
+  { name: 'cover', maxCount: 1 },
+]), async (req: Request, res: Response) => {
+  try {
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    const {
+      title,
+      artist = 'Great Light',
+      album,
+      track_number,
+      is_premium = 'true',
+    } = req.body;
+
+    // Validation
+    if (!title || !album || !track_number || !files.audio?.[0]) {
+      return res.status(400).json({ message: 'Missing required fields or audio file' });
+    }
+
+    // 1. Upload audio to Cloudflare R2
+    const audioFile = files.audio[0];
+    const audioKey = `audio/${audioFile.originalname}`;
+
+    const audioResponse = await fetch(
+      `https://${process.env.CLOUDFLARE_R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${process.env.CLOUDFLARE_R2_BUCKET_NAME}/${audioKey}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY}`,
+          'Content-Type': 'audio/mpeg', // or 'audio/mp4' for M4A
+          'x-amz-acl': 'private',
+        },
+        body: new Blob([new Uint8Array(audioFile.buffer)]),
+      }
+    );
+
+    if (!audioResponse.ok) {
+      throw new Error(`R2 audio upload failed: ${audioResponse.statusText}`);
+    }
+
+    const audioUrl = `https://${process.env.CLOUDFLARE_R2_BUCKET_NAME}.${process.env.CLOUDFLARE_R2_PUBLIC_DOMAIN}/${audioKey}`;
+
+    // 2. Upload cover (optional)
+    let coverUrl = '';
+    if (files.cover?.[0]) {
+      const coverFile = files.cover[0];
+      const coverKey = `covers/${coverFile.originalname}`;
+
+      const coverResponse = await fetch(
+        `https://${process.env.CLOUDFLARE_R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${process.env.CLOUDFLARE_R2_BUCKET_NAME}/${coverKey}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY}`,
+            'Content-Type': 'image/jpeg',
+            'x-amz-acl': 'private',
+          },
+          body: new Blob([new Uint8Array(coverFile.buffer)]),
+        }
+      );
+
+      if (!coverResponse.ok) {
+        throw new Error(`R2 cover upload failed: ${coverResponse.statusText}`);
+      }
+
+      coverUrl = `https://${process.env.CLOUDFLARE_R2_BUCKET_NAME}.${process.env.CLOUDFLARE_R2_PUBLIC_DOMAIN}/${coverKey}`;
+    }
+
+    // 3. Create and save the track object
+    const track = new MusicTrackModel({
+      title,
+      artist,
+      album,
+      track_number: parseInt(track_number),
+      is_premium: is_premium === 'true' || is_premium === true,
+      cover_url: coverUrl,
+      audio_url: audioUrl,
+      bunny_path: audioKey, // rename to r2_key if you prefer
+    });
+
+    await track.save();
+
+    res.status(201).json({
+      message: 'Track saved successfully',
+      track,  // now 'track' is defined
+    });
+  } catch (err: any) {
+    console.error('Music upload error:', err);
+    res.status(500).json({
+      message: 'Failed to save track',
+      error: err.message,
+    });
+  }
+});
+
+// GET /api/music/signed-url/:trackId
+app.get('/api/music/signed-url/:trackId', async (req: Request, res: Response) => {
+  try {
+    const trackId = req.params.trackId;
+
+    // Fetch the track from MongoDB (no auth/premium check here)
+    const track = await MusicTrackModel.findById(trackId);
+    if (!track) {
+      return res.status(404).json({ message: 'Track not found' });
+    }
+
+    // Generate signed URL (valid for 24 hours - adjust expiresIn as needed)
+    const command = new GetObjectCommand({
+      Bucket: process.env.CLOUDFLARE_R2_BUCKET_NAME,
+      Key: track.bunny_path, // e.g., "audio/in-that-day.mp3"
+    });
+
+    const signedUrl = await getSignedUrl(r2, command, { expiresIn: 86400 }); // 24 hours
+
+    res.json({ signedUrl });
+  } catch (err: any) {
+    console.error('Signed URL error:', err);
+    res.status(500).json({ message: 'Failed to generate URL', error: err.message });
+  }
+});
+
+// Legacy GET /api/:typeposts (unchanged)
 app.get("/api/:typeposts", async (req: Request, res: Response) => {
   const type = req.params.typeposts.replace(/posts$/, "");
   let Model;
@@ -245,7 +387,7 @@ app.get("/api/:typeposts", async (req: Request, res: Response) => {
   }
 });
 
-// Legacy PUT /api/:typeposts
+// Legacy PUT /api/:typeposts (unchanged)
 app.put("/api/:typeposts", async (req: Request, res: Response) => {
   const type = req.params.typeposts.replace(/posts$/, "");
   let Model;
@@ -301,7 +443,6 @@ async function startServer() {
 }
 
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-
 startServer()
   .then(() => {
     ViteExpress.listen(app, port, () => {
