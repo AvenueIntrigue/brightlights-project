@@ -1,21 +1,31 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from './Home';
+import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
+import { Helmet } from "react-helmet-async";
+
+import Home from "./Home";
 import BlogPage from "./BlogPage";
 import BlogPost from "./BlogPost";
 import EmailForm from "./Contact";
 import Footer from "./Footer";
 import Header from "./Header";
 import CreateBlog from "./CreateBlog";
-import PrivateRoute from "./PrivateRoute";
 import Create from "./Create";
-import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
-import { Helmet } from "react-helmet-async";
 import ProfilePage from "./ProfilePage";
 import DynamicPost from "./DynamicPost";
 import Portfolio from "./Portfolio";
 import BibleLessonsForm from "./BibleLessonsForm";
 import MusicTrackForm from "./MusicTrackForm";
+
+// Reusable wrapper for Clerk-protected routes
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => (
+  <>
+    <SignedIn>{children}</SignedIn>
+    <SignedOut>
+      <RedirectToSignIn />
+    </SignedOut>
+  </>
+);
 
 const App: React.FC = () => {
   return (
@@ -24,8 +34,11 @@ const App: React.FC = () => {
         <meta name="google-site-verification" content="googlefd09adf64001cc42.html" />
         <meta name="msvalidate.01" content="747DB8DFF5B596B36E56160A4BF8CB35" />
       </Helmet>
+
       <Header />
+
       <Routes>
+        {/* Public routes */}
         <Route path="/" element={<Home />} />
         <Route path="/contact" element={<EmailForm />} />
         <Route path="/blog" element={<BlogPage />} />
@@ -40,64 +53,31 @@ const App: React.FC = () => {
         <Route path="/projects" element={<DynamicPost type="projects" />} />
         <Route path="/portfolio" element={<Portfolio />} />
         <Route path="/profile" element={<ProfilePage />} />
+
+        {/* Protected admin routes */}
         <Route
           path="/admin/lessons"
-          element={
-            <SignedIn>
-              <BibleLessonsForm />
-            </SignedIn>
-          }
-        />
-        <Route
-          path="/admin/lessons"
-          element={
-            <SignedOut>
-              <RedirectToSignIn />
-            </SignedOut>
-          }
-        />
-          <Route
-          path="/admin/music"
-          element={
-            <SignedIn>
-              <MusicTrackForm />
-            </SignedIn>
-          }
+          element={<ProtectedRoute><BibleLessonsForm /></ProtectedRoute>}
         />
         <Route
           path="/admin/music"
-          element={
-            <SignedOut>
-              <RedirectToSignIn />
-            </SignedOut>
-          }
+          element={<ProtectedRoute><MusicTrackForm /></ProtectedRoute>}
         />
+
+        {/* Other protected routes */}
         <Route
           path="/create"
-          element={
-            <SignedIn>
-              <Create />
-            </SignedIn>
-          }
+          element={<ProtectedRoute><Create /></ProtectedRoute>}
         />
         <Route
           path="/create-blog"
-          element={
-            <SignedIn>
-              <CreateBlog />
-            </SignedIn>
-          }
+          element={<ProtectedRoute><CreateBlog /></ProtectedRoute>}
         />
-        <Route
-          path="/create-blog"
-          element={
-            <SignedOut>
-              <RedirectToSignIn />
-            </SignedOut>
-          }
-        />
+
+        {/* Catch-all */}
         <Route path="*" element={<Home />} />
       </Routes>
+
       <Footer />
     </div>
   );
