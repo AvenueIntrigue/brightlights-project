@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import "./Create.css"; // Reuse your existing styles
+import React, { useState } from "react";
+import axios from "axios";
+import { useSession } from "@clerk/clerk-react";
+import "./Create.css";
 
 const MusicTrackForm: React.FC = () => {
+  const { session } = useSession();
+
   const [formData, setFormData] = useState({
-    title: '',
-    artist: 'Great Light',
-    album: '',
-    track_number: '1',
+    title: "",
+    artist: "Great Light",
+    album: "",
+    track_number: "1",
     is_premium: true,
   });
 
@@ -26,13 +29,6 @@ const MusicTrackForm: React.FC = () => {
     setFormData((prev) => ({ ...prev, is_premium: e.target.checked }));
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'audio' | 'cover') => {
-    if (e.target.files?.[0]) {
-      if (type === 'audio') setAudioFile(e.target.files[0]);
-      if (type === 'cover') setCoverFile(e.target.files[0]);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
@@ -40,39 +36,50 @@ const MusicTrackForm: React.FC = () => {
     setSuccess(null);
 
     if (!formData.title || !formData.album || !audioFile) {
-      setError('Title, album, and audio file are required');
+      setError("Title, album, and audio file are required");
+      setLoading(false);
+      return;
+    }
+
+    // ✅ Get Clerk token
+    const token = await session?.getToken();
+    if (!token) {
+      setError("You must be signed in to upload music.");
       setLoading(false);
       return;
     }
 
     const payload = new FormData();
-    payload.append('title', formData.title);
-    payload.append('artist', formData.artist);
-    payload.append('album', formData.album);
-    payload.append('track_number', formData.track_number);
-    payload.append('is_premium', formData.is_premium.toString());
-    payload.append('audio', audioFile);
-    if (coverFile) payload.append('cover', coverFile);
+    payload.append("title", formData.title);
+    payload.append("artist", formData.artist);
+    payload.append("album", formData.album);
+    payload.append("track_number", formData.track_number);
+    payload.append("is_premium", String(formData.is_premium));
+    payload.append("audio", audioFile);
+    if (coverFile) payload.append("cover", coverFile);
 
     try {
-      const response = await axios.post('https://www.brightlightscreative.com/api/music', payload, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      // ✅ Use same-origin relative URL
+      const response = await axios.post("/api/music", payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // Don't set Content-Type manually; axios will handle boundary.
+        },
       });
 
       setSuccess(`Track saved: ${response.data.track.title}`);
-      
-      // Reset form
+
       setFormData({
-        title: '',
-        artist: 'Great Light',
-        album: '',
-        track_number: '1',
+        title: "",
+        artist: "Great Light",
+        album: "",
+        track_number: "1",
         is_premium: true,
       });
       setAudioFile(null);
       setCoverFile(null);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to save track');
+      setError(err.response?.data?.message || "Failed to save track");
       console.error(err);
     } finally {
       setLoading(false);
@@ -87,17 +94,22 @@ const MusicTrackForm: React.FC = () => {
         </div>
 
         {success && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
+          <div
+            className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative"
+            role="alert"
+          >
             <span className="block sm:inline">{success}</span>
           </div>
         )}
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+          <div
+            className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+            role="alert"
+          >
             <span className="block sm:inline">{error}</span>
           </div>
         )}
 
-        {/* Title */}
         <div>
           <label htmlFor="title" className="create-label block text-lg font-medium mb-2">
             Title
@@ -114,7 +126,6 @@ const MusicTrackForm: React.FC = () => {
           />
         </div>
 
-        {/* Artist */}
         <div>
           <label htmlFor="artist" className="create-label block text-lg font-medium mb-2">
             Artist
@@ -129,7 +140,6 @@ const MusicTrackForm: React.FC = () => {
           />
         </div>
 
-        {/* Album */}
         <div>
           <label htmlFor="album" className="create-label block text-lg font-medium mb-2">
             Album
@@ -146,7 +156,6 @@ const MusicTrackForm: React.FC = () => {
           />
         </div>
 
-        {/* Track Number */}
         <div>
           <label htmlFor="track_number" className="create-label block text-lg font-medium mb-2">
             Track Number
@@ -162,7 +171,6 @@ const MusicTrackForm: React.FC = () => {
           />
         </div>
 
-        {/* Premium Checkbox */}
         <div className="flex items-center">
           <input
             type="checkbox"
@@ -177,7 +185,6 @@ const MusicTrackForm: React.FC = () => {
           </label>
         </div>
 
-        {/* Cover Art */}
         <div>
           <label htmlFor="cover" className="create-label block text-lg font-medium mb-2">
             Cover Art (optional, JPG/PNG)
@@ -192,7 +199,6 @@ const MusicTrackForm: React.FC = () => {
           />
         </div>
 
-        {/* Audio File */}
         <div>
           <label htmlFor="audio" className="create-label block text-lg font-medium mb-2">
             Audio File (MP3 or M4A) - Required
@@ -213,7 +219,7 @@ const MusicTrackForm: React.FC = () => {
           disabled={loading}
           className="create-submit-button w-full py-3 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {loading ? 'Uploading...' : 'Save Track'}
+          {loading ? "Uploading..." : "Save Track"}
         </button>
       </form>
     </div>
