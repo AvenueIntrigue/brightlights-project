@@ -53,6 +53,14 @@ if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
   throw new Error("ENCRYPTION_KEY must be set in .env and be 32 characters long");
 }
 
+const dailyTopics = [
+  'love', 'joy', 'peace', 'patience', 'kindness', 'goodness', 'faithfulness',
+  'gentleness', 'self-control', 'family', 'christian_living', 'forgiveness', 'repentance',
+  'gratitude', 'hope', 'humility', 'obedience', 'called_to_create',
+  'honor_god_in_your_work', 'liberty', 'bread_of_life', 'living_water',
+  'provision', 'holy_spirit_guidance', 'follower_of_christ', 'salvation'
+] as const;
+
 const app = express();
 
 
@@ -141,7 +149,7 @@ const upload = multer({ dest: 'uploads/' }); // temp folder — clean up after u
 // GET /api/lessons/:topic/:order
 app.get("/api/lessons/:topic/:order", async (req: Request, res: Response) => {
   const { topic, order } = req.params;
-  if (!topic.includes(topic as any)) {
+  if (!dailyTopics.includes(topic as any)) {
     return res.status(400).json({ message: `Invalid topic: ${topic}` });
   }
   const orderNum = parseInt(order, 10);
@@ -175,7 +183,7 @@ app.post("/api/lessons", async (req: Request, res: Response) => {
 
     console.log("POST /api/lessons received - Body:", JSON.stringify(req.body, null, 2));
 
-    if (!topic.includes(topic as any)) {
+    if (!dailyTopics.includes(topic)) {
       return res.status(400).json({ message: `Invalid topic: ${topic}` });
     }
 

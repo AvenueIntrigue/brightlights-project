@@ -16,6 +16,7 @@ import DynamicPost from "./DynamicPost";
 import Portfolio from "./Portfolio";
 import BibleLessonsForm from "./BibleLessonsForm";
 import MusicTrackForm from "./MusicTrackForm";
+import { SignIn, SignUp } from '@clerk/clerk-react';
 
 // Reusable wrapper for Clerk-protected routes
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => (
@@ -53,7 +54,8 @@ const App: React.FC = () => {
         <Route path="/projects" element={<DynamicPost type="projects" />} />
         <Route path="/portfolio" element={<Portfolio />} />
         <Route path="/profile" element={<ProfilePage />} />
-
+        <Route path="/sign-in" element={<SignIn routing="path" path="/sign-in" />} />
+<Route path="/sign-up" element=<SignUp routing="path" path="/sign-up" /> />
         {/* Protected admin routes */}
         <Route
           path="/admin/lessons"
