@@ -7,17 +7,17 @@ import dotenv from "dotenv";
 import cors from "cors";
 import multer from "multer";
 import encryptionKey from "./generateKey.js";
-import crypto from "node:crypto";
-import { fileURLToPath } from 'url';
-import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { clerkClient } from '@clerk/clerk-sdk-node';
+import { fileURLToPath } from "url";
+
+import {
+  S3Client,
+  GetObjectCommand,
+  PutObjectCommand,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+
+import { clerkClient } from "@clerk/clerk-sdk-node";
 import { ClerkPublicMetadata } from "shared/clerk-types.js";
-
-
-
-// ESM-safe __dirname
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Import your models
 import {
@@ -38,15 +38,23 @@ import {
   PortfolioPostModel,
   marketingConsentContentModel,
   LessonsModel,
-  MusicTrackModel, // Added
+  MusicTrackModel,
 } from "../shared/interfaces.js";
+
+// ESM-safe __dirname
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Load environment variables
 dotenv.config();
 
-const rawUri = process.env.MONGODB_URI || "mongodb://localhost:27017/brightLightsCreative";
-const uri = rawUri.startsWith("MONGODB_URI=") ? rawUri.replace("MONGODB_URI=", "") : rawUri;
-console.log("Using MONGODB_URI:", uri);
+/**
+ * ✅ MongoDB URI (DO NOT LOG SECRETS)
+ */
+const rawUri =
+  process.env.MONGODB_URI || "mongodb://localhost:27017/brightLightsCreative";
+const uri = rawUri.startsWith("MONGODB_URI=")
+  ? rawUri.replace("MONGODB_URI=", "")
+  : rawUri;
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || encryptionKey;
 if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
@@ -54,72 +62,106 @@ if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
 }
 
 const dailyTopics = [
-  'love', 'joy', 'peace', 'patience', 'kindness', 'goodness', 'faithfulness',
-  'gentleness', 'self-control', 'family', 'christian_living', 'forgiveness', 'repentance',
-  'gratitude', 'hope', 'humility', 'obedience', 'called_to_create',
-  'honor_god_in_your_work', 'liberty', 'bread_of_life', 'living_water',
-  'provision', 'holy_spirit_guidance', 'follower_of_christ', 'salvation'
+  "love",
+  "joy",
+  "peace",
+  "patience",
+  "kindness",
+  "goodness",
+  "faithfulness",
+  "gentleness",
+  "self-control",
+  "family",
+  "christian_living",
+  "forgiveness",
+  "repentance",
+  "gratitude",
+  "hope",
+  "humility",
+  "obedience",
+  "called_to_create",
+  "honor_god_in_your_work",
+  "liberty",
+  "bread_of_life",
+  "living_water",
+  "provision",
+  "holy_spirit_guidance",
+  "follower_of_christ",
+  "salvation",
 ] as const;
 
 const app = express();
 
+/**
+ * ✅ Cloudflare R2 env vars (fail-fast on music endpoints)
+ */
+const R2_ACCOUNT_ID = process.env.CLOUDFLARE_R2_ACCOUNT_ID;
+const R2_ACCESS_KEY_ID = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID;
+const R2_SECRET_ACCESS_KEY = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY;
+const R2_BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME;
+const R2_PUBLIC_DOMAIN = process.env.CLOUDFLARE_R2_PUBLIC_DOMAIN;
 
-
-// R2 client setup (add once)
+/**
+ * ✅ Cloudflare R2 S3 Client (SigV4 via AWS SDK)
+ * (We still construct it, but endpoints will check config before using.)
+ */
 const r2 = new S3Client({
-  region: 'auto', // Cloudflare R2 special value
-  endpoint: `https://${process.env.CLOUDFLARE_R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  credentials: {
-    accessKeyId: process.env.CLOUDFLARE_R2_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY!,
-  },
+  region: "auto",
+  endpoint: R2_ACCOUNT_ID
+    ? `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`
+    : undefined,
+  credentials:
+    R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY
+      ? {
+          accessKeyId: R2_ACCESS_KEY_ID,
+          secretAccessKey: R2_SECRET_ACCESS_KEY,
+        }
+      : undefined,
 });
 
-
-
-// Middleware to protect /api/music
+/**
+ * ✅ Auth middleware (Admin-only)
+ */
 const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Unauthorized' });
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const token = authHeader.split(' ')[1];
+  const token = authHeader.split(" ")[1];
 
   try {
     const claims = await clerkClient.verifyToken(token);
-
-    // Cast publicMetadata to your custom type so TypeScript knows about 'role'
     const metadata = claims.publicMetadata as ClerkPublicMetadata | undefined;
 
-    // Check role (case-sensitive match to 'Admin')
-    if (metadata?.role !== 'Admin') {
-      return res.status(403).json({ message: 'Forbidden' });
+    if (metadata?.role !== "Admin") {
+      return res.status(403).json({ message: "Forbidden" });
     }
 
-    // Attach claims to req (use type assertion to silence TS error)
     (req as any).user = claims;
-
     next();
   } catch (err) {
-    console.error('Token verification error:', err);
-    return res.status(401).json({ message: 'Invalid token' });
+    console.error("Token verification error:", err);
+    return res.status(401).json({ message: "Invalid token" });
   }
 };
 
-
-
-// === CORS & Preflight Handling FIRST ===
-app.use(cors({
-  origin: [
-    "https://www.brightlightscreative.com",
-    "https://brightlightscreative.com",
-    "http://localhost:5173"
-  ],
-  methods: ["GET", "POST", "PUT", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true,
-}));
+/**
+ * ✅ CORS
+ */
+app.use(
+  cors({
+    origin: [
+      "https://www.brightlightscreative.com",
+      "https://brightlightscreative.com",
+      "https://brightlights-project.onrender.com",
+      "http://localhost:5173",
+    ],
+    methods: ["GET", "POST", "PUT", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
 
 app.options("*", (req: Request, res: Response) => {
   res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
@@ -129,89 +171,88 @@ app.options("*", (req: Request, res: Response) => {
   res.sendStatus(204);
 });
 
-// Prevent redirects for API/OPTIONS
-app.use((req: Request, res: Response, next: NextFunction) => {
-  if (req.method === "OPTIONS" || req.path.startsWith("/api/")) {
-    return next();
-  }
-  next();
-});
-
-// Middleware
+// Body parsing
 app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
-// Multer for file uploads (temp storage before Bunny)
-const upload = multer({ dest: 'uploads/' }); // temp folder — clean up after upload if needed
+/**
+ * ✅ Multer memory storage so file.buffer exists
+ */
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+});
 
-// === LESSONS ROUTES (unchanged) ===
+/**
+ * ✅ Health check
+ */
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true, env: process.env.NODE_ENV || "unknown" });
+});
 
-// GET /api/lessons/:topic/:order
+/**
+ * =========================
+ * LESSONS ROUTES
+ * =========================
+ */
+
+// GET /api/lessons/:topic/:order (public read)
 app.get("/api/lessons/:topic/:order", async (req: Request, res: Response) => {
   const { topic, order } = req.params;
+
   if (!dailyTopics.includes(topic as any)) {
     return res.status(400).json({ message: `Invalid topic: ${topic}` });
   }
+
   const orderNum = parseInt(order, 10);
   if (isNaN(orderNum) || orderNum < 1) {
     return res.status(400).json({ message: `Invalid order: ${order}` });
   }
+
   try {
     const lesson = await LessonsModel.findOne({ topic, order: orderNum });
-    if (lesson) {
-      res.json(lesson);
-    } else {
-      res.status(404).json({ message: `Lesson not found for ${topic} order ${order}` });
-    }
+    if (lesson) return res.json(lesson);
+    return res
+      .status(404)
+      .json({ message: `Lesson not found for ${topic} order ${order}` });
   } catch (error: any) {
     console.error(`Error fetching lesson ${topic}/${order}: ${error.message}`);
-    res.status(500).json({ message: "Error fetching lesson", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Error fetching lesson", error: error.message });
   }
 });
 
-// POST /api/lessons (Auto-assign order)
-app.post("/api/lessons", async (req: Request, res: Response) => {
+// POST /api/lessons (Admin write)
+app.post("/api/lessons", requireAdmin, async (req: Request, res: Response) => {
   try {
-    const {
-      topic,
-      title,
-      scripture,
-      reflection,
-      action_item,
-      prayer,
-    } = req.body;
-
-    console.log("POST /api/lessons received - Body:", JSON.stringify(req.body, null, 2));
+    const { topic, title, scripture, reflection, action_item, prayer } = req.body;
 
     if (!dailyTopics.includes(topic)) {
       return res.status(400).json({ message: `Invalid topic: ${topic}` });
     }
 
     let nextOrder = 1;
-    try {
-      const lastLesson = await LessonsModel.findOne({ topic })
-        .sort({ order: -1 })
-        .select('order')
-        .exec();
-      if (lastLesson && typeof lastLesson.order === 'number') {
-        nextOrder = lastLesson.order + 1;
-      }
-      console.log(`Assigned order ${nextOrder} for topic "${topic}"`);
-    } catch (queryError: any) {
-      console.error("Error querying last lesson for topic:", queryError.message);
+    const lastLesson = await LessonsModel.findOne({ topic })
+      .sort({ order: -1 })
+      .select("order")
+      .exec();
+
+    if (lastLesson && typeof lastLesson.order === "number") {
+      nextOrder = lastLesson.order + 1;
     }
 
     if (!topic || !title || !scripture || !reflection || !action_item || !prayer) {
       return res.status(400).json({
         message: "Missing required fields",
-        receivedKeys: Object.keys(req.body)
+        receivedKeys: Object.keys(req.body),
       });
     }
 
-    if (typeof scripture !== 'string' || scripture.length < 100) {
+    if (typeof scripture !== "string" || scripture.length < 100) {
       return res.status(400).json({
         message: "Scripture must be a string with at least 100 characters",
-        length: scripture?.length ?? "undefined"
+        length: scripture?.length ?? "undefined",
       });
     }
 
@@ -227,243 +268,277 @@ app.post("/api/lessons", async (req: Request, res: Response) => {
 
     await lesson.save();
 
-    console.log(`Lesson saved successfully: ${topic}/${nextOrder}`);
-
-    res.status(201).json({
+    return res.status(201).json({
       message: "Lesson saved successfully",
       lesson: lesson.toObject(),
     });
   } catch (error: any) {
-    console.error("Error saving lesson:");
-    console.error("Message:", error.message);
-    console.error("Name:", error.name);
-    console.error("Stack:", error.stack);
-    console.error("Full error:", JSON.stringify(error, null, 2));
-    res.status(500).json({
+    console.error("Error saving lesson:", error);
+    return res.status(500).json({
       message: "Error saving lesson",
       error: error.message || "Unknown server error",
-      details: error.name === 'ValidationError' ? error.errors : null,
     });
   }
 });
 
-// === NEW: POST /api/music ===
-// POST /api/music
-app.post('/api/music', upload.fields([
-  { name: 'audio', maxCount: 1 },
-  { name: 'cover', maxCount: 1 },
-]), async (req: Request, res: Response) => {
-  try {
-    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-    const {
-      title,
-      artist = 'Great Light',
-      album,
-      track_number,
-      is_premium = 'true',
-    } = req.body;
+/**
+ * =========================
+ * MUSIC ROUTES (Admin CMS)
+ * =========================
+ */
 
-    // Validation
-    if (!title || !album || !track_number || !files.audio?.[0]) {
-      return res.status(400).json({ message: 'Missing required fields or audio file' });
-    }
-
-    // 1. Upload audio to Cloudflare R2
-    const audioFile = files.audio[0];
-    const audioKey = `audio/${audioFile.originalname}`;
-
-    const audioResponse = await fetch(
-      `https://${process.env.CLOUDFLARE_R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${process.env.CLOUDFLARE_R2_BUCKET_NAME}/${audioKey}`,
-      {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY}`,
-          'Content-Type': 'audio/mpeg', // or 'audio/mp4' for M4A
-          'x-amz-acl': 'private',
-        },
-        body: new Blob([new Uint8Array(audioFile.buffer)]),
+app.post(
+  "/api/music",
+  requireAdmin,
+  upload.fields([
+    { name: "audio", maxCount: 1 },
+    { name: "cover", maxCount: 1 },
+  ]),
+  async (req: Request, res: Response) => {
+    try {
+      if (!R2_BUCKET_NAME || !R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY) {
+        return res.status(500).json({ message: "Cloudflare R2 is not configured on the server." });
       }
-    );
 
-    if (!audioResponse.ok) {
-      throw new Error(`R2 audio upload failed: ${audioResponse.statusText}`);
-    }
+      const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+      const { title, artist = "Great Light", album, track_number, is_premium = "true" } =
+        req.body;
 
-    const audioUrl = `https://${process.env.CLOUDFLARE_R2_BUCKET_NAME}.${process.env.CLOUDFLARE_R2_PUBLIC_DOMAIN}/${audioKey}`;
+      if (!title || !album || !track_number || !files?.audio?.[0]) {
+        return res.status(400).json({ message: "Missing required fields or audio file" });
+      }
 
-    // 2. Upload cover (optional)
-    let coverUrl = '';
-    if (files.cover?.[0]) {
-      const coverFile = files.cover[0];
-      const coverKey = `covers/${coverFile.originalname}`;
+      const audioFile = files.audio[0];
+      const safeAudioName = audioFile.originalname.replace(/[^\w.\-]/g, "_");
+      const audioKey = `audio/${Date.now()}_${safeAudioName}`;
 
-      const coverResponse = await fetch(
-        `https://${process.env.CLOUDFLARE_R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${process.env.CLOUDFLARE_R2_BUCKET_NAME}/${coverKey}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY}`,
-            'Content-Type': 'image/jpeg',
-            'x-amz-acl': 'private',
-          },
-          body: new Blob([new Uint8Array(coverFile.buffer)]),
-        }
+      await r2.send(
+        new PutObjectCommand({
+          Bucket: R2_BUCKET_NAME,
+          Key: audioKey,
+          Body: audioFile.buffer,
+          ContentType: audioFile.mimetype || "audio/mpeg",
+        })
       );
 
-      if (!coverResponse.ok) {
-        throw new Error(`R2 cover upload failed: ${coverResponse.statusText}`);
+      let coverUrl = "";
+      let coverKey = "";
+
+      if (files.cover?.[0]) {
+        const coverFile = files.cover[0];
+        const safeCoverName = coverFile.originalname.replace(/[^\w.\-]/g, "_");
+        coverKey = `covers/${Date.now()}_${safeCoverName}`;
+
+        await r2.send(
+          new PutObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: coverKey,
+            Body: coverFile.buffer,
+            ContentType: coverFile.mimetype || "image/jpeg",
+          })
+        );
+
+        coverUrl =
+          R2_PUBLIC_DOMAIN
+            ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${coverKey}`
+            : "";
       }
 
-      coverUrl = `https://${process.env.CLOUDFLARE_R2_BUCKET_NAME}.${process.env.CLOUDFLARE_R2_PUBLIC_DOMAIN}/${coverKey}`;
+      const audioUrl =
+        R2_PUBLIC_DOMAIN
+          ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${audioKey}`
+          : "";
+
+      const track = new MusicTrackModel({
+        title,
+        artist,
+        album,
+        track_number: parseInt(track_number, 10),
+        is_premium: is_premium === "true" || is_premium === true,
+        cover_url: coverUrl,
+        audio_url: audioUrl,
+        bunny_path: audioKey,
+      });
+
+      await track.save();
+
+      return res.status(201).json({ message: "Track saved successfully", track });
+    } catch (err: any) {
+      console.error("Music upload error:", err);
+      return res.status(500).json({ message: "Failed to save track", error: err.message });
     }
-
-    // 3. Create and save the track object
-    const track = new MusicTrackModel({
-      title,
-      artist,
-      album,
-      track_number: parseInt(track_number),
-      is_premium: is_premium === 'true' || is_premium === true,
-      cover_url: coverUrl,
-      audio_url: audioUrl,
-      bunny_path: audioKey, // rename to r2_key if you prefer
-    });
-
-    await track.save();
-
-    res.status(201).json({
-      message: 'Track saved successfully',
-      track,  // now 'track' is defined
-    });
-  } catch (err: any) {
-    console.error('Music upload error:', err);
-    res.status(500).json({
-      message: 'Failed to save track',
-      error: err.message,
-    });
   }
-});
+);
 
-// GET /api/music/signed-url/:trackId
-app.get('/api/music/signed-url/:trackId', async (req: Request, res: Response) => {
-  try {
-    const trackId = req.params.trackId;
+/**
+ * GET /api/music/signed-url/:trackId
+ * ✅ Admin-only for now (prevents public access).
+ * Later you’ll create /api/app/music/signed-url/:trackId that checks Apple/Google entitlements.
+ */
+app.get(
+  "/api/music/signed-url/:trackId",
+  requireAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      if (!R2_BUCKET_NAME || !R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY) {
+        return res.status(500).json({ message: "Cloudflare R2 is not configured on the server." });
+      }
 
-    // Fetch the track from MongoDB (no auth/premium check here)
-    const track = await MusicTrackModel.findById(trackId);
-    if (!track) {
-      return res.status(404).json({ message: 'Track not found' });
+      const trackId = req.params.trackId;
+      const track = await MusicTrackModel.findById(trackId);
+      if (!track) return res.status(404).json({ message: "Track not found" });
+
+      const command = new GetObjectCommand({
+        Bucket: R2_BUCKET_NAME,
+        Key: track.bunny_path,
+      });
+
+      // Shorter TTL is safer while you test
+      const signedUrl = await getSignedUrl(r2, command, { expiresIn: 3600 }); // 1 hour
+      return res.json({ signedUrl });
+    } catch (err: any) {
+      console.error("Signed URL error:", err);
+      return res.status(500).json({ message: "Failed to generate URL", error: err.message });
     }
-
-    // Generate signed URL (valid for 24 hours - adjust expiresIn as needed)
-    const command = new GetObjectCommand({
-      Bucket: process.env.CLOUDFLARE_R2_BUCKET_NAME,
-      Key: track.bunny_path, // e.g., "audio/in-that-day.mp3"
-    });
-
-    const signedUrl = await getSignedUrl(r2, command, { expiresIn: 86400 }); // 24 hours
-
-    res.json({ signedUrl });
-  } catch (err: any) {
-    console.error('Signed URL error:', err);
-    res.status(500).json({ message: 'Failed to generate URL', error: err.message });
   }
-});
+);
 
-// Legacy GET /api/:typeposts (unchanged)
+/**
+ * =========================
+ * POSTS ROUTES
+ * =========================
+ */
 app.get("/api/:typeposts", async (req: Request, res: Response) => {
   const type = req.params.typeposts.replace(/posts$/, "");
   let Model;
   switch (type) {
-    case "web-development": Model = WebDevelopmentPostModel; break;
-    case "app-development": Model = AppDevelopmentPostModel; break;
-    case "graphic-design": Model = GraphicDesignPostModel; break;
-    case "about": Model = AboutPostModel; break;
-    case "portfolio": Model = PortfolioPostModel; break;
-    case "web3": Model = Web3PostModel; break;
-    case "projects": Model = ProjectsPostModel; break;
-    case "services": Model = ServicesPostModel; break;
-    case "pricing": Model = PricingPostModel; break;
-    default: return res.status(400).json({ message: `Invalid type: ${type}posts` });
+    case "web-development":
+      Model = WebDevelopmentPostModel;
+      break;
+    case "app-development":
+      Model = AppDevelopmentPostModel;
+      break;
+    case "graphic-design":
+      Model = GraphicDesignPostModel;
+      break;
+    case "about":
+      Model = AboutPostModel;
+      break;
+    case "portfolio":
+      Model = PortfolioPostModel;
+      break;
+    case "web3":
+      Model = Web3PostModel;
+      break;
+    case "projects":
+      Model = ProjectsPostModel;
+      break;
+    case "services":
+      Model = ServicesPostModel;
+      break;
+    case "pricing":
+      Model = PricingPostModel;
+      break;
+    default:
+      return res.status(400).json({ message: `Invalid type: ${type}posts` });
   }
+
   try {
     const post = await Model.findOne();
-    if (post) res.json(post);
-    else res.status(404).json({ message: `${type}posts not found` });
+    if (post) return res.json(post);
+    return res.status(404).json({ message: `${type}posts not found` });
   } catch (error: any) {
-    res.status(500).json({ message: `Error fetching ${type}posts`, error: error.message });
+    return res.status(500).json({ message: `Error fetching ${type}posts`, error: error.message });
   }
 });
 
-// Legacy PUT /api/:typeposts (unchanged)
-app.put("/api/:typeposts", async (req: Request, res: Response) => {
+app.put("/api/:typeposts", requireAdmin, async (req, res) => {
   const type = req.params.typeposts.replace(/posts$/, "");
   let Model;
   switch (type) {
-    case "web-development": Model = WebDevelopmentPostModel; break;
-    case "app-development": Model = AppDevelopmentPostModel; break;
-    case "graphic-design": Model = GraphicDesignPostModel; break;
-    case "about": Model = AboutPostModel; break;
-    case "portfolio": Model = PortfolioPostModel; break;
-    case "web3": Model = Web3PostModel; break;
-    case "projects": Model = ProjectsPostModel; break;
-    case "services": Model = ServicesPostModel; break;
-    case "pricing": Model = PricingPostModel; break;
-    default: return res.status(400).json({ message: `Invalid type: ${type}posts` });
+    case "web-development":
+      Model = WebDevelopmentPostModel;
+      break;
+    case "app-development":
+      Model = AppDevelopmentPostModel;
+      break;
+    case "graphic-design":
+      Model = GraphicDesignPostModel;
+      break;
+    case "about":
+      Model = AboutPostModel;
+      break;
+    case "portfolio":
+      Model = PortfolioPostModel;
+      break;
+    case "web3":
+      Model = Web3PostModel;
+      break;
+    case "projects":
+      Model = ProjectsPostModel;
+      break;
+    case "services":
+      Model = ServicesPostModel;
+      break;
+    case "pricing":
+      Model = PricingPostModel;
+      break;
+    default:
+      return res.status(400).json({ message: `Invalid type: ${type}posts` });
   }
+
   try {
     const postData = req.body;
     const existingPost = await Model.findOne();
+
     if (existingPost) {
       await Model.updateOne({}, postData);
-      res.json({ message: `${type}posts updated`, data: postData });
+      return res.json({ message: `${type}posts updated`, data: postData });
     } else {
       const newPost = new Model(postData);
       await newPost.save();
-      res.status(201).json({ message: `${type}posts created`, data: newPost });
+      return res.status(201).json({ message: `${type}posts created`, data: newPost });
     }
   } catch (error: any) {
-    res.status(500).json({ message: `Error saving ${type}posts`, error: error.message });
+    return res.status(500).json({ message: `Error saving ${type}posts`, error: error.message });
   }
 });
 
-// === IMPORTANT: Serve Vite frontend static files and SPA routing (LAST!) ===
-const distPath = path.join(__dirname, '../../dist');
-console.log(`Serving static files from: ${distPath}`);
+/**
+ * ✅ Serve Vite frontend static files (LAST)
+ */
+const distPath = path.join(__dirname, "../../dist");
 app.use(express.static(distPath));
 
-// Catch-all route for React Router (SPA) - serves index.html for all non-API routes
-app.get('*', (req, res) => {
-  const indexPath = path.join(distPath, 'index.html');
-  console.log(`Serving index.html from: ${indexPath}`);
-  res.sendFile(indexPath);
+/**
+ * ✅ SPA catch-all: DO NOT swallow /api/*
+ */
+app.get("*", (req, res, next) => {
+  if (req.path.startsWith("/api/")) return next();
+  return res.sendFile(path.join(distPath, "index.html"));
 });
 
-// Start Server
+/**
+ * ✅ Start server
+ */
 async function startServer() {
-  try {
-    await mongoose.connect(uri);
-    console.log("Connected to MongoDB");
-  } catch (error) {
-    console.error("MongoDB connection failed:", error);
-    process.exit(1);
-  }
+  await mongoose.connect(uri);
+  console.log("Connected to MongoDB");
 }
 
 const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+
 startServer()
   .then(() => {
     ViteExpress.listen(app, port, () => {
-      console.log("main.ts file started executing...");
-      console.log(`✅ Server is listening on http://localhost:${port}`);
-      console.log("Open this in your browser: http://localhost:3000");
+      console.log(`✅ Server listening on port ${port}`);
     });
   })
   .catch((error) => {
     console.error("Failed to start server:", error);
+    process.exit(1);
   });
 
-// ViteExpress config
 ViteExpress.config({
   mode: process.env.NODE_ENV === "production" ? "production" : "development",
 });
