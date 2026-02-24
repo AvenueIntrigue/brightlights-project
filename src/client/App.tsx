@@ -1,6 +1,11 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
-import { SignedIn, SignedOut, RedirectToSignIn, useUser } from "@clerk/clerk-react";
+import {
+  SignedIn,
+  SignedOut,
+  RedirectToSignIn,
+  useUser,
+} from "@clerk/clerk-react";
 import { Helmet } from "react-helmet-async";
 import { SignIn, SignUp } from "@clerk/clerk-react";
 
@@ -16,7 +21,8 @@ import ProfilePage from "./ProfilePage";
 import DynamicPost from "./DynamicPost";
 import Portfolio from "./Portfolio";
 import BibleLessonsForm from "./BibleLessonsForm";
-import MusicTrackForm from "./MusicTrackForm";
+import MusicAlbumForm from "./MusicAlbumForm";
+import AddTrackToAlbumForm from "./AddTrackToAlbumForm";
 
 // Basic signed-in protection
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => (
@@ -70,27 +76,86 @@ const App: React.FC = () => {
         <Route path="/pricing" element={<DynamicPost type="pricing" />} />
         <Route path="/about" element={<DynamicPost type="about" />} />
         <Route path="/services" element={<DynamicPost type="services" />} />
-        <Route path="/web-development" element={<DynamicPost type="web-development" />} />
-        <Route path="/app-development" element={<DynamicPost type="app-development" />} />
-        <Route path="/graphic-design" element={<DynamicPost type="graphic-design" />} />
+        <Route
+          path="/web-development"
+          element={<DynamicPost type="web-development" />}
+        />
+        <Route
+          path="/app-development"
+          element={<DynamicPost type="app-development" />}
+        />
+        <Route
+          path="/graphic-design"
+          element={<DynamicPost type="graphic-design" />}
+        />
         <Route path="/web3" element={<DynamicPost type="web3" />} />
         <Route path="/projects" element={<DynamicPost type="projects" />} />
         <Route path="/portfolio" element={<Portfolio />} />
 
         {/* Clerk hosted routes */}
-        <Route path="/sign-in" element={<SignIn routing="path" path="/sign-in" />} />
-        <Route path="/sign-up" element={<SignUp routing="path" path="/sign-up" />} />
+        <Route
+          path="/sign-in"
+          element={<SignIn routing="path" path="/sign-in" />}
+        />
+        <Route
+          path="/sign-up"
+          element={<SignUp routing="path" path="/sign-up" />}
+        />
 
         {/* Profile (choose whether this should be protected) */}
-        <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
 
         {/* Admin routes */}
-        <Route path="/admin/lessons" element={<AdminRoute><BibleLessonsForm /></AdminRoute>} />
-        <Route path="/admin/music" element={<AdminRoute><MusicTrackForm /></AdminRoute>} />
+        <Route
+          path="/admin/lessons"
+          element={
+            <AdminRoute>
+              <BibleLessonsForm />
+            </AdminRoute>
+          }
+        />
 
+        <Route
+          path="/admin/music"
+          element={
+            <AdminRoute>
+              <MusicAlbumForm />
+            </AdminRoute>
+          }
+        />
+
+        <Route
+          path="/admin/music/add-track"
+          element={
+            <AdminRoute>
+              <AddTrackToAlbumForm />
+            </AdminRoute>
+          }
+        />
         {/* Admin-only create routes */}
-        <Route path="/create" element={<AdminRoute><Create /></AdminRoute>} />
-        <Route path="/create-blog" element={<AdminRoute><CreateBlog /></AdminRoute>} />
+        <Route
+          path="/create"
+          element={
+            <AdminRoute>
+              <Create />
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/create-blog"
+          element={
+            <AdminRoute>
+              <CreateBlog />
+            </AdminRoute>
+          }
+        />
 
         {/* Catch-all */}
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -6,7 +6,7 @@ export interface Category extends Document {
   name: string;
 }
 const CategorySchema: Schema = new Schema({
-  name: { type: String, unique: true, required: true },
+  name: { type: String, unique: true, required: true, trim: true },
 });
 const CategoryModel = mongoose.model<Category>("Category", CategorySchema);
 
@@ -176,45 +176,107 @@ export interface Lesson extends Document {
     correctAnswer?: number;
   };
 }
-const lessonSchema: Schema<Lesson> = new Schema({
-  topic: { type: String, required: true },
-  title: { type: String, required: true },
-  scripture: { type: String, required: true },
-  reflection: { type: String, required: true },
-  action_item: { type: String, required: true },
-  prayer: { type: String, required: true },
-  order: { type: Number, required: true, min: 1 },
-}, { timestamps: true });
-const LessonsModel = mongoose.model<Lesson>('Lesson', lessonSchema);
+const lessonSchema: Schema<Lesson> = new Schema(
+  {
+    topic: { type: String, required: true },
+    title: { type: String, required: true },
+    scripture: { type: String, required: true },
+    reflection: { type: String, required: true },
+    action_item: { type: String, required: true },
+    prayer: { type: String, required: true },
+    order: { type: Number, required: true, min: 1 },
+  },
+  { timestamps: true }
+);
+const LessonsModel = mongoose.model<Lesson>("Lesson", lessonSchema);
 
-// Music Track Schema
-export interface MusicTrack extends Document {
+// =========================
+// Music Album + Track Schema
+// =========================
+
+export type MusicStatus = "active" | "draft" | "archived";
+
+// Album Schema (1 cover per album)
+export interface MusicAlbum extends Document {
   title: string;
   artist: string;
-  album: string;
+  album_is_premium: boolean; // default premium state for tracks
+  cover_url: string; // optional public URL (or empty if private)
+  cover_path: string; // R2 key for cover (recommended)
+  status?: MusicStatus;
+}
+
+const musicAlbumSchema: Schema<MusicAlbum> = new Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    artist: { type: String, default: "Great Light", trim: true },
+    album_is_premium: { type: Boolean, default: true },
+
+    cover_url: { type: String, default: "" },
+    cover_path: { type: String, required: true, default: "" },
+
+    status: {
+      type: String,
+      enum: ["active", "draft", "archived"],
+      default: "active",
+    },
+  },
+  { timestamps: true, collection: "musicalbums" }
+);
+
+// Helpful uniqueness: one artist+title album
+musicAlbumSchema.index({ title: 1, artist: 1 }, { unique: true });
+// Helpful listing index
+musicAlbumSchema.index({ status: 1, createdAt: -1 });
+
+const MusicAlbumModel = mongoose.model<MusicAlbum>("MusicAlbum", musicAlbumSchema);
+
+// Track Schema
+export interface MusicTrack extends Document {
+  albumId: mongoose.Types.ObjectId; // reference to MusicAlbum
+
+  title: string;
   track_number: number;
   duration_seconds?: number;
-  is_premium: boolean;
-  cover_url: string;
-  audio_url: string;
-  bunny_path: string;
-  created_at: Date;
-  updated_at: Date;
-  status?: 'active' | 'draft' | 'archived';
+
+  // Override: if set, it overrides album_is_premium. If not set, inherit.
+  track_is_premium?: boolean;
+
+  audio_url: string; // optional public URL (or empty if private)
+  bunny_path: string; // R2 key (rename later if desired)
+
+  status?: MusicStatus;
 }
-const musicTrackSchema: Schema<MusicTrack> = new Schema({
-  title: { type: String, required: true },
-  artist: { type: String, default: 'Great Light' },
-  album: { type: String, required: true },
-  track_number: { type: Number, required: true, min: 1 },
-  duration_seconds: Number,
-  is_premium: { type: Boolean, default: true },
-  cover_url: { type: String, required: true },
-  audio_url: { type: String, required: true },
-  bunny_path: { type: String, required: true },
-  status: { type: String, default: 'active' },
-}, { timestamps: true });
-const MusicTrackModel = mongoose.model<MusicTrack>('MusicTrack', musicTrackSchema);
+
+const musicTrackSchema: Schema<MusicTrack> = new Schema(
+  {
+    albumId: { type: Schema.Types.ObjectId, ref: "MusicAlbum", required: true, index: true },
+
+    title: { type: String, required: true, trim: true },
+    track_number: { type: Number, required: true, min: 1 },
+    duration_seconds: Number,
+
+    // undefined means "inherit"
+    track_is_premium: { type: Boolean, required: false },
+
+    audio_url: { type: String, default: "" },
+    bunny_path: { type: String, required: true },
+
+    status: {
+      type: String,
+      enum: ["active", "draft", "archived"],
+      default: "active",
+    },
+  },
+  { timestamps: true, collection: "musictracks" }
+);
+
+// Prevent duplicate track numbers within the same album
+musicTrackSchema.index({ albumId: 1, track_number: 1 }, { unique: true });
+// Helpful listing index
+musicTrackSchema.index({ status: 1, createdAt: -1 });
+
+const MusicTrackModel = mongoose.model<MusicTrack>("MusicTrack", musicTrackSchema);
 
 // Post Interface (Generic for All Post Types)
 export interface Post extends Document {
@@ -271,5 +333,6 @@ export {
   PortfolioPostModel,
   CategoryModel,
   LessonsModel,
-  MusicTrackModel
+  MusicTrackModel,
+  MusicAlbumModel,
 };

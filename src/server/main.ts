@@ -6,7 +6,6 @@ import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import cors from "cors";
 import multer from "multer";
-import encryptionKey from "./generateKey.js";
 import { fileURLToPath } from "url";
 
 import {
@@ -39,6 +38,7 @@ import {
   marketingConsentContentModel,
   LessonsModel,
   MusicTrackModel,
+  MusicAlbumModel,
 } from "../shared/interfaces.js";
 
 // ESM-safe __dirname
@@ -56,9 +56,16 @@ const uri = rawUri.startsWith("MONGODB_URI=")
   ? rawUri.replace("MONGODB_URI=", "")
   : rawUri;
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || encryptionKey;
+/**
+ * ✅ Encryption key
+ * IMPORTANT: Do NOT generate keys at runtime in production.
+ * If missing, crash so you notice immediately.
+ */
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
-  throw new Error("ENCRYPTION_KEY must be set in .env and be 32 characters long");
+  throw new Error(
+    "ENCRYPTION_KEY must be set and be 32 characters long (hex or plain)."
+  );
 }
 
 const dailyTopics = [
@@ -101,23 +108,25 @@ const R2_SECRET_ACCESS_KEY = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY;
 const R2_BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME;
 const R2_PUBLIC_DOMAIN = process.env.CLOUDFLARE_R2_PUBLIC_DOMAIN;
 
-/**
- * ✅ Cloudflare R2 S3 Client (SigV4 via AWS SDK)
- * (We still construct it, but endpoints will check config before using.)
- */
-const r2 = new S3Client({
-  region: "auto",
-  endpoint: R2_ACCOUNT_ID
-    ? `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`
-    : undefined,
-  credentials:
-    R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY
-      ? {
+// Only build client when config exists (cleaner + avoids undefined endpoint)
+const r2 =
+  R2_ACCOUNT_ID && R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY
+    ? new S3Client({
+        region: "auto",
+        endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+        credentials: {
           accessKeyId: R2_ACCESS_KEY_ID,
           secretAccessKey: R2_SECRET_ACCESS_KEY,
-        }
-      : undefined,
-});
+        },
+      })
+    : null;
+
+function assertR2Configured(res: Response): res is Response {
+  if (!r2 || !R2_BUCKET_NAME || !R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY) {
+    return false;
+  }
+  return true;
+}
 
 /**
  * ✅ Auth middleware (Admin-only)
@@ -287,32 +296,276 @@ app.post("/api/lessons", requireAdmin, async (req: Request, res: Response) => {
  * =========================
  */
 
+function safeJson<T>(value: any): T | undefined {
+  if (typeof value !== "string") return undefined;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * POST /api/albums (Admin)
+ * Uploads cover + multiple tracks in one shot.
+ */
 app.post(
-  "/api/music",
+  "/api/albums",
   requireAdmin,
   upload.fields([
-    { name: "audio", maxCount: 1 },
     { name: "cover", maxCount: 1 },
+    { name: "tracks", maxCount: 50 },
   ]),
   async (req: Request, res: Response) => {
     try {
-      if (!R2_BUCKET_NAME || !R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY) {
-        return res.status(500).json({ message: "Cloudflare R2 is not configured on the server." });
+      if (!assertR2Configured(res) || !R2_BUCKET_NAME) {
+        return res
+          .status(500)
+          .json({ message: "Cloudflare R2 is not configured on the server." });
       }
 
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-      const { title, artist = "Great Light", album, track_number, is_premium = "true" } =
-        req.body;
+      const coverFile = files?.cover?.[0];
+      const trackFiles = files?.tracks || [];
 
-      if (!title || !album || !track_number || !files?.audio?.[0]) {
+      const {
+        album_title,
+        artist = "Great Light",
+        album_is_premium = "true",
+        track_titles,
+        track_numbers,
+        track_is_premium,
+      } = req.body;
+
+      if (!album_title || !coverFile || trackFiles.length === 0) {
+        return res.status(400).json({
+          message: "Missing required fields: album_title, cover, and at least 1 track file.",
+        });
+      }
+
+      const parsedTitles = safeJson<string[]>(track_titles);
+      const parsedNumbers = safeJson<number[]>(track_numbers);
+      const parsedPremiumOverrides = safeJson<(boolean | null | undefined)[]>(track_is_premium);
+
+      // 1) Upload cover to R2
+      const safeCoverName = coverFile.originalname.replace(/[^\w.\-]/g, "_");
+      const coverKey = `covers/${Date.now()}_${safeCoverName}`;
+
+      await r2!.send(
+        new PutObjectCommand({
+          Bucket: R2_BUCKET_NAME,
+          Key: coverKey,
+          Body: coverFile.buffer,
+          ContentType: coverFile.mimetype || "image/jpeg",
+        })
+      );
+
+      const coverUrl = R2_PUBLIC_DOMAIN
+        ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${coverKey}`
+        : "";
+
+      // 2) Create (or reuse) album
+      const albumDoc = await MusicAlbumModel.findOneAndUpdate(
+        { title: String(album_title).trim(), artist: String(artist).trim() },
+        {
+          $setOnInsert: {
+            title: String(album_title).trim(),
+            artist: String(artist).trim(),
+          },
+          $set: {
+            album_is_premium: album_is_premium === "true" || album_is_premium === true,
+            cover_url: coverUrl,
+            cover_path: coverKey,
+            status: "active",
+          },
+        },
+        { new: true, upsert: true }
+      );
+
+      // 3) Upload each track + create Track docs
+      const createdTracks: any[] = [];
+
+      const sortedTrackFiles = [...trackFiles].sort((a, b) =>
+        a.originalname.localeCompare(b.originalname)
+      );
+
+      for (let i = 0; i < sortedTrackFiles.length; i++) {
+        const f = sortedTrackFiles[i];
+
+        const safeAudioName = f.originalname.replace(/[^\w.\-]/g, "_");
+        const audioKey = `audio/${Date.now()}_${i + 1}_${safeAudioName}`;
+
+        await r2!.send(
+          new PutObjectCommand({
+            Bucket: R2_BUCKET_NAME,
+            Key: audioKey,
+            Body: f.buffer,
+            ContentType: f.mimetype || "audio/mpeg",
+          })
+        );
+
+        const audioUrl = R2_PUBLIC_DOMAIN
+          ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${audioKey}`
+          : "";
+
+        const title = parsedTitles?.[i] || f.originalname.replace(/\.[^/.]+$/, "");
+        const trackNumber = parsedNumbers?.[i] ?? i + 1;
+
+        const overridePremium = parsedPremiumOverrides?.[i];
+
+        const trackDoc = new MusicTrackModel({
+          albumId: albumDoc._id,
+          title,
+          track_number: Number(trackNumber),
+          track_is_premium: typeof overridePremium === "boolean" ? overridePremium : undefined,
+          audio_url: audioUrl,
+          bunny_path: audioKey,
+          status: "active",
+        });
+
+        await trackDoc.save();
+        createdTracks.push(trackDoc);
+      }
+
+      return res.status(201).json({
+        message: "Album uploaded successfully",
+        album: albumDoc,
+        tracks: createdTracks,
+      });
+    } catch (err: any) {
+      console.error("Album upload error:", err);
+      if (err?.code === 11000) {
+        return res.status(409).json({
+          message:
+            "Duplicate detected (album title+artist or track number). Check your album/track numbering.",
+          error: err.message,
+        });
+      }
+      return res.status(500).json({ message: "Failed to upload album", error: err.message });
+    }
+  }
+);
+
+/**
+ * GET /api/albums (Admin)
+ * List albums for dropdown.
+ */
+app.get("/api/albums", requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const albums = await MusicAlbumModel.find({ status: { $ne: "archived" } })
+      .sort({ createdAt: -1 })
+      .select("_id title artist album_is_premium cover_url status createdAt")
+      .lean();
+
+    return res.json({ albums });
+  } catch (err: any) {
+    console.error("List albums error:", err);
+    return res.status(500).json({ message: "Failed to list albums", error: err.message });
+  }
+});
+
+/**
+ * GET /api/albums/:albumId (Admin)
+ * Fetch album + tracks (useful for CMS).
+ */
+app.get("/api/albums/:albumId", requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const { albumId } = req.params;
+
+    const album = await MusicAlbumModel.findById(albumId).lean();
+    if (!album) return res.status(404).json({ message: "Album not found" });
+
+    const tracks = await MusicTrackModel.find({ albumId, status: { $ne: "archived" } })
+      .sort({ track_number: 1 })
+      .lean();
+
+    return res.json({ album, tracks });
+  } catch (err: any) {
+    console.error("Get album error:", err);
+    return res.status(500).json({ message: "Failed to fetch album", error: err.message });
+  }
+});
+
+/**
+ * GET /api/albums/:albumId/tracks (Admin)
+ * Tracks only (handy for dropdown + track list).
+ */
+app.get(
+  "/api/albums/:albumId/tracks",
+  requireAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      const { albumId } = req.params;
+
+      const tracks = await MusicTrackModel.find({ albumId, status: { $ne: "archived" } })
+        .sort({ track_number: 1 })
+        .select("_id title track_number track_is_premium audio_url bunny_path status createdAt")
+        .lean();
+
+      return res.json({ tracks });
+    } catch (err: any) {
+      console.error("List tracks error:", err);
+      return res.status(500).json({ message: "Failed to list tracks", error: err.message });
+    }
+  }
+);
+
+/**
+ * GET /api/albums/:albumId/tracks/next-number (Admin)
+ * Convenience endpoint for your "Add track later" UX.
+ */
+app.get(
+  "/api/albums/:albumId/tracks/next-number",
+  requireAdmin,
+  async (req: Request, res: Response) => {
+    try {
+      const { albumId } = req.params;
+
+      const last = await MusicTrackModel.findOne({ albumId })
+        .sort({ track_number: -1 })
+        .select("track_number")
+        .lean();
+
+      const nextNumber = (last?.track_number ?? 0) + 1;
+      return res.json({ nextNumber });
+    } catch (err: any) {
+      console.error("Next track number error:", err);
+      return res.status(500).json({ message: "Failed to get next number", error: err.message });
+    }
+  }
+);
+
+/**
+ * POST /api/albums/:albumId/tracks (Admin)
+ * Add a new track later to an existing album.
+ */
+app.post(
+  "/api/albums/:albumId/tracks",
+  requireAdmin,
+  upload.single("audio"),
+  async (req: Request, res: Response) => {
+    try {
+      if (!assertR2Configured(res) || !R2_BUCKET_NAME) {
+        return res
+          .status(500)
+          .json({ message: "Cloudflare R2 is not configured on the server." });
+      }
+
+      const { albumId } = req.params;
+      const { title, track_number, track_is_premium } = req.body;
+      const audioFile = req.file;
+
+      if (!title || !track_number || !audioFile) {
         return res.status(400).json({ message: "Missing required fields or audio file" });
       }
 
-      const audioFile = files.audio[0];
+      const album = await MusicAlbumModel.findById(albumId);
+      if (!album) return res.status(404).json({ message: "Album not found" });
+
       const safeAudioName = audioFile.originalname.replace(/[^\w.\-]/g, "_");
       const audioKey = `audio/${Date.now()}_${safeAudioName}`;
 
-      await r2.send(
+      await r2!.send(
         new PutObjectCommand({
           Bucket: R2_BUCKET_NAME,
           Key: audioKey,
@@ -321,67 +574,52 @@ app.post(
         })
       );
 
-      let coverUrl = "";
-      let coverKey = "";
-
-      if (files.cover?.[0]) {
-        const coverFile = files.cover[0];
-        const safeCoverName = coverFile.originalname.replace(/[^\w.\-]/g, "_");
-        coverKey = `covers/${Date.now()}_${safeCoverName}`;
-
-        await r2.send(
-          new PutObjectCommand({
-            Bucket: R2_BUCKET_NAME,
-            Key: coverKey,
-            Body: coverFile.buffer,
-            ContentType: coverFile.mimetype || "image/jpeg",
-          })
-        );
-
-        coverUrl =
-          R2_PUBLIC_DOMAIN
-            ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${coverKey}`
-            : "";
-      }
-
-      const audioUrl =
-        R2_PUBLIC_DOMAIN
-          ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${audioKey}`
-          : "";
+      const audioUrl = R2_PUBLIC_DOMAIN
+        ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${audioKey}`
+        : "";
 
       const track = new MusicTrackModel({
-        title,
-        artist,
-        album,
+        albumId: album._id,
+        title: String(title),
         track_number: parseInt(track_number, 10),
-        is_premium: is_premium === "true" || is_premium === true,
-        cover_url: coverUrl,
+        track_is_premium:
+          track_is_premium === undefined
+            ? undefined
+            : track_is_premium === "true" || track_is_premium === true,
         audio_url: audioUrl,
         bunny_path: audioKey,
+        status: "active",
       });
 
       await track.save();
 
-      return res.status(201).json({ message: "Track saved successfully", track });
+      return res.status(201).json({ message: "Track added successfully", track });
     } catch (err: any) {
-      console.error("Music upload error:", err);
-      return res.status(500).json({ message: "Failed to save track", error: err.message });
+      console.error("Add track error:", err);
+      if (err?.code === 11000) {
+        return res.status(409).json({
+          message: "Track number already exists for this album.",
+          error: err.message,
+        });
+      }
+      return res.status(500).json({ message: "Failed to add track", error: err.message });
     }
   }
 );
 
 /**
  * GET /api/music/signed-url/:trackId
- * ✅ Admin-only for now (prevents public access).
- * Later you’ll create /api/app/music/signed-url/:trackId that checks Apple/Google entitlements.
+ * Admin-only for now.
  */
 app.get(
   "/api/music/signed-url/:trackId",
   requireAdmin,
   async (req: Request, res: Response) => {
     try {
-      if (!R2_BUCKET_NAME || !R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY) {
-        return res.status(500).json({ message: "Cloudflare R2 is not configured on the server." });
+      if (!assertR2Configured(res) || !R2_BUCKET_NAME) {
+        return res
+          .status(500)
+          .json({ message: "Cloudflare R2 is not configured on the server." });
       }
 
       const trackId = req.params.trackId;
@@ -393,8 +631,7 @@ app.get(
         Key: track.bunny_path,
       });
 
-      // Shorter TTL is safer while you test
-      const signedUrl = await getSignedUrl(r2, command, { expiresIn: 3600 }); // 1 hour
+      const signedUrl = await getSignedUrl(r2!, command, { expiresIn: 3600 });
       return res.json({ signedUrl });
     } catch (err: any) {
       console.error("Signed URL error:", err);
