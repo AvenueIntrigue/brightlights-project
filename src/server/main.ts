@@ -133,17 +133,23 @@ function assertR2Configured(res: Response): res is Response {
  */
 const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!authHeader?.startsWith("Bearer ")) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  const token = authHeader.split(" ")[1];
+  const token = authHeader.slice("Bearer ".length);
 
   try {
     const claims = await clerkClient.verifyToken(token);
-    const metadata = claims.publicMetadata as ClerkPublicMetadata | undefined;
 
-    if (metadata?.role !== "Admin") {
+    // userId is usually in claims.sub
+    const userId = (claims as any).sub;
+    if (!userId) return res.status(401).json({ message: "Invalid token" });
+
+    const user = await clerkClient.users.getUser(userId);
+    const role = (user.publicMetadata as any)?.role;
+
+    if (role !== "Admin") {
       return res.status(403).json({ message: "Forbidden" });
     }
 
