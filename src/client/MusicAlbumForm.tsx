@@ -61,7 +61,9 @@ const MusicAlbumForm: React.FC = () => {
   };
 
   const updateTrack = (idx: number, patch: Partial<TrackRow>) => {
-    setTracks((prev) => prev.map((t, i) => (i === idx ? { ...t, ...patch } : t)));
+    setTracks((prev) =>
+      prev.map((t, i) => (i === idx ? { ...t, ...patch } : t)),
+    );
   };
 
   const removeTrack = (idx: number) => {
@@ -91,9 +93,21 @@ const MusicAlbumForm: React.FC = () => {
       return;
     }
 
-    const token = await getToken();
+    if (!isLoaded || !isSignedIn) {
+      setError("You must be signed in.");
+      return;
+    }
+
+    const token = await getToken({ skipCache: true });
+
     if (!token) {
-      setError("Could not get an auth token. Please sign out/in and try again.");
+      setError("Failed to get auth token.");
+      return;
+    }
+    if (!token) {
+      setError(
+        "Could not get an auth token. Please sign out/in and try again.",
+      );
       return;
     }
 
@@ -108,8 +122,14 @@ const MusicAlbumForm: React.FC = () => {
 
       tracks.forEach((t) => payload.append("tracks", t.file));
 
-      payload.append("track_titles", JSON.stringify(tracks.map((t) => t.title)));
-      payload.append("track_numbers", JSON.stringify(tracks.map((t) => t.trackNumber)));
+      payload.append(
+        "track_titles",
+        JSON.stringify(tracks.map((t) => t.title)),
+      );
+      payload.append(
+        "track_numbers",
+        JSON.stringify(tracks.map((t) => t.trackNumber)),
+      );
 
       const premiumArray = tracks.map((t) => {
         if (t.premiumOverride === "inherit") return null;
@@ -125,7 +145,7 @@ const MusicAlbumForm: React.FC = () => {
       });
 
       setSuccess(
-        `Album uploaded: ${res.data.album?.title ?? albumTitle} (${res.data.tracks?.length ?? tracks.length} tracks)`
+        `Album uploaded: ${res.data.album?.title ?? albumTitle} (${res.data.tracks?.length ?? tracks.length} tracks)`,
       );
 
       setAlbumTitle("");
@@ -135,7 +155,10 @@ const MusicAlbumForm: React.FC = () => {
       setTracks([]);
     } catch (err: any) {
       console.error(err);
-      setError(err.response?.data?.message || `Upload failed (${err.response?.status || "unknown"})`);
+      setError(
+        err.response?.data?.message ||
+          `Upload failed (${err.response?.status || "unknown"})`,
+      );
     } finally {
       setLoading(false);
     }
@@ -145,22 +168,32 @@ const MusicAlbumForm: React.FC = () => {
     <div className="create-grandpa mx-auto max-w-4xl p-6">
       <form className="create-form space-y-6" onSubmit={handleSubmit}>
         <div className="create-form-container text-center">
-          <h1 className="create-form-box-text text-3xl font-bold">Upload Album</h1>
+          <h1 className="create-form-box-text text-3xl font-bold">
+            Upload Album
+          </h1>
         </div>
 
         {success && (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded" role="alert">
+          <div
+            className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded"
+            role="alert"
+          >
             {success}
           </div>
         )}
         {error && (
-          <div className="bg-red-100 border border-green-400 text-red-700 px-4 py-3 rounded" role="alert">
+          <div
+            className="bg-red-100 border border-green-400 text-red-700 px-4 py-3 rounded"
+            role="alert"
+          >
             {error}
           </div>
         )}
 
         <div>
-          <label className="create-label block text-lg font-medium mb-2">Album Title</label>
+          <label className="create-label block text-lg font-medium mb-2">
+            Album Title
+          </label>
           <input
             className="create-input-field w-full h-12 px-4 border rounded bg-white text-gray-900"
             value={albumTitle}
@@ -170,7 +203,9 @@ const MusicAlbumForm: React.FC = () => {
         </div>
 
         <div>
-          <label className="create-label block text-lg font-medium mb-2">Artist</label>
+          <label className="create-label block text-lg font-medium mb-2">
+            Artist
+          </label>
           <input
             className="create-input-field w-full h-12 px-4 border rounded bg-white text-gray-900"
             value={artist}
@@ -191,23 +226,48 @@ const MusicAlbumForm: React.FC = () => {
         </div>
 
         <div>
-          <label className="create-label block text-lg font-medium mb-2">Album Cover (required)</label>
-          <input type="file" accept="image/*" onChange={handlePickCover} className="create-input-field w-full" required />
-          {coverFile && <div className="text-sm mt-2">Selected: {coverFile.name}</div>}
+          <label className="create-label block text-lg font-medium mb-2">
+            Album Cover (required)
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handlePickCover}
+            className="create-input-field w-full"
+            required
+          />
+          {coverFile && (
+            <div className="text-sm mt-2">Selected: {coverFile.name}</div>
+          )}
         </div>
 
         <div>
-          <label className="create-label block text-lg font-medium mb-2">Tracks (select multiple audio files)</label>
-          <input type="file" accept="audio/*" multiple onChange={handlePickTracks} className="create-input-field w-full" />
+          <label className="create-label block text-lg font-medium mb-2">
+            Tracks (select multiple audio files)
+          </label>
+          <input
+            type="file"
+            accept="audio/*"
+            multiple
+            onChange={handlePickTracks}
+            className="create-input-field w-full"
+          />
 
           {tracks.length > 0 && (
             <div className="mt-4 space-y-3">
-              <button type="button" onClick={renumber} className="px-3 py-2 border rounded">
+              <button
+                type="button"
+                onClick={renumber}
+                className="px-3 py-2 border rounded"
+              >
                 Renumber 1..N
               </button>
 
               {tracks.map((t, idx) => (
-                <div key={`${t.file.name}-${idx}`} className="p-3 border rounded bg-white">
+                <div
+                  key={`${t.file.name}-${idx}`}
+                  className="p-3 border rounded bg-white"
+                >
                   <div className="text-sm mb-2">
                     <strong>File:</strong> {t.file.name}
                   </div>
@@ -218,7 +278,9 @@ const MusicAlbumForm: React.FC = () => {
                       <input
                         className="create-input-field w-full h-10 px-3 border rounded bg-white"
                         value={t.title}
-                        onChange={(e) => updateTrack(idx, { title: e.target.value })}
+                        onChange={(e) =>
+                          updateTrack(idx, { title: e.target.value })
+                        }
                       />
                     </div>
 
@@ -229,17 +291,26 @@ const MusicAlbumForm: React.FC = () => {
                         min={1}
                         className="create-input-field w-full h-10 px-3 border rounded bg-white"
                         value={t.trackNumber}
-                        onChange={(e) => updateTrack(idx, { trackNumber: Number(e.target.value) })}
+                        onChange={(e) =>
+                          updateTrack(idx, {
+                            trackNumber: Number(e.target.value),
+                          })
+                        }
                       />
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium">Premium Override</label>
+                      <label className="text-sm font-medium">
+                        Premium Override
+                      </label>
                       <select
                         className="create-input-field w-full h-10 px-3 border rounded bg-white"
                         value={t.premiumOverride}
                         onChange={(e) =>
-                          updateTrack(idx, { premiumOverride: e.target.value as TrackRow["premiumOverride"] })
+                          updateTrack(idx, {
+                            premiumOverride: e.target
+                              .value as TrackRow["premiumOverride"],
+                          })
                         }
                       >
                         <option value="inherit">Inherit album</option>
@@ -250,7 +321,11 @@ const MusicAlbumForm: React.FC = () => {
                   </div>
 
                   <div className="mt-3">
-                    <button type="button" onClick={() => removeTrack(idx)} className="px-3 py-2 border rounded">
+                    <button
+                      type="button"
+                      onClick={() => removeTrack(idx)}
+                      className="px-3 py-2 border rounded"
+                    >
                       Remove Track
                     </button>
                   </div>

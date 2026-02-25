@@ -35,7 +35,7 @@ const AddTrackToAlbumForm: React.FC = () => {
 
   const selectedAlbum = useMemo(
     () => albums.find((a) => a._id === selectedAlbumId),
-    [albums, selectedAlbumId]
+    [albums, selectedAlbumId],
   );
 
   const canSubmit = useMemo(() => {
@@ -62,7 +62,7 @@ const AddTrackToAlbumForm: React.FC = () => {
       try {
         setLoadingAlbums(true);
 
-        const token = await getToken();
+        const token = await getToken({ skipCache: true });
         if (!token) {
           setError("Could not get auth token. Try signing out/in.");
           return;
@@ -110,7 +110,17 @@ const AddTrackToAlbumForm: React.FC = () => {
     try {
       setSubmitting(true);
 
-      const token = await getToken();
+      if (!isLoaded) {
+        setError("Auth still loading.");
+        return;
+      }
+
+      const token = await getToken({ skipCache: true });
+
+      if (!token) {
+        setError("You must be signed in.");
+        return;
+      }
       if (!token) {
         setError("Could not get auth token. Try signing out/in.");
         return;
@@ -122,7 +132,10 @@ const AddTrackToAlbumForm: React.FC = () => {
 
       // Only send track_is_premium if overriding
       if (premiumOverride !== "inherit") {
-        payload.append("track_is_premium", String(premiumOverride === "premium"));
+        payload.append(
+          "track_is_premium",
+          String(premiumOverride === "premium"),
+        );
       }
 
       payload.append("audio", audioFile!);
@@ -135,7 +148,7 @@ const AddTrackToAlbumForm: React.FC = () => {
             Authorization: `Bearer ${token}`,
             // don't set Content-Type; axios will set the boundary correctly
           },
-        }
+        },
       );
 
       setSuccess(`Track added: ${res.data?.track?.title ?? title.trim()}`);
@@ -298,8 +311,10 @@ const AddTrackToAlbumForm: React.FC = () => {
           {selectedAlbum ? (
             <div className="text-sm mt-2 text-gray-600">
               Album default is{" "}
-              <strong>{selectedAlbum.album_is_premium ? "Premium" : "Free"}</strong>.
-              This override only applies to this track.
+              <strong>
+                {selectedAlbum.album_is_premium ? "Premium" : "Free"}
+              </strong>
+              . This override only applies to this track.
             </div>
           ) : null}
         </div>
