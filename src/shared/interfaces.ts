@@ -1,6 +1,10 @@
 import mongoose, { Schema, Document } from "mongoose";
 
-// Category
+/**
+ * =========================
+ * Category
+ * =========================
+ */
 export interface Category extends Document {
   _id: mongoose.Types.ObjectId;
   name: string;
@@ -10,7 +14,11 @@ const CategorySchema: Schema = new Schema({
 });
 const CategoryModel = mongoose.model<Category>("Category", CategorySchema);
 
-// BlogPost
+/**
+ * =========================
+ * BlogPost
+ * =========================
+ */
 export interface BlogPost extends Document {
   _id: mongoose.Types.ObjectId;
   title: string;
@@ -35,7 +43,11 @@ const BlogPostSchema: Schema<BlogPost> = new Schema({
 });
 const BlogPostModel = mongoose.model<BlogPost>("BlogPost", BlogPostSchema);
 
-// Container Content Interfaces
+/**
+ * =========================
+ * Container Content
+ * =========================
+ */
 export interface TopContainerContent extends Document {
   _id: mongoose.Types.ObjectId;
   image: string;
@@ -83,6 +95,10 @@ export interface BulletContainerAboutUs extends Document {
 const BulletContainerAboutUsSchema: Schema<BulletContainerAboutUs> = new Schema({
   aboutUs: { type: String, required: true },
 });
+const BulletContainerAboutUsModel = mongoose.model<BulletContainerAboutUs>(
+  "bulletcontaineraboutus",
+  BulletContainerAboutUsSchema
+);
 
 export interface BulletContainerContent extends Document {
   _id: mongoose.Types.ObjectId;
@@ -99,10 +115,6 @@ const BulletContainerContentSchema: Schema<BulletContainerContent> = new Schema(
   description: { type: String, required: true },
   keywords: { type: [String], required: true },
 });
-const BulletContainerAboutUsModel = mongoose.model<BulletContainerAboutUs>(
-  "bulletcontaineraboutus",
-  BulletContainerAboutUsSchema
-);
 const BulletContainerContentModel = mongoose.model<BulletContainerContent>(
   "bulletcontainercontents",
   BulletContainerContentSchema
@@ -128,6 +140,11 @@ const web3ContainerContentModel = mongoose.model<web3ContainerContent>(
   web3ContainerContentSchema
 );
 
+/**
+ * =========================
+ * Marketing Consent
+ * =========================
+ */
 export interface marketingConsentContent extends Document {
   _id: mongoose.Types.ObjectId;
   email: string;
@@ -158,7 +175,11 @@ const marketingConsentContentModel = mongoose.model<marketingConsentContent>(
   marketingConsentSchema
 );
 
-// Lesson Schema
+/**
+ * =========================
+ * Lessons
+ * =========================
+ */
 export interface Lesson extends Document {
   topic: string;
   title: string;
@@ -188,21 +209,31 @@ const lessonSchema: Schema<Lesson> = new Schema(
   },
   { timestamps: true }
 );
+
+// Useful: speed up topic/order lookups
+lessonSchema.index({ topic: 1, order: 1 }, { unique: true });
+
 const LessonsModel = mongoose.model<Lesson>("Lesson", lessonSchema);
 
-// =========================
-// Music Album + Track Schema
-// =========================
-
+/**
+ * =========================
+ * Music Album + Track
+ * =========================
+ */
 export type MusicStatus = "active" | "draft" | "archived";
 
-// Album Schema (1 cover per album)
+/**
+ * Album Schema (1 cover per album)
+ */
 export interface MusicAlbum extends Document {
   title: string;
   artist: string;
-  album_is_premium: boolean; // default premium state for tracks
-  cover_url: string; // optional public URL (or empty if private)
-  cover_path: string; // R2 key for cover (recommended)
+  album_is_premium: boolean;
+
+  // Cover
+  cover_url: string; // optional public URL if you choose
+  cover_path: string; // R2 key (source of truth)
+
   status?: MusicStatus;
 }
 
@@ -213,7 +244,7 @@ const musicAlbumSchema: Schema<MusicAlbum> = new Schema(
     album_is_premium: { type: Boolean, default: true },
 
     cover_url: { type: String, default: "" },
-    cover_path: { type: String, required: true, default: "" },
+    cover_path: { type: String, default: "" }, // allow empty if you ever backfill old albums
 
     status: {
       type: String,
@@ -224,43 +255,61 @@ const musicAlbumSchema: Schema<MusicAlbum> = new Schema(
   { timestamps: true, collection: "musicalbums" }
 );
 
-// Helpful uniqueness: one artist+title album
+// One album per artist+title
 musicAlbumSchema.index({ title: 1, artist: 1 }, { unique: true });
-// Helpful listing index
+// Admin list sorting
 musicAlbumSchema.index({ status: 1, createdAt: -1 });
 
 const MusicAlbumModel = mongoose.model<MusicAlbum>("MusicAlbum", musicAlbumSchema);
 
-// Track Schema
+/**
+ * Track Schema
+ *
+ * IMPORTANT:
+ * - *_path fields are the truth (R2 object keys)
+ * - *_url fields are optional (public URL if you use a public domain)
+ * - For secure streaming, you’ll typically ignore *_url and return signed URLs from the server.
+ */
 export interface MusicTrack extends Document {
-  albumId: mongoose.Types.ObjectId; // reference to MusicAlbum
+  albumId: mongoose.Types.ObjectId;
 
   title: string;
   track_number: number;
   duration_seconds?: number;
 
-  // Override: if set, it overrides album_is_premium. If not set, inherit.
+  // undefined => inherit album_is_premium
   track_is_premium?: boolean;
 
-  audio_url: string; // optional public URL (or empty if private)
-  bunny_path: string; // R2 key (rename later if desired)
+  // Streaming assets
+  stream_mp3_url: string;
+  stream_mp3_path: string;
+
+  stream_m4a_url: string;
+  stream_m4a_path: string;
+
+  // Master asset (never stream)
+  master_wav_path: string;
 
   status?: MusicStatus;
 }
 
 const musicTrackSchema: Schema<MusicTrack> = new Schema(
   {
-    albumId: { type: Schema.Types.ObjectId, ref: "MusicAlbum", required: true, index: true },
+    albumId: { type: Schema.Types.ObjectId, ref: "MusicAlbum", required: true },
 
     title: { type: String, required: true, trim: true },
     track_number: { type: Number, required: true, min: 1 },
     duration_seconds: Number,
 
-    // undefined means "inherit"
     track_is_premium: { type: Boolean, required: false },
 
-    audio_url: { type: String, default: "" },
-    bunny_path: { type: String, required: true },
+    stream_mp3_url: { type: String, default: "" },
+    stream_mp3_path: { type: String, required: true },
+
+    stream_m4a_url: { type: String, default: "" },
+    stream_m4a_path: { type: String, required: true },
+
+    master_wav_path: { type: String, required: true },
 
     status: {
       type: String,
@@ -271,14 +320,18 @@ const musicTrackSchema: Schema<MusicTrack> = new Schema(
   { timestamps: true, collection: "musictracks" }
 );
 
-// Prevent duplicate track numbers within the same album
+// Prevent duplicate track numbers per album
 musicTrackSchema.index({ albumId: 1, track_number: 1 }, { unique: true });
-// Helpful listing index
-musicTrackSchema.index({ status: 1, createdAt: -1 });
+// Helpful for “list tracks for album in order”
+musicTrackSchema.index({ albumId: 1, track_number: 1 });
 
 const MusicTrackModel = mongoose.model<MusicTrack>("MusicTrack", musicTrackSchema);
 
-// Post Interface (Generic for All Post Types)
+/**
+ * =========================
+ * Generic Posts
+ * =========================
+ */
 export interface Post extends Document {
   _id: mongoose.Types.ObjectId;
   title: string;
@@ -288,6 +341,7 @@ export interface Post extends Document {
   keywords: string[];
   createdOn: Date;
 }
+
 const PostSchema = new Schema<Post>({
   title: { type: String, required: true },
   description: { type: String, required: true },
@@ -313,7 +367,11 @@ const Web3PostModel = mongoose.model<Post>("web3posts", PostSchema);
 const ProjectsPostModel = mongoose.model<Post>("projectsposts", PostSchema);
 const PortfolioPostModel = mongoose.model<Post>("portfolioposts", PostSchema);
 
-// Exports
+/**
+ * =========================
+ * Exports
+ * =========================
+ */
 export {
   BlogPostModel,
   TopContainerContentModel,
@@ -333,6 +391,6 @@ export {
   PortfolioPostModel,
   CategoryModel,
   LessonsModel,
-  MusicTrackModel,
   MusicAlbumModel,
+  MusicTrackModel,
 };

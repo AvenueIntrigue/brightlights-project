@@ -7,18 +7,14 @@ import dotenv from "dotenv";
 import cors from "cors";
 import multer from "multer";
 import { fileURLToPath } from "url";
+import crypto from "crypto";
 
-import {
-  S3Client,
-  GetObjectCommand,
-  PutObjectCommand,
-} from "@aws-sdk/client-s3";
+import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import { clerkClient } from "@clerk/clerk-sdk-node";
 import { ClerkPublicMetadata } from "shared/clerk-types.js";
 
-// Import your models
 import {
   PricingPostModel,
   AboutPostModel,
@@ -57,15 +53,11 @@ const uri = rawUri.startsWith("MONGODB_URI=")
   : rawUri;
 
 /**
- * ✅ Encryption key
- * IMPORTANT: Do NOT generate keys at runtime in production.
- * If missing, crash so you notice immediately.
+ * ✅ Encryption key (keep if you use it elsewhere)
  */
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
-  throw new Error(
-    "ENCRYPTION_KEY must be set and be 32 characters long (hex or plain)."
-  );
+  throw new Error("ENCRYPTION_KEY must be set and be 32 characters long.");
 }
 
 const dailyTopics = [
@@ -100,7 +92,7 @@ const dailyTopics = [
 const app = express();
 
 /**
- * ✅ Cloudflare R2 env vars (fail-fast on music endpoints)
+ * ✅ Cloudflare R2 env vars
  */
 const R2_ACCOUNT_ID = process.env.CLOUDFLARE_R2_ACCOUNT_ID;
 const R2_ACCESS_KEY_ID = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID;
@@ -108,7 +100,6 @@ const R2_SECRET_ACCESS_KEY = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY;
 const R2_BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME;
 const R2_PUBLIC_DOMAIN = process.env.CLOUDFLARE_R2_PUBLIC_DOMAIN;
 
-// Only build client when config exists (cleaner + avoids undefined endpoint)
 const r2 =
   R2_ACCOUNT_ID && R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY
     ? new S3Client({
@@ -121,15 +112,12 @@ const r2 =
       })
     : null;
 
-function assertR2Configured(res: Response): res is Response {
-  if (!r2 || !R2_BUCKET_NAME || !R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY) {
-    return false;
-  }
-  return true;
+function isR2Configured() {
+  return !!(r2 && R2_BUCKET_NAME && R2_ACCOUNT_ID && R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY);
 }
 
 /**
- * ✅ Auth middleware (Admin-only)
+ * ✅ Admin auth middleware
  */
 const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
@@ -141,8 +129,6 @@ const requireAdmin = async (req: Request, res: Response, next: NextFunction) => 
 
   try {
     const claims = await clerkClient.verifyToken(token);
-
-    // userId is usually in claims.sub
     const userId = (claims as any).sub;
     if (!userId) return res.status(401).json({ message: "Invalid token" });
 
@@ -191,11 +177,11 @@ app.use(bodyParser.json({ limit: "50mb" }));
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
 
 /**
- * ✅ Multer memory storage so file.buffer exists
+ * ✅ Multer memory storage
  */
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+  limits: { fileSize: 200 * 1024 * 1024 }, // 200MB (albums add up)
 });
 
 /**
@@ -207,7 +193,7 @@ app.get("/api/health", (req, res) => {
 
 /**
  * =========================
- * LESSONS ROUTES
+ * LESSONS
  * =========================
  */
 
@@ -227,18 +213,14 @@ app.get("/api/lessons/:topic/:order", async (req: Request, res: Response) => {
   try {
     const lesson = await LessonsModel.findOne({ topic, order: orderNum });
     if (lesson) return res.json(lesson);
-    return res
-      .status(404)
-      .json({ message: `Lesson not found for ${topic} order ${order}` });
+    return res.status(404).json({ message: `Lesson not found for ${topic} order ${order}` });
   } catch (error: any) {
     console.error(`Error fetching lesson ${topic}/${order}: ${error.message}`);
-    return res
-      .status(500)
-      .json({ message: "Error fetching lesson", error: error.message });
+    return res.status(500).json({ message: "Error fetching lesson", error: error.message });
   }
 });
 
-// POST /api/lessons (Admin write)
+// POST /api/lessons (admin write)
 app.post("/api/lessons", requireAdmin, async (req: Request, res: Response) => {
   try {
     const { topic, title, scripture, reflection, action_item, prayer } = req.body;
@@ -298,7 +280,7 @@ app.post("/api/lessons", requireAdmin, async (req: Request, res: Response) => {
 
 /**
  * =========================
- * MUSIC ROUTES (Admin CMS)
+ * MUSIC (Admin CMS)
  * =========================
  */
 
@@ -311,9 +293,23 @@ function safeJson<T>(value: any): T | undefined {
   }
 }
 
+function sanitizeName(name: string) {
+  return name.replace(/[^\w.\-]/g, "_");
+}
+
+function makeUploadId() {
+  return crypto.randomBytes(16).toString("hex");
+}
+
 /**
  * POST /api/albums (Admin)
- * Uploads cover + multiple tracks in one shot.
+ * - cover (required)
+ * - tracks (required, multiple)
+ *
+ * Current implementation:
+ * - stores tracks as MP3 streaming assets (stream_mp3_path/url)
+ * - leaves stream_m4a_* empty
+ * - leaves master_wav_path empty (until you add a WAV master upload flow)
  */
 app.post(
   "/api/albums",
@@ -323,11 +319,11 @@ app.post(
     { name: "tracks", maxCount: 50 },
   ]),
   async (req: Request, res: Response) => {
+    const requestId = makeUploadId();
+
     try {
-      if (!assertR2Configured(res) || !R2_BUCKET_NAME) {
-        return res
-          .status(500)
-          .json({ message: "Cloudflare R2 is not configured on the server." });
+      if (!isR2Configured()) {
+        return res.status(500).json({ message: "Cloudflare R2 is not configured on the server." });
       }
 
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
@@ -353,13 +349,11 @@ app.post(
       const parsedNumbers = safeJson<number[]>(track_numbers);
       const parsedPremiumOverrides = safeJson<(boolean | null | undefined)[]>(track_is_premium);
 
-      // 1) Upload cover to R2
-      const safeCoverName = coverFile.originalname.replace(/[^\w.\-]/g, "_");
-      const coverKey = `covers/${Date.now()}_${safeCoverName}`;
-
+      // 1) Upload cover
+      const coverKey = `covers/${Date.now()}_${sanitizeName(coverFile.originalname)}`;
       await r2!.send(
         new PutObjectCommand({
-          Bucket: R2_BUCKET_NAME,
+          Bucket: R2_BUCKET_NAME!,
           Key: coverKey,
           Body: coverFile.buffer,
           ContentType: coverFile.mimetype || "image/jpeg",
@@ -370,7 +364,7 @@ app.post(
         ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${coverKey}`
         : "";
 
-      // 2) Create (or reuse) album
+      // 2) Create/reuse album doc
       const albumDoc = await MusicAlbumModel.findOneAndUpdate(
         { title: String(album_title).trim(), artist: String(artist).trim() },
         {
@@ -388,7 +382,7 @@ app.post(
         { new: true, upsert: true }
       );
 
-      // 3) Upload each track + create Track docs
+      // 3) Upload tracks + create track docs
       const createdTracks: any[] = [];
 
       const sortedTrackFiles = [...trackFiles].sort((a, b) =>
@@ -398,34 +392,42 @@ app.post(
       for (let i = 0; i < sortedTrackFiles.length; i++) {
         const f = sortedTrackFiles[i];
 
-        const safeAudioName = f.originalname.replace(/[^\w.\-]/g, "_");
-        const audioKey = `audio/${Date.now()}_${i + 1}_${safeAudioName}`;
+        // Basic “idiot proof” guard: if you upload the same album twice fast,
+        // keys won't collide, but you might create duplicate tracks.
+        // Your unique index (albumId+track_number) will block exact duplicates.
+        const safeAudioName = sanitizeName(f.originalname);
+        const mp3Key = `audio/mp3/${Date.now()}_${i + 1}_${safeAudioName}`;
 
         await r2!.send(
           new PutObjectCommand({
-            Bucket: R2_BUCKET_NAME,
-            Key: audioKey,
+            Bucket: R2_BUCKET_NAME!,
+            Key: mp3Key,
             Body: f.buffer,
             ContentType: f.mimetype || "audio/mpeg",
           })
         );
 
-        const audioUrl = R2_PUBLIC_DOMAIN
-          ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${audioKey}`
+        const mp3Url = R2_PUBLIC_DOMAIN
+          ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${mp3Key}`
           : "";
 
         const title = parsedTitles?.[i] || f.originalname.replace(/\.[^/.]+$/, "");
         const trackNumber = parsedNumbers?.[i] ?? i + 1;
-
         const overridePremium = parsedPremiumOverrides?.[i];
 
         const trackDoc = new MusicTrackModel({
           albumId: albumDoc._id,
-          title,
+          title: String(title),
           track_number: Number(trackNumber),
           track_is_premium: typeof overridePremium === "boolean" ? overridePremium : undefined,
-          audio_url: audioUrl,
-          bunny_path: audioKey,
+
+          // NEW SCHEMA FIELDS:
+          stream_mp3_url: mp3Url,
+          stream_mp3_path: mp3Key,
+          stream_m4a_url: "",
+          stream_m4a_path: "",
+          master_wav_path: "",
+
           status: "active",
         });
 
@@ -435,27 +437,31 @@ app.post(
 
       return res.status(201).json({
         message: "Album uploaded successfully",
+        requestId,
         album: albumDoc,
         tracks: createdTracks,
       });
     } catch (err: any) {
-      console.error("Album upload error:", err);
+      console.error("Album upload error:", { requestId, err });
+
       if (err?.code === 11000) {
         return res.status(409).json({
-          message:
-            "Duplicate detected (album title+artist or track number). Check your album/track numbering.",
+          message: "Duplicate detected (album title+artist or track number).",
+          requestId,
           error: err.message,
         });
       }
-      return res.status(500).json({ message: "Failed to upload album", error: err.message });
+
+      return res.status(500).json({
+        message: "Failed to upload album",
+        requestId,
+        error: err.message,
+      });
     }
   }
 );
 
-/**
- * GET /api/albums (Admin)
- * List albums for dropdown.
- */
+// GET /api/albums (Admin)
 app.get("/api/albums", requireAdmin, async (req: Request, res: Response) => {
   try {
     const albums = await MusicAlbumModel.find({ status: { $ne: "archived" } })
@@ -470,91 +476,15 @@ app.get("/api/albums", requireAdmin, async (req: Request, res: Response) => {
   }
 });
 
-/**
- * GET /api/albums/:albumId (Admin)
- * Fetch album + tracks (useful for CMS).
- */
-app.get("/api/albums/:albumId", requireAdmin, async (req: Request, res: Response) => {
-  try {
-    const { albumId } = req.params;
-
-    const album = await MusicAlbumModel.findById(albumId).lean();
-    if (!album) return res.status(404).json({ message: "Album not found" });
-
-    const tracks = await MusicTrackModel.find({ albumId, status: { $ne: "archived" } })
-      .sort({ track_number: 1 })
-      .lean();
-
-    return res.json({ album, tracks });
-  } catch (err: any) {
-    console.error("Get album error:", err);
-    return res.status(500).json({ message: "Failed to fetch album", error: err.message });
-  }
-});
-
-/**
- * GET /api/albums/:albumId/tracks (Admin)
- * Tracks only (handy for dropdown + track list).
- */
-app.get(
-  "/api/albums/:albumId/tracks",
-  requireAdmin,
-  async (req: Request, res: Response) => {
-    try {
-      const { albumId } = req.params;
-
-      const tracks = await MusicTrackModel.find({ albumId, status: { $ne: "archived" } })
-        .sort({ track_number: 1 })
-        .select("_id title track_number track_is_premium audio_url bunny_path status createdAt")
-        .lean();
-
-      return res.json({ tracks });
-    } catch (err: any) {
-      console.error("List tracks error:", err);
-      return res.status(500).json({ message: "Failed to list tracks", error: err.message });
-    }
-  }
-);
-
-/**
- * GET /api/albums/:albumId/tracks/next-number (Admin)
- * Convenience endpoint for your "Add track later" UX.
- */
-app.get(
-  "/api/albums/:albumId/tracks/next-number",
-  requireAdmin,
-  async (req: Request, res: Response) => {
-    try {
-      const { albumId } = req.params;
-
-      const last = await MusicTrackModel.findOne({ albumId })
-        .sort({ track_number: -1 })
-        .select("track_number")
-        .lean();
-
-      const nextNumber = (last?.track_number ?? 0) + 1;
-      return res.json({ nextNumber });
-    } catch (err: any) {
-      console.error("Next track number error:", err);
-      return res.status(500).json({ message: "Failed to get next number", error: err.message });
-    }
-  }
-);
-
-/**
- * POST /api/albums/:albumId/tracks (Admin)
- * Add a new track later to an existing album.
- */
+// POST /api/albums/:albumId/tracks (Admin)
 app.post(
   "/api/albums/:albumId/tracks",
   requireAdmin,
   upload.single("audio"),
   async (req: Request, res: Response) => {
     try {
-      if (!assertR2Configured(res) || !R2_BUCKET_NAME) {
-        return res
-          .status(500)
-          .json({ message: "Cloudflare R2 is not configured on the server." });
+      if (!isR2Configured()) {
+        return res.status(500).json({ message: "Cloudflare R2 is not configured on the server." });
       }
 
       const { albumId } = req.params;
@@ -568,32 +498,37 @@ app.post(
       const album = await MusicAlbumModel.findById(albumId);
       if (!album) return res.status(404).json({ message: "Album not found" });
 
-      const safeAudioName = audioFile.originalname.replace(/[^\w.\-]/g, "_");
-      const audioKey = `audio/${Date.now()}_${safeAudioName}`;
+      const mp3Key = `audio/mp3/${Date.now()}_${sanitizeName(audioFile.originalname)}`;
 
       await r2!.send(
         new PutObjectCommand({
-          Bucket: R2_BUCKET_NAME,
-          Key: audioKey,
+          Bucket: R2_BUCKET_NAME!,
+          Key: mp3Key,
           Body: audioFile.buffer,
           ContentType: audioFile.mimetype || "audio/mpeg",
         })
       );
 
-      const audioUrl = R2_PUBLIC_DOMAIN
-        ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${audioKey}`
+      const mp3Url = R2_PUBLIC_DOMAIN
+        ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${mp3Key}`
         : "";
 
       const track = new MusicTrackModel({
         albumId: album._id,
-        title: String(title),
+        title: String(title).trim(),
         track_number: parseInt(track_number, 10),
+
         track_is_premium:
           track_is_premium === undefined
             ? undefined
             : track_is_premium === "true" || track_is_premium === true,
-        audio_url: audioUrl,
-        bunny_path: audioKey,
+
+        stream_mp3_url: mp3Url,
+        stream_mp3_path: mp3Key,
+        stream_m4a_url: "",
+        stream_m4a_path: "",
+        master_wav_path: "",
+
         status: "active",
       });
 
@@ -613,42 +548,37 @@ app.post(
   }
 );
 
-/**
- * GET /api/music/signed-url/:trackId
- * Admin-only for now.
- */
-app.get(
-  "/api/music/signed-url/:trackId",
-  requireAdmin,
-  async (req: Request, res: Response) => {
-    try {
-      if (!assertR2Configured(res) || !R2_BUCKET_NAME) {
-        return res
-          .status(500)
-          .json({ message: "Cloudflare R2 is not configured on the server." });
-      }
-
-      const trackId = req.params.trackId;
-      const track = await MusicTrackModel.findById(trackId);
-      if (!track) return res.status(404).json({ message: "Track not found" });
-
-      const command = new GetObjectCommand({
-        Bucket: R2_BUCKET_NAME,
-        Key: track.bunny_path,
-      });
-
-      const signedUrl = await getSignedUrl(r2!, command, { expiresIn: 3600 });
-      return res.json({ signedUrl });
-    } catch (err: any) {
-      console.error("Signed URL error:", err);
-      return res.status(500).json({ message: "Failed to generate URL", error: err.message });
+// GET /api/music/signed-url/:trackId (Admin)
+app.get("/api/music/signed-url/:trackId", requireAdmin, async (req: Request, res: Response) => {
+  try {
+    if (!isR2Configured()) {
+      return res.status(500).json({ message: "Cloudflare R2 is not configured on the server." });
     }
+
+    const trackId = req.params.trackId;
+    const track = await MusicTrackModel.findById(trackId);
+    if (!track) return res.status(404).json({ message: "Track not found" });
+
+    // Prefer MP3 stream for now
+    const key = (track as any).stream_mp3_path;
+    if (!key) return res.status(400).json({ message: "Track has no stream_mp3_path yet." });
+
+    const command = new GetObjectCommand({
+      Bucket: R2_BUCKET_NAME!,
+      Key: key,
+    });
+
+    const signedUrl = await getSignedUrl(r2!, command, { expiresIn: 3600 });
+    return res.json({ signedUrl });
+  } catch (err: any) {
+    console.error("Signed URL error:", err);
+    return res.status(500).json({ message: "Failed to generate URL", error: err.message });
   }
-);
+});
 
 /**
  * =========================
- * POSTS ROUTES
+ * POSTS ROUTES (unchanged)
  * =========================
  */
 app.get("/api/:typeposts", async (req: Request, res: Response) => {
@@ -753,9 +683,6 @@ app.put("/api/:typeposts", requireAdmin, async (req, res) => {
 const distPath = path.join(__dirname, "../../dist");
 app.use(express.static(distPath));
 
-/**
- * ✅ SPA catch-all: DO NOT swallow /api/*
- */
 app.get("*", (req, res, next) => {
   if (req.path.startsWith("/api/")) return next();
   return res.sendFile(path.join(distPath, "index.html"));
