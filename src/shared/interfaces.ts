@@ -322,8 +322,7 @@ const musicTrackSchema: Schema<MusicTrack> = new Schema(
 
 // Prevent duplicate track numbers per album
 musicTrackSchema.index({ albumId: 1, track_number: 1 }, { unique: true });
-// Helpful for “list tracks for album in order”
-musicTrackSchema.index({ albumId: 1, track_number: 1 });
+
 
 const MusicTrackModel = mongoose.model<MusicTrack>("MusicTrack", musicTrackSchema);
 
