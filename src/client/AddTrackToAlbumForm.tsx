@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { Link, useLocation } from "react-router-dom";
-import { useSession } from "@clerk/clerk-react";
+import { useAuth } from "@clerk/clerk-react";
 import "./Create.css";
 
 type AlbumOption = {
@@ -14,15 +14,13 @@ type AlbumOption = {
 
 const AddTrackToAlbumForm: React.FC = () => {
   const location = useLocation();
-  const { session } = useSession();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
 
   const [albums, setAlbums] = useState<AlbumOption[]>([]);
   const [selectedAlbumId, setSelectedAlbumId] = useState("");
 
   const [title, setTitle] = useState("");
   const [trackNumber, setTrackNumber] = useState<number>(1);
-
-  // null = inherit album premium
   const [premiumOverride, setPremiumOverride] = useState<
     "inherit" | "premium" | "free"
   >("inherit");
@@ -37,7 +35,7 @@ const AddTrackToAlbumForm: React.FC = () => {
 
   const selectedAlbum = useMemo(
     () => albums.find((a) => a._id === selectedAlbumId),
-    [albums, selectedAlbumId],
+    [albums, selectedAlbumId]
   );
 
   const canSubmit = useMemo(() => {
@@ -49,15 +47,24 @@ const AddTrackToAlbumForm: React.FC = () => {
     );
   }, [selectedAlbumId, title, trackNumber, audioFile]);
 
+  // Load albums
   useEffect(() => {
     const fetchAlbums = async () => {
       setError(null);
-      setLoadingAlbums(true);
+      setSuccess(null);
+
+      if (!isLoaded) return;
+      if (!isSignedIn) {
+        setError("You must be signed in to load albums.");
+        return;
+      }
 
       try {
-        const token = await session?.getToken();
+        setLoadingAlbums(true);
+
+        const token = await getToken();
         if (!token) {
-          setError("You must be signed in to load albums.");
+          setError("Could not get auth token. Try signing out/in.");
           return;
         }
 
@@ -68,8 +75,10 @@ const AddTrackToAlbumForm: React.FC = () => {
         const list: AlbumOption[] = res.data?.albums || [];
         setAlbums(list);
 
-        // auto-select first album for convenience
-        if (list.length > 0) setSelectedAlbumId(list[0]._id);
+        // Auto-select first album if none selected
+        if (!selectedAlbumId && list.length > 0) {
+          setSelectedAlbumId(list[0]._id);
+        }
       } catch (err: any) {
         console.error(err);
         setError(err.response?.data?.message || "Failed to load albums");
@@ -79,7 +88,8 @@ const AddTrackToAlbumForm: React.FC = () => {
     };
 
     fetchAlbums();
-  }, [session]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getToken, isLoaded, isSignedIn]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,12 +101,18 @@ const AddTrackToAlbumForm: React.FC = () => {
       return;
     }
 
+    if (!isLoaded) return;
+    if (!isSignedIn) {
+      setError("You must be signed in to upload a track.");
+      return;
+    }
+
     try {
       setSubmitting(true);
 
-      const token = await session?.getToken();
+      const token = await getToken();
       if (!token) {
-        setError("You must be signed in to upload a track.");
+        setError("Could not get auth token. Try signing out/in.");
         return;
       }
 
@@ -104,27 +120,29 @@ const AddTrackToAlbumForm: React.FC = () => {
       payload.append("title", title.trim());
       payload.append("track_number", String(trackNumber));
 
+      // Only send track_is_premium if overriding
       if (premiumOverride !== "inherit") {
-        payload.append(
-          "track_is_premium",
-          String(premiumOverride === "premium"),
-        );
+        payload.append("track_is_premium", String(premiumOverride === "premium"));
       }
+
       payload.append("audio", audioFile!);
 
       const res = await axios.post(
         `/api/albums/${selectedAlbumId}/tracks`,
         payload,
         {
-          headers: { Authorization: `Bearer ${token}` },
-        },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            // don't set Content-Type; axios will set the boundary correctly
+          },
+        }
       );
 
       setSuccess(`Track added: ${res.data?.track?.title ?? title.trim()}`);
 
       // Reset for next add
       setTitle("");
-      setTrackNumber(trackNumber + 1);
+      setTrackNumber((n) => n + 1);
       setPremiumOverride("inherit");
       setAudioFile(null);
     } catch (err: any) {
@@ -161,6 +179,7 @@ const AddTrackToAlbumForm: React.FC = () => {
           Add Track
         </Link>
       </div>
+
       <form className="create-form space-y-6" onSubmit={handleSubmit}>
         <div className="create-form-container text-center">
           <h1 className="create-form-box-text text-3xl font-bold">
@@ -197,7 +216,9 @@ const AddTrackToAlbumForm: React.FC = () => {
             disabled={loadingAlbums || albums.length === 0}
           >
             {albums.length === 0 ? (
-              <option value="">No albums found</option>
+              <option value="">
+                {loadingAlbums ? "Loading albums..." : "No albums found"}
+              </option>
             ) : (
               albums.map((a) => (
                 <option key={a._id} value={a._id}>
@@ -273,13 +294,14 @@ const AddTrackToAlbumForm: React.FC = () => {
             <option value="premium">Premium</option>
             <option value="free">Free</option>
           </select>
-          <div className="text-sm mt-2 text-gray-600">
-            Album default is{" "}
-            <strong>
-              {selectedAlbum?.album_is_premium ? "Premium" : "Free"}
-            </strong>
-            . This override only applies to this track.
-          </div>
+
+          {selectedAlbum ? (
+            <div className="text-sm mt-2 text-gray-600">
+              Album default is{" "}
+              <strong>{selectedAlbum.album_is_premium ? "Premium" : "Free"}</strong>.
+              This override only applies to this track.
+            </div>
+          ) : null}
         </div>
 
         {/* Audio file */}
