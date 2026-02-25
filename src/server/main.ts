@@ -8,7 +8,7 @@ import cors from "cors";
 import multer from "multer";
 import { fileURLToPath } from "url";
 import crypto from "crypto";
-
+import { execSync } from "child_process"
 import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -284,6 +284,24 @@ app.post("/api/lessons", requireAdmin, async (req: Request, res: Response) => {
  * =========================
  */
 
+
+
+
+app.get("/api/debug/ffmpeg", (req: Request, res: Response) => {
+  try {
+    const output = execSync("ffmpeg -version", { stdio: "pipe" }).toString();
+    res.json({
+      ok: true,
+      version: output.split("\n")[0],
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      ok: false,
+      message: "ffmpeg not found at runtime",
+      error: error?.message,
+    });
+  }
+});
 function safeJson<T>(value: any): T | undefined {
   if (typeof value !== "string") return undefined;
   try {
