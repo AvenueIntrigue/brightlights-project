@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import "./Create.css";
-import { useSession } from "@clerk/clerk-react";
+import { useAuth } from "@clerk/clerk-react";
 
 // Define the interface to match the backend schema (no order!)
 interface LessonFormData {
@@ -44,6 +44,8 @@ const dailyTopics = [
 ] as const;
 
 const BibleLessonsForm: React.FC = () => {
+  const { getToken, isLoaded, isSignedIn } = useAuth();
+
   const [formData, setFormData] = useState<LessonFormData>({
     topic: "",
     title: "",
@@ -52,7 +54,7 @@ const BibleLessonsForm: React.FC = () => {
     action_item: "",
     prayer: "",
   });
-  const { session } = useSession();
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -60,7 +62,7 @@ const BibleLessonsForm: React.FC = () => {
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >,
+    >
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -92,9 +94,7 @@ const BibleLessonsForm: React.FC = () => {
       return;
     }
     if (!formData.scripture || formData.scripture.length < 100) {
-      setError(
-        "Please paste the full chapter scripture (at least 100 characters)",
-      );
+      setError("Please paste the full chapter scripture (at least 100 characters)");
       setLoading(false);
       return;
     }
@@ -115,10 +115,19 @@ const BibleLessonsForm: React.FC = () => {
     }
 
     try {
-      const token = await session?.getToken();
-      if (!token) {
+      if (!isLoaded) {
+        setError("Auth is still loading—try again in a moment.");
+        return;
+      }
+      if (!isSignedIn) {
         setError("Not signed in.");
-        setLoading(false);
+        return;
+      }
+
+      // ✅ Fresh token immediately before request
+      const token = await getToken({ skipCache: true });
+      if (!token) {
+        setError("Could not get an auth token. Please sign out/in and try again.");
         return;
       }
 
@@ -127,11 +136,9 @@ const BibleLessonsForm: React.FC = () => {
           Authorization: `Bearer ${token}`,
         },
       });
+
       const savedLesson = response.data.lesson;
-      setSuccess(
-        `Lesson saved successfully as #${savedLesson.order} for "${savedLesson.topic}"!`,
-      );
-      console.log("Saved lesson:", response.data);
+      setSuccess(`Lesson saved successfully as #${savedLesson.order} for "${savedLesson.topic}"!`);
 
       // Reset form (keep the same topic for convenience)
       setFormData({
@@ -144,7 +151,14 @@ const BibleLessonsForm: React.FC = () => {
       });
     } catch (err: any) {
       console.error("Error saving lesson:", err);
-      setError(err.response?.data?.message || "Failed to save lesson");
+
+      // Optional nicer messaging for expired tokens
+      const serverCode = err?.response?.data?.code;
+      if (err?.response?.status === 401 && serverCode === "token-expired") {
+        setError("Your session token expired—please try again.");
+      } else {
+        setError(err.response?.data?.message || "Failed to save lesson");
+      }
     } finally {
       setLoading(false);
     }
@@ -179,10 +193,7 @@ const BibleLessonsForm: React.FC = () => {
         <div className="create-form-content space-y-6">
           {/* Topic Dropdown */}
           <div>
-            <label
-              htmlFor="topic"
-              className="create-label block text-lg font-medium mb-2"
-            >
+            <label htmlFor="topic" className="create-label block text-lg font-medium mb-2">
               Topic (Fruit/Theme):
             </label>
             <select
@@ -204,10 +215,7 @@ const BibleLessonsForm: React.FC = () => {
 
           {/* Title */}
           <div>
-            <label
-              htmlFor="title"
-              className="create-label block text-lg font-medium mb-2"
-            >
+            <label htmlFor="title" className="create-label block text-lg font-medium mb-2">
               Title (e.g., "John 4 – The Woman at the Well"):
             </label>
             <input
@@ -222,12 +230,9 @@ const BibleLessonsForm: React.FC = () => {
             />
           </div>
 
-          {/* Scripture (Full Chapter Text) */}
+          {/* Scripture */}
           <div>
-            <label
-              htmlFor="scripture"
-              className="create-label block text-lg font-medium mb-2"
-            >
+            <label htmlFor="scripture" className="create-label block text-lg font-medium mb-2">
               Full Chapter Scripture (WEB Version):
             </label>
             <textarea
@@ -244,10 +249,7 @@ const BibleLessonsForm: React.FC = () => {
 
           {/* Reflection */}
           <div>
-            <label
-              htmlFor="reflection"
-              className="create-label block text-lg font-medium mb-2"
-            >
+            <label htmlFor="reflection" className="create-label block text-lg font-medium mb-2">
               Reflection (~300 words):
             </label>
             <textarea
@@ -264,10 +266,7 @@ const BibleLessonsForm: React.FC = () => {
 
           {/* Action Item */}
           <div>
-            <label
-              htmlFor="action_item"
-              className="create-label block text-lg font-medium mb-2"
-            >
+            <label htmlFor="action_item" className="create-label block text-lg font-medium mb-2">
               Action Item:
             </label>
             <textarea
@@ -284,10 +283,7 @@ const BibleLessonsForm: React.FC = () => {
 
           {/* Prayer */}
           <div>
-            <label
-              htmlFor="prayer"
-              className="create-label block text-lg font-medium mb-2"
-            >
+            <label htmlFor="prayer" className="create-label block text-lg font-medium mb-2">
               Prayer:
             </label>
             <textarea

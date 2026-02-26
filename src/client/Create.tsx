@@ -1,50 +1,14 @@
 import React, {
-  useMemo,
   useEffect,
   useState,
-  useCallback,
   FormEvent,
   useRef,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { EditorContent, useEditor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import TextStyle from "@tiptap/extension-text-style";
-import TextAlign from "@tiptap/extension-text-align";
-import FontFamily from "@tiptap/extension-font-family";
-import Underlines from "@tiptap/extension-underline";
-import Image from "@tiptap/extension-image";
-import extLink from "@tiptap/extension-link";
-import ListItem from "@tiptap/extension-list-item";
-import YouTube from "@tiptap/extension-youtube";
-import {
-  Bold,
-  Heading,
-  Italic,
-  Underline,
-  Type,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignJustify,
-  CaseSensitive,
-  ImageIcon,
-  Strikethrough,
-  Clapperboard,
-  MessageSquareQuote,
-  Link,
-  List,
-  Plus,
-  Divide,
-  Check,
-} from "lucide-react";
-import { useUser, useSession } from "@clerk/clerk-react";
+import { Check } from "lucide-react";
+import { useUser, useAuth } from "@clerk/clerk-react";
 import axios from "axios";
 import "./Create.css";
-import Paragraph from "@tiptap/extension-paragraph";
-import { availableAdobeFonts } from "./Fonts";
-import { FontSize } from "./FontSize";
-import { Color } from "@tiptap/extension-color";
 import TitleEditor from "./TitleEditor";
 import DescriptionEditor from "./DescriptionEditor";
 
@@ -60,19 +24,13 @@ interface CustomDropdownProps {
   onPageRemove: (page: string) => void;
 }
 
-type CustomElement = { type: "paragraph"; children: CustomText[] };
-type CustomText = { text: string };
-
-const initialValue: CustomElement[] = [
-  { type: "paragraph", children: [{ text: "" }] },
-];
-
 const Create = () => {
   const [pages, setPages] = useState<string[]>([]);
   const [selectedPage, setSelectedPage] = useState<string>("");
   const navigate = useNavigate();
+
   const { user } = useUser();
-  const { session } = useSession();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
 
   useEffect(() => {
     const fetchPages = async () => {
@@ -87,7 +45,8 @@ const Create = () => {
           "web3",
           "projects",
         ].map((type) => type.charAt(0).toUpperCase() + type.slice(1));
-        let availablePages: string[] = [];
+
+        const availablePages: string[] = [];
 
         for (const type of knownTypes) {
           const response = await fetch(`/api/${type.toLowerCase()}posts`);
@@ -118,23 +77,16 @@ const Create = () => {
   const [keywords, setKeywords] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState("");
 
-  const handleTitleChange = (newTitle: string) => {
-    setTitle(newTitle);
-  };
-
   const CustomDropdown: React.FC<CustomDropdownProps> = ({
     pages,
     selectedPage,
     onPageSelect,
-    onPageRemove,
   }) => {
     const [isDropdownVisible, setIsDropdownVisible] = useState(false);
     const [newPage, setNewPage] = useState("");
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    const handleDropdownToggle = () => {
-      setIsDropdownVisible(!isDropdownVisible);
-    };
+    const handleDropdownToggle = () => setIsDropdownVisible(!isDropdownVisible);
 
     const handlePageSelect = (page: string) => {
       if (page === "Add New Page") {
@@ -164,7 +116,11 @@ const Create = () => {
     }, []);
 
     return (
-      <div ref={dropdownRef} className="create-custom-dropdown" onClick={handleDropdownToggle}>
+      <div
+        ref={dropdownRef}
+        className="create-custom-dropdown"
+        onClick={handleDropdownToggle}
+      >
         <div className="cd-input-field absolute top-0 left-0 right-0 outline-3">
           <div className="dropdown-selected block w-full">
             {selectedPage || (
@@ -173,6 +129,7 @@ const Create = () => {
               </div>
             )}
           </div>
+
           {isDropdownVisible && (
             <div className="create-dropdown-menu top-0 w-full h-auto rounded-md">
               {pages.map((page) => (
@@ -182,6 +139,7 @@ const Create = () => {
                   </div>
                 </div>
               ))}
+
               <div className="dropdown-item w-full h-auto bg-transparent">
                 <input
                   type="text"
@@ -189,7 +147,7 @@ const Create = () => {
                   placeholder="Add New Page"
                   value={newPage}
                   onChange={(e) => setNewPage(e.target.value)}
-                  onKeyPress={handleAddNewPage}
+                  onKeyDown={handleAddNewPage}
                   onClick={(e) => e.stopPropagation()}
                 />
               </div>
@@ -200,10 +158,6 @@ const Create = () => {
     );
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  };
-
   const addKeywords = () => {
     const newKeywords = inputValue
       .split(",")
@@ -211,16 +165,6 @@ const Create = () => {
       .filter((keyword) => keyword !== "");
     setKeywords((prev) => [...prev, ...newKeywords]);
     setInputValue("");
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") addKeywords();
-  };
-
-  const handleBlur = () => addKeywords();
-
-  const handleDeleteKeyword = (keywordToDelete: string) => {
-    setKeywords((prev) => prev.filter((keyword) => keyword !== keywordToDelete));
   };
 
   const uploadImage = async (file: File, alt: string) => {
@@ -247,30 +191,39 @@ const Create = () => {
     e.preventDefault();
 
     try {
+      if (!isLoaded) {
+        alert("Auth is still loading—try again in a moment.");
+        return;
+      }
+      if (!isSignedIn) {
+        alert("You must be signed in.");
+        return;
+      }
       if (!user) {
-        console.error("User is not defined.");
+        alert("User not found.");
         return;
       }
       if (!selectedPage) {
-        console.warn("No page selected.");
+        alert("Please select a page.");
         return;
       }
 
-      // Check if user is admin instead of permissions
-      const isAdmin = user.publicMetadata?.isAdmin === true; // Assumes Clerk has an isAdmin flag
+      // Admin check (matches your backend logic)
+      const role = (user.publicMetadata as any)?.role;
+      const isAdmin = role === "Admin";
       if (!isAdmin) {
-        console.error("User is not an admin. Access denied.");
         alert("Only admins can create posts.");
         return;
       }
 
-      const token = await session?.getToken();
+      // ✅ Fresh token immediately before request
+      const token = await getToken({ skipCache: true });
       if (!token) {
-        console.error("Failed to retrieve token");
+        alert("Could not get an auth token. Please sign out/in and try again.");
         return;
       }
 
-      const endpoint = `/api/${selectedPage.toLowerCase()}posts`; // Relative path for Render
+      const endpoint = `/api/${selectedPage.toLowerCase()}posts`;
       const newPost = {
         title: editorOne?.getHTML() || "",
         description: editorTwo?.getHTML() || "",
@@ -278,8 +231,6 @@ const Create = () => {
         pages: selectedPage,
         keywords: keywords.length ? keywords : [],
       };
-
-      console.log("Sending:", newPost);
 
       const response = await fetch(endpoint, {
         method: "PUT",
@@ -291,15 +242,15 @@ const Create = () => {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        await response.json();
         navigate(`/${selectedPage.toLowerCase()}`);
       } else {
-        const errorDetails = await response.json();
+        const errorDetails = await response.json().catch(() => ({}));
         console.error(`Error creating ${selectedPage.toLowerCase()} post`, errorDetails);
-        alert(`Failed to create post: ${errorDetails.message}`);
+        alert(`Failed to create post: ${errorDetails.message || response.status}`);
       }
     } catch (error: any) {
-      console.error(`Error creating ${selectedPage.toLowerCase()} post`, error.message);
+      console.error(`Error creating ${selectedPage.toLowerCase()} post`, error?.message || error);
       alert("An error occurred while creating the post.");
     }
   };
@@ -310,20 +261,23 @@ const Create = () => {
         <div className="create-form-container">
           <h1 className="create-form-box-text">Create Post</h1>
         </div>
+
         <div className="create-form-content">
           <TitleEditor
             onTitleChange={(newTitle) => setTitle(newTitle)}
             initialTitle={title}
             setEditorOne={setEditorOne}
           />
+
           <div title="Choose Desired Page" className="create-input-field relative mb-4">
             <CustomDropdown
               pages={pages}
               selectedPage={selectedPage}
               onPageSelect={setSelectedPage}
-              onPageRemove={(page) => setPages((prev) => prev.filter((p) => p !== page))}
+              onPageRemove={() => {}}
             />
           </div>
+
           <div className="flex w-full h-auto">
             <div title="Upload Image" className="create-input-field relative mb-4 text-wrap p-3 flex-col">
               <input
@@ -336,35 +290,47 @@ const Create = () => {
                   }
                 }}
               />
+
               {images.map((image, index) => (
                 <div key={index} className="create-image-preview-container flex">
                   <img src={image.url} alt={image.alt} className="create-image-preview" />
-                  <button onClick={() => handleCancelImage(index)}>x</button>
+                  <button type="button" onClick={() => handleCancelImage(index)}>x</button>
                   <label>{image.alt}</label>
                 </div>
               ))}
             </div>
           </div>
+
           <DescriptionEditor setEditorTwo={setEditorTwo} />
+
           <div title="Add Keywords for SEO Optimization" className="create-keywords-section">
             <input
               type="text"
               className="create-input-field relative h-10 mb-4 bg-transparent"
               value={inputValue}
-              onChange={handleInputChange}
-              onKeyPress={handleKeyPress}
-              onBlur={handleBlur}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addKeywords();
+                }
+              }}
+              onBlur={addKeywords}
               placeholder="Enter keywords separated by commas"
             />
+
             <div className="create-keyword-list flex flex-wrap mt-2">
               {keywords.map((keyword, index) => (
                 <div key={index} className="create-keyword-chip flex items-center px-2 py-2 mr-2 mb-2 rounded">
-                  <button onClick={() => handleDeleteKeyword(keyword)}>x</button>
+                  <button type="button" onClick={() => setKeywords((prev) => prev.filter((k) => k !== keyword))}>
+                    x
+                  </button>
                   {keyword}
                 </div>
               ))}
             </div>
           </div>
+
           <button
             type="submit"
             title="Submit"
