@@ -109,14 +109,21 @@ const MusicAlbumForm: React.FC = () => {
     }
 
     // ✅ Always get a fresh token right before the API call
+    function decodeJwtPayload(token: string) {
+      const parts = token.split(".");
+      if (parts.length < 2) throw new Error("Malformed JWT");
+      return JSON.parse(atob(parts[1]));
+    }
+
+    // usage
     const token = await getToken({ skipCache: true });
     if (!token) {
-      setError(
-        "Could not get an auth token. Please sign out/in and try again.",
-      );
+      setError?.("No token returned");
       return;
     }
 
+    const payload = decodeJwtPayload(token);
+    console.log("exp:", payload.exp);
     try {
       setLoading(true);
 
