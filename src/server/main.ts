@@ -124,28 +124,32 @@ function isR2Configured() {
 const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
   if (!authHeader?.startsWith("Bearer ")) {
-    return res.status(401).json({ message: "Unauthorized" });
+    return res.status(401).json({ message: "Missing Bearer token" });
   }
 
-  const token = authHeader.slice("Bearer ".length);
+  const token = authHeader.slice("Bearer ".length).trim();
 
   try {
     const claims = await clerkClient.verifyToken(token);
+
     const userId = (claims as any).sub;
-    if (!userId) return res.status(401).json({ message: "Invalid token" });
+    if (!userId) return res.status(401).json({ message: "Token missing sub" });
 
     const user = await clerkClient.users.getUser(userId);
     const role = (user.publicMetadata as any)?.role;
 
     if (role !== "Admin") {
-      return res.status(403).json({ message: "Forbidden" });
+      return res.status(403).json({ message: "Forbidden (not Admin)" });
     }
 
     (req as any).user = claims;
     next();
-  } catch (err) {
-    console.error("Token verification error:", err);
-    return res.status(401).json({ message: "Invalid token" });
+  } catch (err: any) {
+    console.error("Token verification error:", err?.reason || err?.message || err);
+    return res.status(401).json({
+      message: "Invalid token",
+      reason: err?.reason, // helpful: token-expired, secret-key-invalid, etc.
+    });
   }
 };
 
