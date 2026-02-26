@@ -11,7 +11,9 @@ import crypto from "crypto";
 import { execSync } from "child_process"
 import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-
+import fs from "fs/promises";
+import os from "os";
+import { spawn } from "child_process";
 import { clerkClient } from "@clerk/clerk-sdk-node";
 import { ClerkPublicMetadata } from "shared/clerk-types.js";
 
@@ -285,23 +287,6 @@ app.post("/api/lessons", requireAdmin, async (req: Request, res: Response) => {
  */
 
 
-
-
-app.get("/api/debug/ffmpeg", (req: Request, res: Response) => {
-  try {
-    const output = execSync("ffmpeg -version", { stdio: "pipe" }).toString();
-    res.json({
-      ok: true,
-      version: output.split("\n")[0],
-    });
-  } catch (error: any) {
-    res.status(500).json({
-      ok: false,
-      message: "ffmpeg not found at runtime",
-      error: error?.message,
-    });
-  }
-});
 function safeJson<T>(value: any): T | undefined {
   if (typeof value !== "string") return undefined;
   try {
@@ -329,24 +314,58 @@ function makeUploadId() {
  * - leaves stream_m4a_* empty
  * - leaves master_wav_path empty (until you add a WAV master upload flow)
  */
+
+
+
+function runFfmpeg(args: string[]): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const p = spawn("ffmpeg", args, { stdio: ["ignore", "pipe", "pipe"] });
+
+    let stderr = "";
+    p.stderr.on("data", (d) => (stderr += d.toString()));
+
+    p.on("error", reject);
+    p.on("close", (code) => {
+      if (code === 0) return resolve();
+      reject(new Error(`ffmpeg exited with code ${code}. ${stderr.slice(-2000)}`));
+    });
+  });
+}
+
+function isWavFile(f: Express.Multer.File) {
+  const nameOk = f.originalname.toLowerCase().endsWith(".wav");
+  // Some browsers set mimetype as audio/wav or audio/x-wav (or empty)
+  const mimeOk =
+    !f.mimetype ||
+    f.mimetype === "audio/wav" ||
+    f.mimetype === "audio/x-wav" ||
+    f.mimetype === "audio/wave" ||
+    f.mimetype === "audio/vnd.wave";
+  return nameOk && mimeOk;
+}
 app.post(
   "/api/albums",
   requireAdmin,
   upload.fields([
     { name: "cover", maxCount: 1 },
-    { name: "tracks", maxCount: 50 },
+    { name: "tracks", maxCount: 10 },
   ]),
   async (req: Request, res: Response) => {
     const requestId = makeUploadId();
 
+    // temp folder for this upload
+    const tmpDir = path.join(os.tmpdir(), `blc-upload-${requestId}`);
+
     try {
       if (!isR2Configured()) {
-        return res.status(500).json({ message: "Cloudflare R2 is not configured on the server." });
+        return res
+          .status(500)
+          .json({ message: "Cloudflare R2 is not configured on the server." });
       }
 
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-      const coverFile = files?.cover?.[0];
-      const trackFiles = files?.tracks || [];
+      const coverFile = files?.cover?.[0] ?? null;
+      const trackFiles = files?.tracks ?? [];
 
       const {
         album_title,
@@ -359,16 +378,35 @@ app.post(
 
       if (!album_title || !coverFile || trackFiles.length === 0) {
         return res.status(400).json({
-          message: "Missing required fields: album_title, cover, and at least 1 track file.",
+          message:
+            "Missing required fields: album_title, cover, and at least 1 track file.",
+          requestId,
+        });
+      }
+
+      // WAV-only enforcement (masters)
+      const bad = trackFiles.find((f) => !isWavFile(f));
+      if (bad) {
+        return res.status(400).json({
+          message: `Only .wav master files are allowed. "${bad.originalname}" is not WAV.`,
+          requestId,
         });
       }
 
       const parsedTitles = safeJson<string[]>(track_titles);
       const parsedNumbers = safeJson<number[]>(track_numbers);
-      const parsedPremiumOverrides = safeJson<(boolean | null | undefined)[]>(track_is_premium);
+      const parsedPremiumOverrides = safeJson<(boolean | null | undefined)[]>(
+        track_is_premium
+      );
+
+      // temp dir
+      await fs.mkdir(tmpDir, { recursive: true });
 
       // 1) Upload cover
-      const coverKey = `covers/${Date.now()}_${sanitizeName(coverFile.originalname)}`;
+      const coverKey = `covers/${Date.now()}_${sanitizeName(
+        coverFile.originalname
+      )}`;
+
       await r2!.send(
         new PutObjectCommand({
           Bucket: R2_BUCKET_NAME!,
@@ -400,7 +438,7 @@ app.post(
         { new: true, upsert: true }
       );
 
-      // 3) Upload tracks + create track docs
+      // 3) Convert + upload tracks
       const createdTracks: any[] = [];
 
       const sortedTrackFiles = [...trackFiles].sort((a, b) =>
@@ -410,18 +448,80 @@ app.post(
       for (let i = 0; i < sortedTrackFiles.length; i++) {
         const f = sortedTrackFiles[i];
 
-        // Basic “idiot proof” guard: if you upload the same album twice fast,
-        // keys won't collide, but you might create duplicate tracks.
-        // Your unique index (albumId+track_number) will block exact duplicates.
-        const safeAudioName = sanitizeName(f.originalname);
-        const mp3Key = `audio/mp3/${Date.now()}_${i + 1}_${safeAudioName}`;
+        const title = parsedTitles?.[i] || f.originalname.replace(/\.[^/.]+$/, "");
+        const trackNumber = parsedNumbers?.[i] ?? i + 1;
+        const overridePremium = parsedPremiumOverrides?.[i];
 
+        // --- Write WAV to disk for ffmpeg ---
+        const base = `${Date.now()}_${i + 1}_${sanitizeName(f.originalname).replace(/\.wav$/i, "")}`;
+        const wavPath = path.join(tmpDir, `${base}.wav`);
+        const mp3Path = path.join(tmpDir, `${base}.mp3`);
+        const m4aPath = path.join(tmpDir, `${base}.m4a`);
+
+        await fs.writeFile(wavPath, f.buffer);
+
+        // --- ffmpeg: WAV -> MP3 (stream) ---
+        // 320k CBR is a solid “high quality streaming” default
+        await runFfmpeg([
+          "-y",
+          "-i",
+          wavPath,
+          "-vn",
+          "-c:a",
+          "libmp3lame",
+          "-b:a",
+          "320k",
+          "-ar",
+          "44100",
+          mp3Path,
+        ]);
+
+        // --- ffmpeg: WAV -> M4A (AAC stream) ---
+        // 256k AAC is a solid default
+        await runFfmpeg([
+          "-y",
+          "-i",
+          wavPath,
+          "-vn",
+          "-c:a",
+          "aac",
+          "-b:a",
+          "256k",
+          "-ar",
+          "44100",
+          m4aPath,
+        ]);
+
+        // --- Upload master WAV ---
+        const masterKey = `audio/master/${base}.wav`;
+        await r2!.send(
+          new PutObjectCommand({
+            Bucket: R2_BUCKET_NAME!,
+            Key: masterKey,
+            Body: await fs.readFile(wavPath),
+            ContentType: "audio/wav",
+          })
+        );
+
+        // --- Upload MP3 ---
+        const mp3Key = `audio/mp3/${base}.mp3`;
         await r2!.send(
           new PutObjectCommand({
             Bucket: R2_BUCKET_NAME!,
             Key: mp3Key,
-            Body: f.buffer,
-            ContentType: f.mimetype || "audio/mpeg",
+            Body: await fs.readFile(mp3Path),
+            ContentType: "audio/mpeg",
+          })
+        );
+
+        // --- Upload M4A ---
+        const m4aKey = `audio/m4a/${base}.m4a`;
+        await r2!.send(
+          new PutObjectCommand({
+            Bucket: R2_BUCKET_NAME!,
+            Key: m4aKey,
+            Body: await fs.readFile(m4aPath),
+            ContentType: "audio/mp4", // correct for .m4a container
           })
         );
 
@@ -429,22 +529,23 @@ app.post(
           ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${mp3Key}`
           : "";
 
-        const title = parsedTitles?.[i] || f.originalname.replace(/\.[^/.]+$/, "");
-        const trackNumber = parsedNumbers?.[i] ?? i + 1;
-        const overridePremium = parsedPremiumOverrides?.[i];
+        const m4aUrl = R2_PUBLIC_DOMAIN
+          ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${m4aKey}`
+          : "";
 
         const trackDoc = new MusicTrackModel({
           albumId: albumDoc._id,
           title: String(title),
           track_number: Number(trackNumber),
-          track_is_premium: typeof overridePremium === "boolean" ? overridePremium : undefined,
+          track_is_premium:
+            typeof overridePremium === "boolean" ? overridePremium : undefined,
 
           // NEW SCHEMA FIELDS:
           stream_mp3_url: mp3Url,
           stream_mp3_path: mp3Key,
-          stream_m4a_url: "",
-          stream_m4a_path: "",
-          master_wav_path: "",
+          stream_m4a_url: m4aUrl,
+          stream_m4a_path: m4aKey,
+          master_wav_path: masterKey,
 
           status: "active",
         });
@@ -475,6 +576,13 @@ app.post(
         requestId,
         error: err.message,
       });
+    } finally {
+      // cleanup temp files
+      try {
+        await fs.rm(tmpDir, { recursive: true, force: true });
+      } catch {
+        // ignore
+      }
     }
   }
 );
