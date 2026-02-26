@@ -10,7 +10,6 @@ import { fileURLToPath } from "url";
 import crypto from "crypto";
 import os from "os";
 import fs from "fs/promises";
-import { createReadStream } from "fs";
 import { spawn } from "child_process";
 
 import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
@@ -43,17 +42,17 @@ import {
 // ESM-safe __dirname
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Load env
+// Load environment variables
 dotenv.config();
 
 /**
- * MongoDB URI
+ * ✅ MongoDB URI
  */
 const rawUri = process.env.MONGODB_URI || "mongodb://localhost:27017/brightLightsCreative";
 const uri = rawUri.startsWith("MONGODB_URI=") ? rawUri.replace("MONGODB_URI=", "") : rawUri;
 
 /**
- * Encryption key (keep if you use it elsewhere)
+ * ✅ Encryption key (keep if used elsewhere)
  */
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
@@ -61,38 +60,16 @@ if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
 }
 
 const dailyTopics = [
-  "love",
-  "joy",
-  "peace",
-  "patience",
-  "kindness",
-  "goodness",
-  "faithfulness",
-  "gentleness",
-  "self-control",
-  "family",
-  "christian_living",
-  "forgiveness",
-  "repentance",
-  "gratitude",
-  "hope",
-  "humility",
-  "obedience",
-  "called_to_create",
-  "honor_god_in_your_work",
-  "liberty",
-  "bread_of_life",
-  "living_water",
-  "provision",
-  "holy_spirit_guidance",
-  "follower_of_christ",
-  "salvation",
+  "love","joy","peace","patience","kindness","goodness","faithfulness","gentleness","self-control",
+  "family","christian_living","forgiveness","repentance","gratitude","hope","humility","obedience",
+  "called_to_create","honor_god_in_your_work","liberty","bread_of_life","living_water","provision",
+  "holy_spirit_guidance","follower_of_christ","salvation",
 ] as const;
 
 const app = express();
 
 /**
- * Cloudflare R2 env vars
+ * ✅ Cloudflare R2 env vars
  */
 const R2_ACCOUNT_ID = process.env.CLOUDFLARE_R2_ACCOUNT_ID;
 const R2_ACCESS_KEY_ID = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID;
@@ -117,7 +94,7 @@ function isR2Configured() {
 }
 
 /**
- * Admin auth middleware
+ * ✅ Admin auth middleware
  */
 const requireAdmin = async (req: Request, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
@@ -129,7 +106,6 @@ const requireAdmin = async (req: Request, res: Response, next: NextFunction) => 
 
   try {
     const claims = await clerkClient.verifyToken(token);
-
     const userId = (claims as any).sub;
     if (!userId) return res.status(401).json({ message: "Token missing sub" });
 
@@ -152,7 +128,7 @@ const requireAdmin = async (req: Request, res: Response, next: NextFunction) => 
 };
 
 /**
- * CORS
+ * ✅ CORS
  */
 app.use(
   cors({
@@ -177,18 +153,21 @@ app.options("*", (req: Request, res: Response) => {
   res.sendStatus(204);
 });
 
-// Body parsing
-app.use(bodyParser.json({ limit: "50mb" }));
-app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }));
+// Body parsing (don’t use huge here; file uploads are multipart/multer anyway)
+app.use(bodyParser.json({ limit: "10mb" }));
+app.use(bodyParser.urlencoded({ limit: "10mb", extended: true }));
 
 /**
- * Multer disk storage (IMPORTANT: no file.buffer!)
+ * ✅ Multer disk storage
  */
+function sanitizeName(name: string) {
+  return name.replace(/[^\w.\-]/g, "_");
+}
+
 const upload = multer({
   storage: multer.diskStorage({
     destination: (_req, _file, cb) => cb(null, os.tmpdir()),
-    filename: (_req, file, cb) =>
-      cb(null, `${Date.now()}_${file.originalname.replace(/[^\w.\-]/g, "_")}`),
+    filename: (_req, file, cb) => cb(null, `${Date.now()}_${sanitizeName(file.originalname)}`),
   }),
   limits: {
     fileSize: 250 * 1024 * 1024, // per file
@@ -197,7 +176,47 @@ const upload = multer({
 });
 
 /**
- * Health
+ * ✅ Utilities
+ */
+function safeJson<T>(value: any): T | undefined {
+  if (typeof value !== "string") return undefined;
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    return undefined;
+  }
+}
+
+function makeUploadId() {
+  return crypto.randomBytes(16).toString("hex");
+}
+
+function isWavFile(f: Express.Multer.File) {
+  const nameOk = f.originalname.toLowerCase().endsWith(".wav");
+  const mimeOk =
+    !f.mimetype ||
+    f.mimetype === "audio/wav" ||
+    f.mimetype === "audio/x-wav" ||
+    f.mimetype === "audio/wave" ||
+    f.mimetype === "audio/vnd.wave";
+  return nameOk && mimeOk;
+}
+
+function runFfmpeg(args: string[]): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const p = spawn("ffmpeg", args, { stdio: ["ignore", "pipe", "pipe"] });
+    let stderr = "";
+    p.stderr.on("data", (d) => (stderr += d.toString()));
+    p.on("error", reject);
+    p.on("close", (code) => {
+      if (code === 0) return resolve();
+      reject(new Error(`ffmpeg exited with code ${code}. ${stderr.slice(-2000)}`));
+    });
+  });
+}
+
+/**
+ * ✅ Health
  */
 app.get("/api/health", (_req, res) => {
   res.json({ ok: true, env: process.env.NODE_ENV || "unknown" });
@@ -243,96 +262,42 @@ app.post("/api/lessons", requireAdmin, async (req: Request, res: Response) => {
     if (lastLesson && typeof lastLesson.order === "number") nextOrder = lastLesson.order + 1;
 
     if (!topic || !title || !scripture || !reflection || !action_item || !prayer) {
-      return res.status(400).json({
-        message: "Missing required fields",
-        receivedKeys: Object.keys(req.body),
-      });
+      return res.status(400).json({ message: "Missing required fields" });
     }
 
     if (typeof scripture !== "string" || scripture.length < 100) {
-      return res.status(400).json({
-        message: "Scripture must be a string with at least 100 characters",
-        length: scripture?.length ?? "undefined",
-      });
+      return res.status(400).json({ message: "Scripture must be at least 100 characters" });
     }
 
-    const lesson = new LessonsModel({
-      topic,
-      title,
-      scripture,
-      order: nextOrder,
-      reflection,
-      action_item,
-      prayer,
-    });
-
+    const lesson = new LessonsModel({ topic, title, scripture, order: nextOrder, reflection, action_item, prayer });
     await lesson.save();
 
-    return res.status(201).json({
-      message: "Lesson saved successfully",
-      lesson: lesson.toObject(),
-    });
+    return res.status(201).json({ message: "Lesson saved successfully", lesson: lesson.toObject() });
   } catch (error: any) {
     console.error("Error saving lesson:", error);
-    return res.status(500).json({
-      message: "Error saving lesson",
-      error: error.message || "Unknown server error",
-    });
+    return res.status(500).json({ message: "Error saving lesson", error: error.message || "Unknown server error" });
   }
 });
 
 /**
  * =========================
- * MUSIC (Admin CMS)
+ * MUSIC (Admin)
  * =========================
  */
 
-function safeJson<T>(value: any): T | undefined {
-  if (typeof value !== "string") return undefined;
-  try {
-    return JSON.parse(value) as T;
-  } catch {
-    return undefined;
-  }
-}
-
-function sanitizeName(name: string) {
-  return name.replace(/[^\w.\-]/g, "_");
-}
-
-function makeUploadId() {
-  return crypto.randomBytes(16).toString("hex");
-}
-
-function runFfmpeg(args: string[]): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const p = spawn("ffmpeg", args, { stdio: ["ignore", "pipe", "pipe"] });
-
-    let stderr = "";
-    p.stderr.on("data", (d) => (stderr += d.toString()));
-
-    p.on("error", reject);
-    p.on("close", (code) => {
-      if (code === 0) return resolve();
-      reject(new Error(`ffmpeg exited with code ${code}. ${stderr.slice(-2000)}`));
-    });
-  });
-}
-
-function isWavFile(f: Express.Multer.File) {
-  const nameOk = f.originalname.toLowerCase().endsWith(".wav");
-  const mimeOk =
-    !f.mimetype ||
-    f.mimetype === "audio/wav" ||
-    f.mimetype === "audio/x-wav" ||
-    f.mimetype === "audio/wave" ||
-    f.mimetype === "audio/vnd.wave";
-  return nameOk && mimeOk;
-}
-
 /**
- * POST /api/albums (Admin)
- * cover + multiple WAV masters -> store master + generate mp3 + m4a
+ * POST /api/albums
+ * cover: 1 image
+ * tracks: up to 10 WAV masters
+ *
+ * Converts:
+ * - WAV -> MP3 (320k)
+ * - WAV -> M4A (AAC 256k)
+ * Uploads to R2:
+ * - covers/*
+ * - audio/master/*
+ * - audio/mp3/*
+ * - audio/m4a/*
  */
 app.post(
   "/api/albums",
@@ -345,17 +310,8 @@ app.post(
     const requestId = makeUploadId();
     const tmpDir = path.join(os.tmpdir(), `blc-upload-${requestId}`);
 
-    // Helper for best-effort cleanup of multer temp files
-    const cleanupMulterFiles = async () => {
-      try {
-        const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-        if (!files) return;
-        const all = [...(files.cover ?? []), ...(files.tracks ?? [])];
-        await Promise.allSettled(all.map((f) => fs.unlink((f as any).path)));
-      } catch {
-        // ignore
-      }
-    };
+    // track every path we should remove
+    const cleanupPaths: string[] = [];
 
     try {
       if (!isR2Configured()) {
@@ -396,25 +352,26 @@ app.post(
       const parsedPremiumOverrides = safeJson<(boolean | null | undefined)[]>(track_is_premium);
 
       await fs.mkdir(tmpDir, { recursive: true });
+      cleanupPaths.push(tmpDir);
 
-      /**
-       * 1) Upload cover (from disk path)
-       */
+      // ---- Upload cover (disk file -> R2) ----
+      cleanupPaths.push(coverFile.path);
+
       const coverKey = `covers/${Date.now()}_${sanitizeName(coverFile.originalname)}`;
+      const coverBytes = await fs.readFile(coverFile.path);
+
       await r2!.send(
         new PutObjectCommand({
           Bucket: R2_BUCKET_NAME!,
           Key: coverKey,
-          Body: createReadStream((coverFile as any).path),
+          Body: coverBytes,
           ContentType: coverFile.mimetype || "image/jpeg",
         })
       );
 
       const coverUrl = R2_PUBLIC_DOMAIN ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${coverKey}` : "";
 
-      /**
-       * 2) Create/reuse album doc
-       */
+      // ---- Create/reuse album doc ----
       const albumDoc = await MusicAlbumModel.findOneAndUpdate(
         { title: String(album_title).trim(), artist: String(artist).trim() },
         {
@@ -432,31 +389,33 @@ app.post(
         { new: true, upsert: true }
       );
 
-      /**
-       * 3) Convert + upload tracks (sequential)
-       */
+      // ---- Convert + upload tracks ----
       const createdTracks: any[] = [];
       const sortedTrackFiles = [...trackFiles].sort((a, b) => a.originalname.localeCompare(b.originalname));
 
       for (let i = 0; i < sortedTrackFiles.length; i++) {
         const f = sortedTrackFiles[i];
+        cleanupPaths.push(f.path);
 
         const title = parsedTitles?.[i] || f.originalname.replace(/\.[^/.]+$/, "");
         const trackNumber = parsedNumbers?.[i] ?? i + 1;
         const overridePremium = parsedPremiumOverrides?.[i];
 
-        // Multer stored the WAV on disk here:
-        const wavInputPath = (f as any).path;
-
         const base = `${Date.now()}_${i + 1}_${sanitizeName(f.originalname).replace(/\.wav$/i, "")}`;
+
+        // input WAV is already on disk at f.path
+        const wavPath = f.path;
+
+        // outputs in our per-request tmp dir
         const mp3Path = path.join(tmpDir, `${base}.mp3`);
         const m4aPath = path.join(tmpDir, `${base}.m4a`);
+        cleanupPaths.push(mp3Path, m4aPath);
 
         // WAV -> MP3
         await runFfmpeg([
           "-y",
           "-i",
-          wavInputPath,
+          wavPath,
           "-vn",
           "-c:a",
           "libmp3lame",
@@ -471,7 +430,7 @@ app.post(
         await runFfmpeg([
           "-y",
           "-i",
-          wavInputPath,
+          wavPath,
           "-vn",
           "-c:a",
           "aac",
@@ -482,13 +441,13 @@ app.post(
           m4aPath,
         ]);
 
-        // Upload master WAV (direct stream from multer file path)
+        // Upload master WAV
         const masterKey = `audio/master/${base}.wav`;
         await r2!.send(
           new PutObjectCommand({
             Bucket: R2_BUCKET_NAME!,
             Key: masterKey,
-            Body: createReadStream(wavInputPath),
+            Body: await fs.readFile(wavPath),
             ContentType: "audio/wav",
           })
         );
@@ -499,7 +458,7 @@ app.post(
           new PutObjectCommand({
             Bucket: R2_BUCKET_NAME!,
             Key: mp3Key,
-            Body: createReadStream(mp3Path),
+            Body: await fs.readFile(mp3Path),
             ContentType: "audio/mpeg",
           })
         );
@@ -510,7 +469,7 @@ app.post(
           new PutObjectCommand({
             Bucket: R2_BUCKET_NAME!,
             Key: m4aKey,
-            Body: createReadStream(m4aPath),
+            Body: await fs.readFile(m4aPath),
             ContentType: "audio/mp4",
           })
         );
@@ -520,7 +479,7 @@ app.post(
 
         const trackDoc = new MusicTrackModel({
           albumId: albumDoc._id,
-          title: String(title),
+          title: String(title).trim(),
           track_number: Number(trackNumber),
           track_is_premium: typeof overridePremium === "boolean" ? overridePremium : undefined,
 
@@ -535,9 +494,6 @@ app.post(
 
         await trackDoc.save();
         createdTracks.push(trackDoc);
-
-        // cleanup per-track temp outputs
-        await Promise.allSettled([fs.unlink(mp3Path), fs.unlink(m4aPath)]);
       }
 
       return res.status(201).json({
@@ -563,18 +519,19 @@ app.post(
         error: err.message,
       });
     } finally {
-      // cleanup ffmpeg temp dir + multer temp files
-      await Promise.allSettled([
-        fs.rm(tmpDir, { recursive: true, force: true }),
-        cleanupMulterFiles(),
-      ]);
+      // cleanup: remove files and tmp dir
+      for (const p of cleanupPaths.reverse()) {
+        try {
+          await fs.rm(p, { recursive: true, force: true });
+        } catch {
+          // ignore
+        }
+      }
     }
   }
 );
 
-/**
- * GET /api/albums (Admin)
- */
+// GET /api/albums (Admin)
 app.get("/api/albums", requireAdmin, async (_req: Request, res: Response) => {
   try {
     const albums = await MusicAlbumModel.find({ status: { $ne: "archived" } })
@@ -589,10 +546,8 @@ app.get("/api/albums", requireAdmin, async (_req: Request, res: Response) => {
   }
 });
 
-/**
- * POST /api/albums/:albumId/tracks (Admin)
- * Add ONE track later (expects WAV master)
- */
+// POST /api/albums/:albumId/tracks (Admin)
+// Accepts WAV, generates MP3+M4A+stores master too (same as album upload).
 app.post(
   "/api/albums/:albumId/tracks",
   requireAdmin,
@@ -600,14 +555,7 @@ app.post(
   async (req: Request, res: Response) => {
     const requestId = makeUploadId();
     const tmpDir = path.join(os.tmpdir(), `blc-addtrack-${requestId}`);
-
-    const cleanupMulterFile = async () => {
-      try {
-        if (req.file?.path) await fs.unlink((req.file as any).path);
-      } catch {
-        // ignore
-      }
-    };
+    const cleanupPaths: string[] = [];
 
     try {
       if (!isR2Configured()) {
@@ -622,82 +570,58 @@ app.post(
         return res.status(400).json({ message: "Missing required fields or audio file" });
       }
 
-      // WAV-only (master)
       if (!isWavFile(audioFile)) {
-        return res.status(400).json({ message: `Only .wav master files are allowed. "${audioFile.originalname}" is not WAV.` });
+        return res.status(400).json({ message: `Only .wav master files allowed. Got "${audioFile.originalname}".` });
       }
 
       const album = await MusicAlbumModel.findById(albumId);
       if (!album) return res.status(404).json({ message: "Album not found" });
 
       await fs.mkdir(tmpDir, { recursive: true });
+      cleanupPaths.push(tmpDir, audioFile.path);
 
       const base = `${Date.now()}_${sanitizeName(audioFile.originalname).replace(/\.wav$/i, "")}`;
-      const wavInputPath = (audioFile as any).path;
+      const wavPath = audioFile.path;
       const mp3Path = path.join(tmpDir, `${base}.mp3`);
       const m4aPath = path.join(tmpDir, `${base}.m4a`);
+      cleanupPaths.push(mp3Path, m4aPath);
 
-      // convert
       await runFfmpeg([
-        "-y",
-        "-i",
-        wavInputPath,
-        "-vn",
-        "-c:a",
-        "libmp3lame",
-        "-b:a",
-        "320k",
-        "-ar",
-        "44100",
+        "-y", "-i", wavPath, "-vn",
+        "-c:a", "libmp3lame", "-b:a", "320k", "-ar", "44100",
         mp3Path,
       ]);
 
       await runFfmpeg([
-        "-y",
-        "-i",
-        wavInputPath,
-        "-vn",
-        "-c:a",
-        "aac",
-        "-b:a",
-        "256k",
-        "-ar",
-        "44100",
+        "-y", "-i", wavPath, "-vn",
+        "-c:a", "aac", "-b:a", "256k", "-ar", "44100",
         m4aPath,
       ]);
 
-      // upload master
       const masterKey = `audio/master/${base}.wav`;
-      await r2!.send(
-        new PutObjectCommand({
-          Bucket: R2_BUCKET_NAME!,
-          Key: masterKey,
-          Body: createReadStream(wavInputPath),
-          ContentType: "audio/wav",
-        })
-      );
-
-      // upload mp3
       const mp3Key = `audio/mp3/${base}.mp3`;
-      await r2!.send(
-        new PutObjectCommand({
-          Bucket: R2_BUCKET_NAME!,
-          Key: mp3Key,
-          Body: createReadStream(mp3Path),
-          ContentType: "audio/mpeg",
-        })
-      );
-
-      // upload m4a
       const m4aKey = `audio/m4a/${base}.m4a`;
-      await r2!.send(
-        new PutObjectCommand({
-          Bucket: R2_BUCKET_NAME!,
-          Key: m4aKey,
-          Body: createReadStream(m4aPath),
-          ContentType: "audio/mp4",
-        })
-      );
+
+      await r2!.send(new PutObjectCommand({
+        Bucket: R2_BUCKET_NAME!,
+        Key: masterKey,
+        Body: await fs.readFile(wavPath),
+        ContentType: "audio/wav",
+      }));
+
+      await r2!.send(new PutObjectCommand({
+        Bucket: R2_BUCKET_NAME!,
+        Key: mp3Key,
+        Body: await fs.readFile(mp3Path),
+        ContentType: "audio/mpeg",
+      }));
+
+      await r2!.send(new PutObjectCommand({
+        Bucket: R2_BUCKET_NAME!,
+        Key: m4aKey,
+        Body: await fs.readFile(m4aPath),
+        ContentType: "audio/mp4",
+      }));
 
       const mp3Url = R2_PUBLIC_DOMAIN ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${mp3Key}` : "";
       const m4aUrl = R2_PUBLIC_DOMAIN ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${m4aKey}` : "";
@@ -707,7 +631,9 @@ app.post(
         title: String(title).trim(),
         track_number: parseInt(track_number, 10),
         track_is_premium:
-          track_is_premium === undefined ? undefined : track_is_premium === "true" || track_is_premium === true,
+          track_is_premium === undefined
+            ? undefined
+            : track_is_premium === "true" || track_is_premium === true,
 
         stream_mp3_url: mp3Url,
         stream_mp3_path: mp3Key,
@@ -719,29 +645,24 @@ app.post(
       });
 
       await track.save();
-
       return res.status(201).json({ message: "Track added successfully", track });
     } catch (err: any) {
       console.error("Add track error:", err);
       if (err?.code === 11000) {
-        return res.status(409).json({
-          message: "Track number already exists for this album.",
-          error: err.message,
-        });
+        return res.status(409).json({ message: "Track number already exists for this album.", error: err.message });
       }
       return res.status(500).json({ message: "Failed to add track", error: err.message });
     } finally {
-      await Promise.allSettled([
-        fs.rm(tmpDir, { recursive: true, force: true }),
-        cleanupMulterFile(),
-      ]);
+      for (const p of cleanupPaths.reverse()) {
+        try {
+          await fs.rm(p, { recursive: true, force: true });
+        } catch {}
+      }
     }
   }
 );
 
-/**
- * GET /api/music/signed-url/:trackId (Admin)
- */
+// GET /api/music/signed-url/:trackId (Admin)
 app.get("/api/music/signed-url/:trackId", requireAdmin, async (req: Request, res: Response) => {
   try {
     if (!isR2Configured()) {
@@ -752,14 +673,10 @@ app.get("/api/music/signed-url/:trackId", requireAdmin, async (req: Request, res
     const track = await MusicTrackModel.findById(trackId);
     if (!track) return res.status(404).json({ message: "Track not found" });
 
-    const key = (track as any).stream_mp3_path;
-    if (!key) return res.status(400).json({ message: "Track has no stream_mp3_path yet." });
+    const key = (track as any).stream_mp3_path || (track as any).stream_m4a_path;
+    if (!key) return res.status(400).json({ message: "Track has no stream path yet." });
 
-    const command = new GetObjectCommand({
-      Bucket: R2_BUCKET_NAME!,
-      Key: key,
-    });
-
+    const command = new GetObjectCommand({ Bucket: R2_BUCKET_NAME!, Key: key });
     const signedUrl = await getSignedUrl(r2!, command, { expiresIn: 3600 });
     return res.json({ signedUrl });
   } catch (err: any) {
@@ -770,40 +687,22 @@ app.get("/api/music/signed-url/:trackId", requireAdmin, async (req: Request, res
 
 /**
  * =========================
- * POSTS ROUTES
+ * POSTS ROUTES (your existing)
  * =========================
  */
 app.get("/api/:typeposts", async (req: Request, res: Response) => {
   const type = req.params.typeposts.replace(/posts$/, "");
-  let Model;
+  let Model: any;
   switch (type) {
-    case "web-development":
-      Model = WebDevelopmentPostModel;
-      break;
-    case "app-development":
-      Model = AppDevelopmentPostModel;
-      break;
-    case "graphic-design":
-      Model = GraphicDesignPostModel;
-      break;
-    case "about":
-      Model = AboutPostModel;
-      break;
-    case "portfolio":
-      Model = PortfolioPostModel;
-      break;
-    case "web3":
-      Model = Web3PostModel;
-      break;
-    case "projects":
-      Model = ProjectsPostModel;
-      break;
-    case "services":
-      Model = ServicesPostModel;
-      break;
-    case "pricing":
-      Model = PricingPostModel;
-      break;
+    case "web-development": Model = WebDevelopmentPostModel; break;
+    case "app-development": Model = AppDevelopmentPostModel; break;
+    case "graphic-design": Model = GraphicDesignPostModel; break;
+    case "about": Model = AboutPostModel; break;
+    case "portfolio": Model = PortfolioPostModel; break;
+    case "web3": Model = Web3PostModel; break;
+    case "projects": Model = ProjectsPostModel; break;
+    case "services": Model = ServicesPostModel; break;
+    case "pricing": Model = PricingPostModel; break;
     default:
       return res.status(400).json({ message: `Invalid type: ${type}posts` });
   }
@@ -819,35 +718,17 @@ app.get("/api/:typeposts", async (req: Request, res: Response) => {
 
 app.put("/api/:typeposts", requireAdmin, async (req, res) => {
   const type = req.params.typeposts.replace(/posts$/, "");
-  let Model;
+  let Model: any;
   switch (type) {
-    case "web-development":
-      Model = WebDevelopmentPostModel;
-      break;
-    case "app-development":
-      Model = AppDevelopmentPostModel;
-      break;
-    case "graphic-design":
-      Model = GraphicDesignPostModel;
-      break;
-    case "about":
-      Model = AboutPostModel;
-      break;
-    case "portfolio":
-      Model = PortfolioPostModel;
-      break;
-    case "web3":
-      Model = Web3PostModel;
-      break;
-    case "projects":
-      Model = ProjectsPostModel;
-      break;
-    case "services":
-      Model = ServicesPostModel;
-      break;
-    case "pricing":
-      Model = PricingPostModel;
-      break;
+    case "web-development": Model = WebDevelopmentPostModel; break;
+    case "app-development": Model = AppDevelopmentPostModel; break;
+    case "graphic-design": Model = GraphicDesignPostModel; break;
+    case "about": Model = AboutPostModel; break;
+    case "portfolio": Model = PortfolioPostModel; break;
+    case "web3": Model = Web3PostModel; break;
+    case "projects": Model = ProjectsPostModel; break;
+    case "services": Model = ServicesPostModel; break;
+    case "pricing": Model = PricingPostModel; break;
     default:
       return res.status(400).json({ message: `Invalid type: ${type}posts` });
   }
@@ -855,7 +736,6 @@ app.put("/api/:typeposts", requireAdmin, async (req, res) => {
   try {
     const postData = req.body;
     const existingPost = await Model.findOne();
-
     if (existingPost) {
       await Model.updateOne({}, postData);
       return res.json({ message: `${type}posts updated`, data: postData });
@@ -870,7 +750,7 @@ app.put("/api/:typeposts", requireAdmin, async (req, res) => {
 });
 
 /**
- * Serve Vite frontend static files (LAST)
+ * ✅ Serve Vite frontend static files (LAST)
  */
 const distPath = path.join(__dirname, "../../dist");
 app.use(express.static(distPath));
@@ -881,7 +761,7 @@ app.get("*", (req, res, next) => {
 });
 
 /**
- * Start server
+ * ✅ Start server
  */
 async function startServer() {
   await mongoose.connect(uri);
