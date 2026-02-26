@@ -12,7 +12,10 @@ type TrackRow = {
 
 const MusicAlbumForm: React.FC = () => {
   const { getToken, isLoaded, isSignedIn } = useAuth();
-
+  const API_BASE =
+  import.meta.env.MODE === "production"
+    ? "https://upload.brightlightscreative.com"
+    : "";
   const [albumTitle, setAlbumTitle] = useState("");
   const [artist, setArtist] = useState("Great Light");
   const [albumIsPremium, setAlbumIsPremium] = useState(true);
@@ -146,7 +149,7 @@ const MusicAlbumForm: React.FC = () => {
       });
       payload.append("track_is_premium", JSON.stringify(premiumArray));
 
-      const res = await axios.post("/api/albums", payload, {
+      const res = await axios.post(`${API_BASE}/api/albums`, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
           // ✅ do NOT set Content-Type for FormData

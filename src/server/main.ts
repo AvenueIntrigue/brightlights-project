@@ -158,6 +158,7 @@ app.use(
       "https://www.brightlightscreative.com",
       "https://brightlightscreative.com",
       "https://brightlights-project.onrender.com",
+      "https://upload.brightlightscreative.com",  
       "http://localhost:5173",
     ],
     methods: ["GET", "POST", "PUT", "OPTIONS"],
