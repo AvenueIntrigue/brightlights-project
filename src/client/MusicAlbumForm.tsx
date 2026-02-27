@@ -352,12 +352,16 @@ const MusicAlbumForm: React.FC = () => {
         </div>
 
         <button
-          type="submit"
-          disabled={loading || !canSubmit}
-          className="create-submit-button border-none text-slate-700 h-10 rounded w-full mt-4 mx-autodisabled:opacity-50 success?bg-green-500 hover:bg-green-600 focus:ring-green-300 disabled:cursor-not-allowed"
-        >
-          {loading ? "Uploading..." : success ? "Upload Successful!" : "Upload Album"}
-        </button>
+  type="submit"
+  disabled={loading || !canSubmit}
+  className={`create-submit-button border-none h-10 rounded w-full mt-4 mx-auto disabled:opacity-50 ${
+    success
+      ? "bg-green-700 text-[#f5f5f5]"
+      : "bg-green-200 text-slate-700"
+  }`}
+>
+  {loading ? "Uploading..." : success ? "Upload Complete ✓" : "Upload Album"}
+</button>
       </form>
     </div>
   );
