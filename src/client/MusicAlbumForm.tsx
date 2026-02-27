@@ -253,7 +253,7 @@ const MusicAlbumForm: React.FC = () => {
         )}
 
         <div>
-          <label className="create-label block text-lg font-medium mb-2">Album Title</label>
+          <label className="create-label block text-lg font-medium mb-2 text-[#f5f5f5]">Album Title</label>
           <input
             className="create-input-field w-full h-12 px-4 border rounded bg-white text-gray-900"
             value={albumTitle}
@@ -263,7 +263,7 @@ const MusicAlbumForm: React.FC = () => {
         </div>
 
         <div>
-          <label className="create-label block text-lg font-medium mb-2">Artist</label>
+          <label className="create-label block text-lg font-medium mb-2 text-[#f5f5f5]">Artist</label>
           <input
             className="create-input-field w-full h-12 px-4 border rounded bg-white text-gray-900"
             value={artist}
@@ -284,13 +284,13 @@ const MusicAlbumForm: React.FC = () => {
         </div>
 
         <div>
-          <label className="create-label block text-lg font-medium mb-2 text-gray-900">Album Cover (required)</label>
+          <label className="create-label block text-lg font-medium mb-2 text-[#f5f5f5]">Album Cover (required)</label>
           <input type="file" accept="image/*" onChange={handlePickCover} className="create-input-field w-full" required />
           {coverFile && <div className="text-sm mt-2">Selected: {coverFile.name}</div>}
         </div>
 
         <div>
-          <label className="create-label block text-lg font-medium mb-2 text-gray-900">Tracks (WAV only)</label>
+          <label className="create-label block text-lg font-medium mb-2 text-[#f5f5f5]">Tracks (WAV only)</label>
           <input type="file" accept=".wav,audio/wav" multiple onChange={handlePickTracks} className="create-input-field w-full" />
 
           {tracks.length > 0 && (
