@@ -10,6 +10,7 @@ import { fileURLToPath } from "url";
 import crypto from "crypto";
 import os from "os";
 import fs from "fs/promises";
+import fsSync from "fs";
 import { spawn } from "child_process";
 
 import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
@@ -60,10 +61,32 @@ if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
 }
 
 const dailyTopics = [
-  "love", "joy", "peace", "patience", "kindness", "goodness", "faithfulness", "gentleness", "self-control",
-  "family", "christian_living", "forgiveness", "repentance", "gratitude", "hope", "humility", "obedience",
-  "called_to_create", "honor_god_in_your_work", "liberty", "bread_of_life", "living_water", "provision",
-  "holy_spirit_guidance", "follower_of_christ", "salvation",
+  "love",
+  "joy",
+  "peace",
+  "patience",
+  "kindness",
+  "goodness",
+  "faithfulness",
+  "gentleness",
+  "self-control",
+  "family",
+  "christian_living",
+  "forgiveness",
+  "repentance",
+  "gratitude",
+  "hope",
+  "humility",
+  "obedience",
+  "called_to_create",
+  "honor_god_in_your_work",
+  "liberty",
+  "bread_of_life",
+  "living_water",
+  "provision",
+  "holy_spirit_guidance",
+  "follower_of_christ",
+  "salvation",
 ] as const;
 
 const app = express();
@@ -80,13 +103,13 @@ const R2_PUBLIC_DOMAIN = process.env.CLOUDFLARE_R2_PUBLIC_DOMAIN;
 const r2 =
   R2_ACCOUNT_ID && R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY
     ? new S3Client({
-      region: "auto",
-      endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-      credentials: {
-        accessKeyId: R2_ACCESS_KEY_ID,
-        secretAccessKey: R2_SECRET_ACCESS_KEY,
-      },
-    })
+        region: "auto",
+        endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+        credentials: {
+          accessKeyId: R2_ACCESS_KEY_ID,
+          secretAccessKey: R2_SECRET_ACCESS_KEY,
+        },
+      })
     : null;
 
 function isR2Configured() {
@@ -153,7 +176,7 @@ app.options("*", (req: Request, res: Response) => {
   res.sendStatus(204);
 });
 
-// Body parsing (don’t use huge here; file uploads are multipart/multer anyway)
+// Body parsing (uploads are multipart/multer)
 app.use(bodyParser.json({ limit: "10mb" }));
 app.use(bodyParser.urlencoded({ limit: "10mb", extended: true }));
 
@@ -161,10 +184,7 @@ app.use(bodyParser.urlencoded({ limit: "10mb", extended: true }));
  * ✅ Multer disk storage
  */
 function sanitizeName(name: string) {
-  return name
-    .trim()
-    .replace(/\s+/g, "_")
-    .replace(/[^\w.\-]/g, "_");
+  return name.trim().replace(/\s+/g, "_").replace(/[^\w.\-]/g, "_");
 }
 
 const upload = multer({
@@ -205,17 +225,87 @@ function isWavFile(f: Express.Multer.File) {
   return nameOk && mimeOk;
 }
 
+function fileExistsAndNonEmpty(p: string) {
+  try {
+    return fsSync.existsSync(p) && fsSync.statSync(p).size > 0;
+  } catch {
+    return false;
+  }
+}
+
 function runFfmpeg(args: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
     const p = spawn("ffmpeg", args, { stdio: ["ignore", "pipe", "pipe"] });
+
     let stderr = "";
     p.stderr.on("data", (d) => (stderr += d.toString()));
-    p.on("error", reject);
+
+    p.on("error", (e) => reject(e));
     p.on("close", (code) => {
       if (code === 0) return resolve();
-      reject(new Error(`ffmpeg exited with code ${code}. ${stderr.slice(-2000)}`));
+      reject(new Error(`ffmpeg exited with code ${code}. ${stderr.slice(-4000)}`));
     });
   });
+}
+
+/**
+ * MP3 encoding: libmp3lame often missing on managed hosts.
+ * Try libmp3lame first, fallback to "mp3".
+ */
+async function wavToMp3(wavPath: string, mp3Path: string) {
+  try {
+    await runFfmpeg([
+      "-y",
+      "-i",
+      wavPath,
+      "-vn",
+      "-c:a",
+      "libmp3lame",
+      "-b:a",
+      "320k",
+      "-ar",
+      "44100",
+      mp3Path,
+    ]);
+  } catch (e) {
+    await runFfmpeg([
+      "-y",
+      "-i",
+      wavPath,
+      "-vn",
+      "-c:a",
+      "mp3",
+      "-b:a",
+      "320k",
+      "-ar",
+      "44100",
+      mp3Path,
+    ]);
+  }
+
+  if (!fileExistsAndNonEmpty(mp3Path)) {
+    throw new Error("MP3 file was not created by ffmpeg (encoder unavailable or conversion failed).");
+  }
+}
+
+async function wavToM4a(wavPath: string, m4aPath: string) {
+  await runFfmpeg([
+    "-y",
+    "-i",
+    wavPath,
+    "-vn",
+    "-c:a",
+    "aac",
+    "-b:a",
+    "256k",
+    "-ar",
+    "44100",
+    m4aPath,
+  ]);
+
+  if (!fileExistsAndNonEmpty(m4aPath)) {
+    throw new Error("M4A file was not created by ffmpeg.");
+  }
 }
 
 /**
@@ -289,24 +379,8 @@ app.post("/api/lessons", requireAdmin, async (req: Request, res: Response) => {
  */
 
 /**
- * POST /api/albums
- * cover: 1 image
- * tracks: up to 10 WAV masters
- *
- * Converts:
- * - WAV -> MP3 (320k)
- * - WAV -> M4A (AAC 256k)
- * Uploads to R2:
- * - covers/*
- * - audio/master/*
- * - audio/mp3/*
- * - audio/m4a/*
+ * Presign and commit endpoints for client direct-to-R2 uploads (optional).
  */
-
-
-
-// Presign and commit endpoints for client direct-to-R2 uploads (optional, but good for large files and faster UX)  
-
 app.post("/api/r2/presign", requireAdmin, async (req: Request, res: Response) => {
   try {
     if (!isR2Configured()) {
@@ -330,23 +404,21 @@ app.post("/api/r2/presign", requireAdmin, async (req: Request, res: Response) =>
     const safeArtist = sanitizeName((artist || "Great_Light").trim());
     const safeAlbum = sanitizeName((albumTitle || "Untitled_Album").trim());
 
-    // Choose key structure (this is your R2 object key)
     const key =
       kind === "cover"
         ? `covers/${safeArtist}/${safeAlbum}/${Date.now()}_${safeFile}`
-        : `audio/master/${safeArtist}/${safeAlbum}/track_${String(trackNumber ?? 0).padStart(2, "0")}_${Date.now()}_${safeFile}`;
+        : `audio/master/${safeArtist}/${safeAlbum}/track_${String(trackNumber ?? 0).padStart(
+            2,
+            "0"
+          )}_${Date.now()}_${safeFile}`;
 
     const cmd = new PutObjectCommand({
       Bucket: R2_BUCKET_NAME!,
       Key: key,
       ContentType: contentType || (kind === "cover" ? "image/jpeg" : "audio/wav"),
-      // You can add metadata if you want:
-      // Metadata: { kind, album: safeAlbum, artist: safeArtist }
     });
 
-    // 10 minutes is fine; upload itself can run longer after connection starts
     const putUrl = await getSignedUrl(r2!, cmd, { expiresIn: 60 * 10 });
-
     return res.json({ key, putUrl });
   } catch (err: any) {
     console.error("Presign error:", err);
@@ -356,13 +428,7 @@ app.post("/api/r2/presign", requireAdmin, async (req: Request, res: Response) =>
 
 app.post("/api/albums/commit", requireAdmin, async (req: Request, res: Response) => {
   try {
-    const {
-      album_title,
-      artist = "Great Light",
-      album_is_premium = true,
-      cover_key,
-      tracks,
-    } = req.body as {
+    const { album_title, artist = "Great Light", album_is_premium = true, cover_key, tracks } = req.body as {
       album_title: string;
       artist: string;
       album_is_premium: boolean;
@@ -372,6 +438,9 @@ app.post("/api/albums/commit", requireAdmin, async (req: Request, res: Response)
         track_number: number;
         track_is_premium?: boolean | null;
         master_wav_key: string;
+        // if you ever add these later:
+        stream_mp3_key?: string;
+        stream_m4a_key?: string;
       }>;
     };
 
@@ -379,7 +448,6 @@ app.post("/api/albums/commit", requireAdmin, async (req: Request, res: Response)
       return res.status(400).json({ message: "Missing album_title, cover_key, or tracks." });
     }
 
-    // Create/reuse album doc
     const albumDoc = await MusicAlbumModel.findOneAndUpdate(
       { title: String(album_title).trim(), artist: String(artist).trim() },
       {
@@ -390,7 +458,7 @@ app.post("/api/albums/commit", requireAdmin, async (req: Request, res: Response)
         $set: {
           album_is_premium: !!album_is_premium,
           cover_path: cover_key,
-          cover_url: "", // you said you don’t care about URL
+          cover_url: "",
           status: "active",
         },
       },
@@ -406,12 +474,13 @@ app.post("/api/albums/commit", requireAdmin, async (req: Request, res: Response)
         track_number: Number(t.track_number),
         track_is_premium: typeof t.track_is_premium === "boolean" ? t.track_is_premium : undefined,
 
-        // WAV-only masters for now
         master_wav_path: t.master_wav_key,
+
+        // if your schema allows empty defaults, this is fine:
         stream_mp3_url: "",
-        stream_mp3_path: "",
+        stream_mp3_path: t.stream_mp3_key || "",
         stream_m4a_url: "",
-        stream_m4a_path: "",
+        stream_m4a_path: t.stream_m4a_key || "",
 
         status: "active",
       });
@@ -436,7 +505,15 @@ app.post("/api/albums/commit", requireAdmin, async (req: Request, res: Response)
   }
 });
 
-//
+/**
+ * POST /api/albums
+ * cover: 1 image
+ * tracks: up to 10 WAV masters
+ *
+ * Converts:
+ * - WAV -> MP3 (320k)  (libmp3lame -> fallback mp3)
+ * - WAV -> M4A (AAC 256k)
+ */
 app.post(
   "/api/albums",
   requireAdmin,
@@ -448,7 +525,6 @@ app.post(
     const requestId = makeUploadId();
     const tmpDir = path.join(os.tmpdir(), `blc-upload-${requestId}`);
 
-    // track every path we should remove
     const cleanupPaths: string[] = [];
 
     try {
@@ -476,7 +552,6 @@ app.post(
         });
       }
 
-      // WAV-only enforcement
       const bad = trackFiles.find((f) => !isWavFile(f));
       if (bad) {
         return res.status(400).json({
@@ -492,7 +567,7 @@ app.post(
       await fs.mkdir(tmpDir, { recursive: true });
       cleanupPaths.push(tmpDir);
 
-      // ---- Upload cover (disk file -> R2) ----
+      // ---- Upload cover (disk -> R2) ----
       cleanupPaths.push(coverFile.path);
 
       const coverKey = `covers/${Date.now()}_${sanitizeName(coverFile.originalname)}`;
@@ -527,7 +602,6 @@ app.post(
         { new: true, upsert: true }
       );
 
-      // ---- Convert + upload tracks ----
       const createdTracks: any[] = [];
       const sortedTrackFiles = [...trackFiles].sort((a, b) => a.originalname.localeCompare(b.originalname));
 
@@ -541,43 +615,16 @@ app.post(
 
         const base = `${Date.now()}_${i + 1}_${sanitizeName(f.originalname).replace(/\.wav$/i, "")}`;
 
-        // input WAV is already on disk at f.path
         const wavPath = f.path;
-
-        // outputs in our per-request tmp dir
         const mp3Path = path.join(tmpDir, `${base}.mp3`);
         const m4aPath = path.join(tmpDir, `${base}.m4a`);
         cleanupPaths.push(mp3Path, m4aPath);
 
-        // WAV -> MP3
-        await runFfmpeg([
-          "-y",
-          "-i",
-          wavPath,
-          "-vn",
-          "-c:a",
-          "libmp3lame",
-          "-b:a",
-          "320k",
-          "-ar",
-          "44100",
-          mp3Path,
-        ]);
+        // WAV -> MP3 (with fallback)
+        await wavToMp3(wavPath, mp3Path);
 
-        // WAV -> M4A (AAC)
-        await runFfmpeg([
-          "-y",
-          "-i",
-          wavPath,
-          "-vn",
-          "-c:a",
-          "aac",
-          "-b:a",
-          "256k",
-          "-ar",
-          "44100",
-          m4aPath,
-        ]);
+        // WAV -> M4A
+        await wavToM4a(wavPath, m4aPath);
 
         // Upload master WAV
         const masterKey = `audio/master/${base}.wav`;
@@ -657,7 +704,6 @@ app.post(
         error: err.message,
       });
     } finally {
-      // cleanup: remove files and tmp dir
       for (const p of cleanupPaths.reverse()) {
         try {
           await fs.rm(p, { recursive: true, force: true });
@@ -685,7 +731,6 @@ app.get("/api/albums", requireAdmin, async (_req: Request, res: Response) => {
 });
 
 // POST /api/albums/:albumId/tracks (Admin)
-// Accepts WAV, generates MP3+M4A+stores master too (same as album upload).
 app.post(
   "/api/albums/:albumId/tracks",
   requireAdmin,
@@ -724,42 +769,39 @@ app.post(
       const m4aPath = path.join(tmpDir, `${base}.m4a`);
       cleanupPaths.push(mp3Path, m4aPath);
 
-      await runFfmpeg([
-        "-y", "-i", wavPath, "-vn",
-        "-c:a", "libmp3lame", "-b:a", "320k", "-ar", "44100",
-        mp3Path,
-      ]);
-
-      await runFfmpeg([
-        "-y", "-i", wavPath, "-vn",
-        "-c:a", "aac", "-b:a", "256k", "-ar", "44100",
-        m4aPath,
-      ]);
+      await wavToMp3(wavPath, mp3Path);
+      await wavToM4a(wavPath, m4aPath);
 
       const masterKey = `audio/master/${base}.wav`;
       const mp3Key = `audio/mp3/${base}.mp3`;
       const m4aKey = `audio/m4a/${base}.m4a`;
 
-      await r2!.send(new PutObjectCommand({
-        Bucket: R2_BUCKET_NAME!,
-        Key: masterKey,
-        Body: await fs.readFile(wavPath),
-        ContentType: "audio/wav",
-      }));
+      await r2!.send(
+        new PutObjectCommand({
+          Bucket: R2_BUCKET_NAME!,
+          Key: masterKey,
+          Body: await fs.readFile(wavPath),
+          ContentType: "audio/wav",
+        })
+      );
 
-      await r2!.send(new PutObjectCommand({
-        Bucket: R2_BUCKET_NAME!,
-        Key: mp3Key,
-        Body: await fs.readFile(mp3Path),
-        ContentType: "audio/mpeg",
-      }));
+      await r2!.send(
+        new PutObjectCommand({
+          Bucket: R2_BUCKET_NAME!,
+          Key: mp3Key,
+          Body: await fs.readFile(mp3Path),
+          ContentType: "audio/mpeg",
+        })
+      );
 
-      await r2!.send(new PutObjectCommand({
-        Bucket: R2_BUCKET_NAME!,
-        Key: m4aKey,
-        Body: await fs.readFile(m4aPath),
-        ContentType: "audio/mp4",
-      }));
+      await r2!.send(
+        new PutObjectCommand({
+          Bucket: R2_BUCKET_NAME!,
+          Key: m4aKey,
+          Body: await fs.readFile(m4aPath),
+          ContentType: "audio/mp4",
+        })
+      );
 
       const mp3Url = R2_PUBLIC_DOMAIN ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${mp3Key}` : "";
       const m4aUrl = R2_PUBLIC_DOMAIN ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${m4aKey}` : "";
@@ -769,9 +811,7 @@ app.post(
         title: String(title).trim(),
         track_number: parseInt(track_number, 10),
         track_is_premium:
-          track_is_premium === undefined
-            ? undefined
-            : track_is_premium === "true" || track_is_premium === true,
+          track_is_premium === undefined ? undefined : track_is_premium === "true" || track_is_premium === true,
 
         stream_mp3_url: mp3Url,
         stream_mp3_path: mp3Key,
@@ -794,7 +834,9 @@ app.post(
       for (const p of cleanupPaths.reverse()) {
         try {
           await fs.rm(p, { recursive: true, force: true });
-        } catch { }
+        } catch {
+          // ignore
+        }
       }
     }
   }
@@ -832,15 +874,33 @@ app.get("/api/:typeposts", async (req: Request, res: Response) => {
   const type = req.params.typeposts.replace(/posts$/, "");
   let Model: any;
   switch (type) {
-    case "web-development": Model = WebDevelopmentPostModel; break;
-    case "app-development": Model = AppDevelopmentPostModel; break;
-    case "graphic-design": Model = GraphicDesignPostModel; break;
-    case "about": Model = AboutPostModel; break;
-    case "portfolio": Model = PortfolioPostModel; break;
-    case "web3": Model = Web3PostModel; break;
-    case "projects": Model = ProjectsPostModel; break;
-    case "services": Model = ServicesPostModel; break;
-    case "pricing": Model = PricingPostModel; break;
+    case "web-development":
+      Model = WebDevelopmentPostModel;
+      break;
+    case "app-development":
+      Model = AppDevelopmentPostModel;
+      break;
+    case "graphic-design":
+      Model = GraphicDesignPostModel;
+      break;
+    case "about":
+      Model = AboutPostModel;
+      break;
+    case "portfolio":
+      Model = PortfolioPostModel;
+      break;
+    case "web3":
+      Model = Web3PostModel;
+      break;
+    case "projects":
+      Model = ProjectsPostModel;
+      break;
+    case "services":
+      Model = ServicesPostModel;
+      break;
+    case "pricing":
+      Model = PricingPostModel;
+      break;
     default:
       return res.status(400).json({ message: `Invalid type: ${type}posts` });
   }
@@ -858,15 +918,33 @@ app.put("/api/:typeposts", requireAdmin, async (req, res) => {
   const type = req.params.typeposts.replace(/posts$/, "");
   let Model: any;
   switch (type) {
-    case "web-development": Model = WebDevelopmentPostModel; break;
-    case "app-development": Model = AppDevelopmentPostModel; break;
-    case "graphic-design": Model = GraphicDesignPostModel; break;
-    case "about": Model = AboutPostModel; break;
-    case "portfolio": Model = PortfolioPostModel; break;
-    case "web3": Model = Web3PostModel; break;
-    case "projects": Model = ProjectsPostModel; break;
-    case "services": Model = ServicesPostModel; break;
-    case "pricing": Model = PricingPostModel; break;
+    case "web-development":
+      Model = WebDevelopmentPostModel;
+      break;
+    case "app-development":
+      Model = AppDevelopmentPostModel;
+      break;
+    case "graphic-design":
+      Model = GraphicDesignPostModel;
+      break;
+    case "about":
+      Model = AboutPostModel;
+      break;
+    case "portfolio":
+      Model = PortfolioPostModel;
+      break;
+    case "web3":
+      Model = Web3PostModel;
+      break;
+    case "projects":
+      Model = ProjectsPostModel;
+      break;
+    case "services":
+      Model = ServicesPostModel;
+      break;
+    case "pricing":
+      Model = PricingPostModel;
+      break;
     default:
       return res.status(400).json({ message: `Invalid type: ${type}posts` });
   }
