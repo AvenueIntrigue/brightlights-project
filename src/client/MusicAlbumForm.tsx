@@ -278,19 +278,19 @@ const MusicAlbumForm: React.FC = () => {
             onChange={(e) => setAlbumIsPremium(e.target.checked)}
             className="h-5 w-5 border-gray-300 rounded"
           />
-          <label className="ml-2 block text-lg font-medium text-gray-900">
+          <label className="ml-2 block text-lg font-medium text-[#f5f5f5]">
             Album is Premium (tracks inherit unless overridden)
           </label>
         </div>
 
         <div>
-          <label className="create-label block text-lg font-medium mb-2">Album Cover (required)</label>
+          <label className="create-label block text-lg font-medium mb-2 text-gray-900">Album Cover (required)</label>
           <input type="file" accept="image/*" onChange={handlePickCover} className="create-input-field w-full" required />
           {coverFile && <div className="text-sm mt-2">Selected: {coverFile.name}</div>}
         </div>
 
         <div>
-          <label className="create-label block text-lg font-medium mb-2">Tracks (WAV only)</label>
+          <label className="create-label block text-lg font-medium mb-2 text-gray-900">Tracks (WAV only)</label>
           <input type="file" accept=".wav,audio/wav" multiple onChange={handlePickTracks} className="create-input-field w-full" />
 
           {tracks.length > 0 && (
@@ -301,13 +301,13 @@ const MusicAlbumForm: React.FC = () => {
 
               {tracks.map((t, idx) => (
                 <div key={`${t.file.name}-${idx}`} className="p-3 border rounded bg-white">
-                  <div className="text-sm mb-2">
+                  <div className="text-sm mb-2 text-gray-900">
                     <strong>File:</strong> {t.file.name}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div>
-                      <label className="text-sm font-medium">Title</label>
+                      <label className="text-sm font-medium text-gray-900">Title</label>
                       <input
                         className="create-input-field w-full h-10 px-3 border rounded bg-white"
                         value={t.title}
@@ -316,7 +316,7 @@ const MusicAlbumForm: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium">Track #</label>
+                      <label className="text-sm font-medium text-gray-900">Track #</label>
                       <input
                         type="number"
                         min={1}
@@ -327,7 +327,7 @@ const MusicAlbumForm: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="text-sm font-medium">Premium Override</label>
+                      <label className="text-sm font-medium text-gray-900">Premium Override</label>
                       <select
                         className="create-input-field w-full h-10 px-3 border rounded bg-white"
                         value={t.premiumOverride}
@@ -354,9 +354,9 @@ const MusicAlbumForm: React.FC = () => {
         <button
           type="submit"
           disabled={loading || !canSubmit}
-          className="create-submit-button w-full py-3 bg-blue-600 text-white font-bold rounded disabled:opacity-50"
+          className="create-submit-button border-none text-slate-700 h-10 rounded w-full mt-4 mx-autodisabled:opacity-50 success?bg-green-500 hover:bg-green-600 focus:ring-green-300 disabled:cursor-not-allowed"
         >
-          {loading ? "Uploading..." : "Upload Album"}
+          {loading ? "Uploading..." : success ? "Upload Successful!" : "Upload Album"}
         </button>
       </form>
     </div>
