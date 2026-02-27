@@ -10,16 +10,7 @@ type TrackRow = {
   premiumOverride: "inherit" | "premium" | "free";
 };
 
-function decodeJwtPayload(token: string) {
-  // NOTE: only for debugging exp in console
-  const parts = token.split(".");
-  if (parts.length < 2) throw new Error("Malformed JWT");
-  return JSON.parse(atob(parts[1]));
-}
-
-async function getFreshToken(getToken: ReturnType<typeof useAuth>["getToken"]) {
-  return await getToken({ skipCache: true });
-}
+type PresignResponse = { key: string; putUrl: string };
 
 const MusicAlbumForm: React.FC = () => {
   const { getToken, isLoaded, isSignedIn } = useAuth();
@@ -40,7 +31,7 @@ const MusicAlbumForm: React.FC = () => {
       albumTitle.trim().length > 0 &&
       !!coverFile &&
       tracks.length > 0 &&
-      tracks.every((t) => t.title.trim().length > 0 && t.trackNumber >= 1)
+      tracks.every((t) => t.title.trim().length > 0 && t.trackNumber >= 1 && !!t.file)
     );
   }, [albumTitle, coverFile, tracks]);
 
@@ -52,8 +43,6 @@ const MusicAlbumForm: React.FC = () => {
   };
 
   const handlePickTracks = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setError(null);
-
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
@@ -77,7 +66,6 @@ const MusicAlbumForm: React.FC = () => {
       return [...prev, ...newRows];
     });
 
-    // allow selecting the same file again later
     e.target.value = "";
   };
 
@@ -93,129 +81,122 @@ const MusicAlbumForm: React.FC = () => {
     setTracks((prev) => prev.map((t, i) => ({ ...t, trackNumber: i + 1 })));
   };
 
-  const buildFormData = () => {
-    const fd = new FormData();
-    fd.append("album_title", albumTitle.trim());
-    fd.append("artist", artist.trim() || "Great Light");
-    fd.append("album_is_premium", String(albumIsPremium));
-    fd.append("cover", coverFile!);
+  async function getFreshTokenOrThrow() {
+    if (!isLoaded) throw new Error("Auth is still loading.");
+    if (!isSignedIn) throw new Error("You must be signed in.");
+    const token = await getToken({ skipCache: true });
+    if (!token) throw new Error("Could not get auth token. Sign out/in and try again.");
+    return token;
+  }
 
-    // audio files
-    tracks.forEach((t) => fd.append("tracks", t.file));
-
-    // per-track metadata arrays
-    fd.append("track_titles", JSON.stringify(tracks.map((t) => t.title)));
-    fd.append("track_numbers", JSON.stringify(tracks.map((t) => t.trackNumber)));
-
-    // null => inherit album premium
-    const premiumArray = tracks.map((t) => {
-      if (t.premiumOverride === "inherit") return null;
-      return t.premiumOverride === "premium";
+  async function presign(token: string, body: any): Promise<PresignResponse> {
+    const res = await axios.post("/api/r2/presign", body, {
+      headers: { Authorization: `Bearer ${token}` },
     });
-    fd.append("track_is_premium", JSON.stringify(premiumArray));
+    return res.data as PresignResponse;
+  }
 
-    return fd;
-  };
-
-  const postAlbumWithToken = async (token: string) => {
-    const fd = buildFormData();
-    return axios.post("/api/albums", fd, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        // IMPORTANT: don't set Content-Type manually for FormData
-      },
+  async function putToR2(putUrl: string, file: File) {
+    // Use fetch for presigned PUT (axios also works, fetch is simpler here)
+    const resp = await fetch(putUrl, {
+      method: "PUT",
+      headers: { "Content-Type": file.type || "application/octet-stream" },
+      body: file,
     });
-  };
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => "");
+      throw new Error(`R2 upload failed (${resp.status}): ${text.slice(0, 200)}`);
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccess(null);
 
-    if (!albumTitle.trim() || !coverFile) {
-      setError("Album title and cover are required.");
-      return;
-    }
-    if (tracks.length === 0) {
-      setError("Please add at least one track file.");
-      return;
-    }
-    if (!canSubmit) {
-      setError("Please fill out all track titles and track numbers.");
-      return;
-    }
-    if (!isLoaded) {
-      setError("Auth is still loading—try again in a moment.");
-      return;
-    }
-    if (!isSignedIn) {
-      setError("You must be signed in to upload music.");
+    if (!canSubmit || !coverFile) {
+      setError("Album title, cover, and at least one WAV track are required.");
       return;
     }
 
     try {
       setLoading(true);
 
-      // ✅ Token as late as possible (right before request)
-      let token = await getFreshToken(getToken);
-      if (!token) {
-        setError("Could not get an auth token. Please sign out/in and try again.");
-        return;
+      // 1) Token for fast presign calls
+      const token = await getFreshTokenOrThrow();
+
+      // 2) Cover: presign -> PUT to R2
+      const coverPresign = await presign(token, {
+        kind: "cover",
+        albumTitle,
+        artist,
+        filename: coverFile.name,
+        contentType: coverFile.type || "image/jpeg",
+      });
+      await putToR2(coverPresign.putUrl, coverFile);
+
+      // 3) Tracks: presign -> PUT each WAV to R2
+      // (Sequential is safest to start; once stable, we can add concurrency=2)
+      const uploadedTracks: Array<{
+        title: string;
+        track_number: number;
+        track_is_premium?: boolean | null;
+        master_wav_key: string;
+      }> = [];
+
+      for (const t of tracks) {
+        // fresh token each presign call (optional, but keeps you safest)
+        const tk = await getFreshTokenOrThrow();
+
+        const ps = await presign(tk, {
+          kind: "master",
+          albumTitle,
+          artist,
+          trackNumber: t.trackNumber,
+          filename: t.file.name,
+          contentType: t.file.type || "audio/wav",
+        });
+
+        await putToR2(ps.putUrl, t.file);
+
+        uploadedTracks.push({
+          title: t.title,
+          track_number: t.trackNumber,
+          track_is_premium:
+            t.premiumOverride === "inherit"
+              ? null
+              : t.premiumOverride === "premium",
+          master_wav_key: ps.key,
+        });
       }
 
-      // Optional debug: token exp
-      try {
-        const jwt = decodeJwtPayload(token);
-        console.log("JWT exp:", jwt?.exp);
-      } catch {
-        // ignore debug decode errors
-      }
+      // 4) Commit album (fast server call)
+      const finalToken = await getFreshTokenOrThrow();
+      const commitRes = await axios.post(
+        "/api/albums/commit",
+        {
+          album_title: albumTitle.trim(),
+          artist: artist.trim() || "Great Light",
+          album_is_premium: albumIsPremium,
+          cover_key: coverPresign.key,
+          tracks: uploadedTracks,
+        },
+        { headers: { Authorization: `Bearer ${finalToken}` } }
+      );
 
-      try {
-        const res = await postAlbumWithToken(token);
+      setSuccess(
+        `Album saved: ${commitRes.data.album?.title ?? albumTitle} (${commitRes.data.tracks?.length ?? tracks.length} tracks)`
+      );
 
-        setSuccess(
-          `Album uploaded: ${res.data.album?.title ?? albumTitle} (${res.data.tracks?.length ?? tracks.length} tracks)`
-        );
-
-        // reset
-        setAlbumTitle("");
-        setArtist("Great Light");
-        setAlbumIsPremium(true);
-        setCoverFile(null);
-        setTracks([]);
-      } catch (err: any) {
-        // ✅ One automatic retry if token expired mid-flight
-        const status = err?.response?.status;
-        const reason = err?.response?.data?.reason;
-
-        if (status === 401 && reason === "token-expired") {
-          token = await getFreshToken(getToken);
-          if (!token) throw err;
-
-          const res = await postAlbumWithToken(token);
-
-          setSuccess(
-            `Album uploaded: ${res.data.album?.title ?? albumTitle} (${res.data.tracks?.length ?? tracks.length} tracks)`
-          );
-
-          // reset
-          setAlbumTitle("");
-          setArtist("Great Light");
-          setAlbumIsPremium(true);
-          setCoverFile(null);
-          setTracks([]);
-          return;
-        }
-
-        throw err;
-      }
+      // reset
+      setAlbumTitle("");
+      setArtist("Great Light");
+      setAlbumIsPremium(true);
+      setCoverFile(null);
+      setTracks([]);
     } catch (err: any) {
       console.error(err);
-      setError(
-        err.response?.data?.message ||
-          (err.response?.status ? `Upload failed (${err.response.status})` : "Upload failed")
-      );
+      setError(err?.message || err.response?.data?.message || "Upload failed");
     } finally {
       setLoading(false);
     }
@@ -225,7 +206,7 @@ const MusicAlbumForm: React.FC = () => {
     <div className="create-grandpa mx-auto max-w-4xl p-6">
       <form className="create-form space-y-6" onSubmit={handleSubmit}>
         <div className="create-form-container text-center">
-          <h1 className="create-form-box-text text-3xl font-bold">Upload Album</h1>
+          <h1 className="create-form-box-text text-3xl font-bold">Upload Album (WAV Masters)</h1>
         </div>
 
         {success && (
@@ -233,7 +214,6 @@ const MusicAlbumForm: React.FC = () => {
             {success}
           </div>
         )}
-
         {error && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded" role="alert">
             {error}
@@ -284,7 +264,7 @@ const MusicAlbumForm: React.FC = () => {
         </div>
 
         <div>
-          <label className="create-label block text-lg font-medium mb-2">Tracks (WAV masters)</label>
+          <label className="create-label block text-lg font-medium mb-2">Tracks (WAV only)</label>
           <input
             type="file"
             accept=".wav,audio/wav"
