@@ -60,10 +60,10 @@ if (!ENCRYPTION_KEY || ENCRYPTION_KEY.length !== 32) {
 }
 
 const dailyTopics = [
-  "love","joy","peace","patience","kindness","goodness","faithfulness","gentleness","self-control",
-  "family","christian_living","forgiveness","repentance","gratitude","hope","humility","obedience",
-  "called_to_create","honor_god_in_your_work","liberty","bread_of_life","living_water","provision",
-  "holy_spirit_guidance","follower_of_christ","salvation",
+  "love", "joy", "peace", "patience", "kindness", "goodness", "faithfulness", "gentleness", "self-control",
+  "family", "christian_living", "forgiveness", "repentance", "gratitude", "hope", "humility", "obedience",
+  "called_to_create", "honor_god_in_your_work", "liberty", "bread_of_life", "living_water", "provision",
+  "holy_spirit_guidance", "follower_of_christ", "salvation",
 ] as const;
 
 const app = express();
@@ -80,13 +80,13 @@ const R2_PUBLIC_DOMAIN = process.env.CLOUDFLARE_R2_PUBLIC_DOMAIN;
 const r2 =
   R2_ACCOUNT_ID && R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY
     ? new S3Client({
-        region: "auto",
-        endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-        credentials: {
-          accessKeyId: R2_ACCESS_KEY_ID,
-          secretAccessKey: R2_SECRET_ACCESS_KEY,
-        },
-      })
+      region: "auto",
+      endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      credentials: {
+        accessKeyId: R2_ACCESS_KEY_ID,
+        secretAccessKey: R2_SECRET_ACCESS_KEY,
+      },
+    })
     : null;
 
 function isR2Configured() {
@@ -161,7 +161,10 @@ app.use(bodyParser.urlencoded({ limit: "10mb", extended: true }));
  * ✅ Multer disk storage
  */
 function sanitizeName(name: string) {
-  return name.replace(/[^\w.\-]/g, "_");
+  return name
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/[^\w.\-]/g, "_");
 }
 
 const upload = multer({
@@ -299,6 +302,141 @@ app.post("/api/lessons", requireAdmin, async (req: Request, res: Response) => {
  * - audio/mp3/*
  * - audio/m4a/*
  */
+
+
+
+// Presign and commit endpoints for client direct-to-R2 uploads (optional, but good for large files and faster UX)  
+
+app.post("/api/r2/presign", requireAdmin, async (req: Request, res: Response) => {
+  try {
+    if (!isR2Configured()) {
+      return res.status(500).json({ message: "Cloudflare R2 is not configured on the server." });
+    }
+
+    const { kind, albumTitle, artist, trackNumber, filename, contentType } = req.body as {
+      kind: "cover" | "master";
+      albumTitle?: string;
+      artist?: string;
+      trackNumber?: number;
+      filename: string;
+      contentType?: string;
+    };
+
+    if (!kind || !filename) {
+      return res.status(400).json({ message: "Missing required fields: kind, filename" });
+    }
+
+    const safeFile = sanitizeName(filename);
+    const safeArtist = sanitizeName((artist || "Great_Light").trim());
+    const safeAlbum = sanitizeName((albumTitle || "Untitled_Album").trim());
+
+    // Choose key structure (this is your R2 object key)
+    const key =
+      kind === "cover"
+        ? `covers/${safeArtist}/${safeAlbum}/${Date.now()}_${safeFile}`
+        : `audio/master/${safeArtist}/${safeAlbum}/track_${String(trackNumber ?? 0).padStart(2, "0")}_${Date.now()}_${safeFile}`;
+
+    const cmd = new PutObjectCommand({
+      Bucket: R2_BUCKET_NAME!,
+      Key: key,
+      ContentType: contentType || (kind === "cover" ? "image/jpeg" : "audio/wav"),
+      // You can add metadata if you want:
+      // Metadata: { kind, album: safeAlbum, artist: safeArtist }
+    });
+
+    // 10 minutes is fine; upload itself can run longer after connection starts
+    const putUrl = await getSignedUrl(r2!, cmd, { expiresIn: 60 * 10 });
+
+    return res.json({ key, putUrl });
+  } catch (err: any) {
+    console.error("Presign error:", err);
+    return res.status(500).json({ message: "Failed to presign upload", error: err.message });
+  }
+});
+
+app.post("/api/albums/commit", requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const {
+      album_title,
+      artist = "Great Light",
+      album_is_premium = true,
+      cover_key,
+      tracks,
+    } = req.body as {
+      album_title: string;
+      artist: string;
+      album_is_premium: boolean;
+      cover_key: string;
+      tracks: Array<{
+        title: string;
+        track_number: number;
+        track_is_premium?: boolean | null;
+        master_wav_key: string;
+      }>;
+    };
+
+    if (!album_title || !cover_key || !tracks?.length) {
+      return res.status(400).json({ message: "Missing album_title, cover_key, or tracks." });
+    }
+
+    // Create/reuse album doc
+    const albumDoc = await MusicAlbumModel.findOneAndUpdate(
+      { title: String(album_title).trim(), artist: String(artist).trim() },
+      {
+        $setOnInsert: {
+          title: String(album_title).trim(),
+          artist: String(artist).trim(),
+        },
+        $set: {
+          album_is_premium: !!album_is_premium,
+          cover_path: cover_key,
+          cover_url: "", // you said you don’t care about URL
+          status: "active",
+        },
+      },
+      { new: true, upsert: true }
+    );
+
+    const createdTracks: any[] = [];
+
+    for (const t of tracks) {
+      const trackDoc = new MusicTrackModel({
+        albumId: albumDoc._id,
+        title: String(t.title).trim(),
+        track_number: Number(t.track_number),
+        track_is_premium: typeof t.track_is_premium === "boolean" ? t.track_is_premium : undefined,
+
+        // WAV-only masters for now
+        master_wav_path: t.master_wav_key,
+        stream_mp3_url: "",
+        stream_mp3_path: "",
+        stream_m4a_url: "",
+        stream_m4a_path: "",
+
+        status: "active",
+      });
+
+      await trackDoc.save();
+      createdTracks.push(trackDoc);
+    }
+
+    return res.status(201).json({
+      message: "Album committed successfully",
+      album: albumDoc,
+      tracks: createdTracks,
+    });
+  } catch (err: any) {
+    console.error("Commit album error:", err);
+
+    if (err?.code === 11000) {
+      return res.status(409).json({ message: "Duplicate track number or album.", error: err.message });
+    }
+
+    return res.status(500).json({ message: "Failed to commit album", error: err.message });
+  }
+});
+
+//
 app.post(
   "/api/albums",
   requireAdmin,
@@ -656,7 +794,7 @@ app.post(
       for (const p of cleanupPaths.reverse()) {
         try {
           await fs.rm(p, { recursive: true, force: true });
-        } catch {}
+        } catch { }
       }
     }
   }
