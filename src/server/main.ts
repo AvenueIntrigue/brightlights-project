@@ -12,7 +12,7 @@ import os from "os";
 import fs from "fs/promises";
 import fsSync from "fs";
 import { spawn } from "child_process";
-
+import { Readable } from "stream";
 import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
@@ -103,13 +103,13 @@ const R2_PUBLIC_DOMAIN = process.env.CLOUDFLARE_R2_PUBLIC_DOMAIN;
 const r2 =
   R2_ACCOUNT_ID && R2_ACCESS_KEY_ID && R2_SECRET_ACCESS_KEY
     ? new S3Client({
-        region: "auto",
-        endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-        credentials: {
-          accessKeyId: R2_ACCESS_KEY_ID,
-          secretAccessKey: R2_SECRET_ACCESS_KEY,
-        },
-      })
+      region: "auto",
+      endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      credentials: {
+        accessKeyId: R2_ACCESS_KEY_ID,
+        secretAccessKey: R2_SECRET_ACCESS_KEY,
+      },
+    })
     : null;
 
 function isR2Configured() {
@@ -378,6 +378,64 @@ app.post("/api/lessons", requireAdmin, async (req: Request, res: Response) => {
  * =========================
  */
 
+async function streamToBuffer(stream: any): Promise<Buffer> {
+  // AWS SDK v3 returns Body as a stream in Node
+  const chunks: Buffer[] = [];
+  const readable = stream as Readable;
+  for await (const chunk of readable) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  return Buffer.concat(chunks);
+}
+
+async function downloadR2ObjectToFile(key: string, destPath: string) {
+  const out = await r2!.send(
+    new GetObjectCommand({
+      Bucket: R2_BUCKET_NAME!,
+      Key: key,
+    })
+  );
+  const body = (out as any).Body;
+  if (!body) throw new Error(`R2 GetObject returned empty body for key: ${key}`);
+  const buf = await streamToBuffer(body);
+  await fs.writeFile(destPath, buf);
+}
+
+async function transcodeAndUploadStreamsFromMaster(masterKey: string, base: string, tmpDir: string) {
+  const wavPath = path.join(tmpDir, `${base}.wav`);
+  const mp3Path = path.join(tmpDir, `${base}.mp3`);
+  const m4aPath = path.join(tmpDir, `${base}.m4a`);
+
+  await downloadR2ObjectToFile(masterKey, wavPath);
+
+  await wavToMp3(wavPath, mp3Path);
+  await wavToM4a(wavPath, m4aPath);
+
+  const mp3Key = `audio/mp3/${base}.mp3`;
+  const m4aKey = `audio/m4a/${base}.m4a`;
+
+  await r2!.send(
+    new PutObjectCommand({
+      Bucket: R2_BUCKET_NAME!,
+      Key: mp3Key,
+      Body: await fs.readFile(mp3Path),
+      ContentType: "audio/mpeg",
+    })
+  );
+
+  await r2!.send(
+    new PutObjectCommand({
+      Bucket: R2_BUCKET_NAME!,
+      Key: m4aKey,
+      Body: await fs.readFile(m4aPath),
+      ContentType: "audio/mp4",
+    })
+  );
+
+  const mp3Url = R2_PUBLIC_DOMAIN ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${mp3Key}` : "";
+  const m4aUrl = R2_PUBLIC_DOMAIN ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${m4aKey}` : "";
+
+  return { mp3Key, m4aKey, mp3Url, m4aUrl };
+}
+
 /**
  * Presign and commit endpoints for client direct-to-R2 uploads (optional).
  */
@@ -408,9 +466,9 @@ app.post("/api/r2/presign", requireAdmin, async (req: Request, res: Response) =>
       kind === "cover"
         ? `covers/${safeArtist}/${safeAlbum}/${Date.now()}_${safeFile}`
         : `audio/master/${safeArtist}/${safeAlbum}/track_${String(trackNumber ?? 0).padStart(
-            2,
-            "0"
-          )}_${Date.now()}_${safeFile}`;
+          2,
+          "0"
+        )}_${Date.now()}_${safeFile}`;
 
     const cmd = new PutObjectCommand({
       Bucket: R2_BUCKET_NAME!,
@@ -448,6 +506,10 @@ app.post("/api/albums/commit", requireAdmin, async (req: Request, res: Response)
       return res.status(400).json({ message: "Missing album_title, cover_key, or tracks." });
     }
 
+    console.log("✅ COMMIT HANDLER HIT");
+console.log("tracks count:", tracks.length);
+console.log("first master key:", tracks[0]?.master_wav_key);
+
     const albumDoc = await MusicAlbumModel.findOneAndUpdate(
       { title: String(album_title).trim(), artist: String(artist).trim() },
       {
@@ -466,27 +528,53 @@ app.post("/api/albums/commit", requireAdmin, async (req: Request, res: Response)
     );
 
     const createdTracks: any[] = [];
+    const requestId = makeUploadId();
+    const tmpDir = path.join(os.tmpdir(), `blc-commit-${requestId}`);
+    await fs.mkdir(tmpDir, { recursive: true });
+    try {
+      for (const t of tracks) {
+        const trackDoc = new MusicTrackModel({
+          albumId: albumDoc._id,
+          title: String(t.title).trim(),
+          track_number: Number(t.track_number),
+          track_is_premium: typeof t.track_is_premium === "boolean" ? t.track_is_premium : undefined,
 
-    for (const t of tracks) {
-      const trackDoc = new MusicTrackModel({
-        albumId: albumDoc._id,
-        title: String(t.title).trim(),
-        track_number: Number(t.track_number),
-        track_is_premium: typeof t.track_is_premium === "boolean" ? t.track_is_premium : undefined,
+          master_wav_path: t.master_wav_key,
 
-        master_wav_path: t.master_wav_key,
+          // will be filled in after transcode
+          stream_mp3_url: "",
+          stream_mp3_path: "",
+          stream_m4a_url: "",
+          stream_m4a_path: "",
 
-        // if your schema allows empty defaults, this is fine:
-        stream_mp3_url: "",
-        stream_mp3_path: t.stream_mp3_key || "",
-        stream_m4a_url: "",
-        stream_m4a_path: t.stream_m4a_key || "",
+          status: "active",
+        });
 
-        status: "active",
-      });
+        await trackDoc.save();
 
-      await trackDoc.save();
-      createdTracks.push(trackDoc);
+        // ✅ THIS is the missing step: make MP3+M4A from the WAV already in R2, upload them, then save paths.
+        const base = `${sanitizeName(artist)}_${sanitizeName(album_title)}_track_${String(t.track_number).padStart(2, "0")}_${Date.now()}`;
+
+        const { mp3Key, m4aKey, mp3Url, m4aUrl } = await transcodeAndUploadStreamsFromMaster(
+          t.master_wav_key,
+          base,
+          tmpDir
+        );
+        console.log("✅ transcode done:", { mp3Key, m4aKey });
+        trackDoc.stream_mp3_path = mp3Key;
+        trackDoc.stream_mp3_url = mp3Url;
+        trackDoc.stream_m4a_path = m4aKey;
+        trackDoc.stream_m4a_url = m4aUrl;
+
+
+        console.log("🎛️ transcoding track", t.track_number, "key:", t.master_wav_key);
+        await trackDoc.save();
+
+        createdTracks.push(trackDoc);
+      }
+    }
+    finally {
+      await fs.rm(tmpDir, { recursive: true, force: true });
     }
 
     return res.status(201).json({
@@ -503,6 +591,7 @@ app.post("/api/albums/commit", requireAdmin, async (req: Request, res: Response)
 
     return res.status(500).json({ message: "Failed to commit album", error: err.message });
   }
+  
 });
 
 /**
