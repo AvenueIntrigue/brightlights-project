@@ -89,24 +89,44 @@ const MusicAlbumForm: React.FC = () => {
     return token;
   }
 
-  async function presign(token: string, body: any): Promise<PresignResponse> {
+  // IMPORTANT: pass the exact contentType you will use in the PUT,
+  // because your backend presign sets ContentType in the PutObjectCommand.
+  async function presign(body: any): Promise<PresignResponse> {
+    const token = await getFreshTokenOrThrow();
     const res = await axios.post("/api/r2/presign", body, {
       headers: { Authorization: `Bearer ${token}` },
     });
     return res.data as PresignResponse;
   }
 
-  async function putToR2(putUrl: string, file: File) {
-    // Use fetch for presigned PUT (axios also works, fetch is simpler here)
+  async function putToR2(putUrl: string, file: File, contentType: string) {
+    // DO NOT send Authorization headers to R2.
+    // Keep headers minimal (Content-Type only) for CORS and signature matching.
     const resp = await fetch(putUrl, {
       method: "PUT",
-      headers: { "Content-Type": file.type || "application/octet-stream" },
+      mode: "cors",
+      credentials: "omit",
+      headers: {
+        "Content-Type": contentType,
+      },
       body: file,
     });
+
     if (!resp.ok) {
       const text = await resp.text().catch(() => "");
-      throw new Error(`R2 upload failed (${resp.status}): ${text.slice(0, 200)}`);
+      throw new Error(`R2 upload failed (${resp.status}): ${text.slice(0, 300)}`);
     }
+  }
+
+  function getCoverContentType(file: File) {
+    // Must match what you put into presign AND what you send to PUT.
+    return file.type?.trim() || "image/jpeg";
+  }
+
+  function getWavContentType(_file: File) {
+    // For WAV, force a stable value. Browsers can report audio/wav, audio/x-wav, or empty.
+    // Pick ONE and use it consistently.
+    return "audio/wav";
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -119,24 +139,31 @@ const MusicAlbumForm: React.FC = () => {
       return;
     }
 
+    // quick client-side sanity: prevent duplicate track numbers (avoids 409)
+    const nums = tracks.map((t) => t.trackNumber);
+    const dup = nums.find((n, i) => nums.indexOf(n) !== i);
+    if (dup !== undefined) {
+      setError(`Duplicate track number detected: ${dup}. Please renumber or fix duplicates.`);
+      return;
+    }
+
     try {
       setLoading(true);
 
-      // 1) Token for fast presign calls
-      const token = await getFreshTokenOrThrow();
+      // 1) Cover: presign -> PUT to R2
+      const coverContentType = getCoverContentType(coverFile);
 
-      // 2) Cover: presign -> PUT to R2
-      const coverPresign = await presign(token, {
+      const coverPresign = await presign({
         kind: "cover",
         albumTitle,
         artist,
         filename: coverFile.name,
-        contentType: coverFile.type || "image/jpeg",
+        contentType: coverContentType,
       });
-      await putToR2(coverPresign.putUrl, coverFile);
 
-      // 3) Tracks: presign -> PUT each WAV to R2
-      // (Sequential is safest to start; once stable, we can add concurrency=2)
+      await putToR2(coverPresign.putUrl, coverFile, coverContentType);
+
+      // 2) Tracks: presign -> PUT each WAV to R2 (sequential for reliability)
       const uploadedTracks: Array<{
         title: string;
         track_number: number;
@@ -144,33 +171,32 @@ const MusicAlbumForm: React.FC = () => {
         master_wav_key: string;
       }> = [];
 
-      for (const t of tracks) {
-        // fresh token each presign call (optional, but keeps you safest)
-        const tk = await getFreshTokenOrThrow();
+      // Upload in trackNumber order (helps you reason/debug)
+      const sorted = [...tracks].sort((a, b) => a.trackNumber - b.trackNumber);
 
-        const ps = await presign(tk, {
+      for (const t of sorted) {
+        const wavContentType = getWavContentType(t.file);
+
+        const ps = await presign({
           kind: "master",
           albumTitle,
           artist,
           trackNumber: t.trackNumber,
           filename: t.file.name,
-          contentType: t.file.type || "audio/wav",
+          contentType: wavContentType,
         });
 
-        await putToR2(ps.putUrl, t.file);
+        await putToR2(ps.putUrl, t.file, wavContentType);
 
         uploadedTracks.push({
           title: t.title,
           track_number: t.trackNumber,
-          track_is_premium:
-            t.premiumOverride === "inherit"
-              ? null
-              : t.premiumOverride === "premium",
+          track_is_premium: t.premiumOverride === "inherit" ? null : t.premiumOverride === "premium",
           master_wav_key: ps.key,
         });
       }
 
-      // 4) Commit album (fast server call)
+      // 3) Commit album (fast server call)
       const finalToken = await getFreshTokenOrThrow();
       const commitRes = await axios.post(
         "/api/albums/commit",
@@ -185,7 +211,8 @@ const MusicAlbumForm: React.FC = () => {
       );
 
       setSuccess(
-        `Album saved: ${commitRes.data.album?.title ?? albumTitle} (${commitRes.data.tracks?.length ?? tracks.length} tracks)`
+        `Album saved: ${commitRes.data.album?.title ?? albumTitle} (${commitRes.data.tracks?.length ?? uploadedTracks.length
+        } tracks)`
       );
 
       // reset
@@ -196,7 +223,12 @@ const MusicAlbumForm: React.FC = () => {
       setTracks([]);
     } catch (err: any) {
       console.error(err);
-      setError(err?.message || err.response?.data?.message || "Upload failed");
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        err?.message ||
+        "Upload failed";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -253,25 +285,13 @@ const MusicAlbumForm: React.FC = () => {
 
         <div>
           <label className="create-label block text-lg font-medium mb-2">Album Cover (required)</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handlePickCover}
-            className="create-input-field w-full"
-            required
-          />
+          <input type="file" accept="image/*" onChange={handlePickCover} className="create-input-field w-full" required />
           {coverFile && <div className="text-sm mt-2">Selected: {coverFile.name}</div>}
         </div>
 
         <div>
           <label className="create-label block text-lg font-medium mb-2">Tracks (WAV only)</label>
-          <input
-            type="file"
-            accept=".wav,audio/wav"
-            multiple
-            onChange={handlePickTracks}
-            className="create-input-field w-full"
-          />
+          <input type="file" accept=".wav,audio/wav" multiple onChange={handlePickTracks} className="create-input-field w-full" />
 
           {tracks.length > 0 && (
             <div className="mt-4 space-y-3">
@@ -311,9 +331,7 @@ const MusicAlbumForm: React.FC = () => {
                       <select
                         className="create-input-field w-full h-10 px-3 border rounded bg-white"
                         value={t.premiumOverride}
-                        onChange={(e) =>
-                          updateTrack(idx, { premiumOverride: e.target.value as TrackRow["premiumOverride"] })
-                        }
+                        onChange={(e) => updateTrack(idx, { premiumOverride: e.target.value as TrackRow["premiumOverride"] })}
                       >
                         <option value="inherit">Inherit album</option>
                         <option value="premium">Premium</option>
