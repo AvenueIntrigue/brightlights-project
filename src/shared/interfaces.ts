@@ -277,22 +277,20 @@ export interface MusicTrack extends Document {
   track_number: number;
   duration_seconds?: number;
 
-  // undefined => inherit album_is_premium
   track_is_premium?: boolean;
 
-  // Streaming assets
-  stream_mp3_url: string;
-  stream_mp3_path: string;
+  // Optional streaming assets (not required in WAV-only mode)
+  stream_mp3_url?: string;
+  stream_mp3_path?: string;
 
-  stream_m4a_url: string;
-  stream_m4a_path: string;
+  stream_m4a_url?: string;
+  stream_m4a_path?: string;
 
-  // Master asset (never stream)
+  // Required master
   master_wav_path: string;
 
   status?: MusicStatus;
 }
-
 const musicTrackSchema: Schema<MusicTrack> = new Schema(
   {
     albumId: { type: Schema.Types.ObjectId, ref: "MusicAlbum", required: true },
@@ -304,10 +302,10 @@ const musicTrackSchema: Schema<MusicTrack> = new Schema(
     track_is_premium: { type: Boolean, required: false },
 
     stream_mp3_url: { type: String, default: "" },
-    stream_mp3_path: { type: String, required: true },
+    stream_mp3_path: { type: String, default: "" },
 
     stream_m4a_url: { type: String, default: "" },
-    stream_m4a_path: { type: String, required: true },
+    stream_m4a_path: { type: String, default: "" },
 
     master_wav_path: { type: String, required: true },
 
