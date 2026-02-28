@@ -151,6 +151,22 @@ const requireAdmin = async (req: Request, res: Response, next: NextFunction) => 
   }
 };
 
+
+
+function requireUploaderKey(req: Request, res: Response, next: NextFunction) {
+  const key = req.header("x-uploader-key");
+
+  if (!process.env.UPLOADER_KEY) {
+    return res.status(500).json({ message: "Uploader key not configured." });
+  }
+
+  if (key !== process.env.UPLOADER_KEY) {
+    return res.status(401).json({ message: "Invalid uploader key." });
+  }
+
+  next();
+}
+
 /**
  * ✅ CORS
  */
@@ -490,7 +506,7 @@ function publicUrlForKey(key: string) {
  *   - video_master (ContentType NOT pinned)
  *   - video_poster (ContentType NOT pinned)
  */
-app.post("/api/r2/presign", requireAdmin, async (req: Request, res: Response) => {
+app.post("/api/r2/presign", requireUploaderKey, async (req: Request, res: Response) => {
   try {
     if (!isR2Configured()) {
       return res.status(500).json({ message: "Cloudflare R2 is not configured on the server." });
@@ -1062,7 +1078,7 @@ app.get("/api/music/signed-url/:trackId", requireAdmin, async (req: Request, res
 
 
 
-app.post("/api/videos/commit", requireAdmin, async (req: Request, res: Response) => {
+app.post("/api/videos/commit", requireUploaderKey, async (req: Request, res: Response) => {
   const requestId = makeUploadId();
 
   try {
@@ -1151,7 +1167,7 @@ app.post("/api/videos/commit", requireAdmin, async (req: Request, res: Response)
 
 
 // GET /api/videos (Admin)
-app.get("/api/videos", requireAdmin, async (_req: Request, res: Response) => {
+app.get("/api/videos", requireUploaderKey, async (_req: Request, res: Response) => {
   try {
     const videos = await VideoModel.find({ status: { $ne: "archived" } })
       .sort({ createdAt: -1 })
@@ -1168,7 +1184,7 @@ app.get("/api/videos", requireAdmin, async (_req: Request, res: Response) => {
 });
 
 // POST /api/videos/:videoId/retry (Admin)
-app.post("/api/videos/:videoId/retry", requireAdmin, async (req: Request, res: Response) => {
+app.post("/api/videos/:videoId/retry", requireUploaderKey, async (req: Request, res: Response) => {
   try {
     const { videoId } = req.params;
 
