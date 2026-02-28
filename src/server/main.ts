@@ -177,7 +177,13 @@ app.use(
       "https://brightlightscreative.com",
       "https://brightlights-project.onrender.com",
       "https://upload.brightlightscreative.com",
+
+      // local web dev
       "http://localhost:5173",
+
+      // ✅ Tauri dev server
+      "http://localhost:1420",
+      "tauri://localhost",
     ],
     methods: ["GET", "POST", "PUT", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "x-uploader-key"],
