@@ -336,7 +336,8 @@ const VideoSchema = new mongoose.Schema(
     description: { type: String, default: "" },
 
     video_is_premium: { type: Boolean, default: true },
-
+    
+    make_4k: { type: Boolean, default: false },
     // R2 keys (paths)
     master_mp4_path: { type: String, required: true },
     poster_path: { type: String, default: "" },
@@ -360,6 +361,9 @@ const VideoSchema = new mongoose.Schema(
       enum: ["processing", "active", "archived", "failed"],
       default: "processing",
     }, // active | processing | archived
+    processing_worker: { type: String, default: "" },
+    processing_lock: { type: String, default: "" }, // worker ID that claimed the job
+    processing_started_at: { type: Date, default: null },
   },
   { timestamps: true }
 );

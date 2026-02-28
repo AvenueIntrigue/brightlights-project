@@ -1103,130 +1103,94 @@ app.post("/api/videos/commit", requireAdmin, async (req: Request, res: Response)
       return res.status(400).json({ message: "Missing videoId, title, or master_key." });
     }
 
-    // 1) Create/Upsert DB record (processing)
-    const initial = await VideoModel.findOneAndUpdate(
-      { videoId }, // ✅ Option C: use separate videoId field
+    const videoDoc = await VideoModel.findOneAndUpdate(
+      { videoId },
       {
-        $setOnInsert: {
-          videoId,
+        $setOnInsert: { videoId },
+
+        $set: {
+          // allow metadata edits on re-commit
           title: String(title).trim(),
           artist: String(artist).trim(),
-        },
-        $set: {
           description: String(description || ""),
           video_is_premium: !!video_is_premium,
+
           master_mp4_path: master_key,
           poster_path: poster_key || "",
           poster_url: poster_key ? publicUrlForKey(poster_key) : "",
+
+          // queue it
           status: "processing",
+          make_4k: !!make_4k,
+
+          // IMPORTANT: clear lock so the worker can claim it
+          processing_lock: "",
+          processing_started_at: null,
+
+          // clear outputs on re-commit
+          mp4_720_path: "",
+          mp4_1080_path: "",
+          mp4_2160_path: "",
+          mp4_720_url: "",
+          mp4_1080_url: "",
+          mp4_2160_url: "",
         },
       },
       { new: true, upsert: true }
     );
 
-    const tmpDir = path.join(os.tmpdir(), `blc-video-commit-${requestId}`);
-    await fs.mkdir(tmpDir, { recursive: true });
-
-    try {
-      // 2) Download master to disk
-      const inputExt = guessExtFromKey(master_key); // e.g. "mp4", "mov"
-      const inputPath = path.join(tmpDir, `master.${inputExt}`);
-
-      console.log("⬇️ downloading master from R2", { master_key, inputPath });
-      await downloadR2ObjectToFile(master_key, inputPath);
-
-      // 3) Transcode outputs
-      const out720 = path.join(tmpDir, "720p.mp4");
-      const out1080 = path.join(tmpDir, "1080p.mp4");
-      const out2160 = path.join(tmpDir, "2160p.mp4");
-
-      console.log("🎬 transcoding 720p...");
-      await transcodeVideoToMp4(inputPath, out720, 720);
-
-      console.log("🎬 transcoding 1080p...");
-      await transcodeVideoToMp4(inputPath, out1080, 1080);
-
-      const do4k = !!make_4k;
-      if (do4k) {
-        console.log("🎬 transcoding 2160p (4K)...");
-        await transcodeVideoToMp4(inputPath, out2160, 2160);
-      }
-
-      // 4) Upload outputs to R2
-      const safeVid = sanitizeName(videoId);
-
-      const mp4_720_key = `video/mp4/${safeVid}/720p.mp4`;
-      const mp4_1080_key = `video/mp4/${safeVid}/1080p.mp4`;
-      const mp4_2160_key = `video/mp4/${safeVid}/2160p.mp4`;
-
-      console.log("⬆️ uploading outputs to R2", {
-        mp4_720_key,
-        mp4_1080_key,
-        mp4_2160_key: do4k ? mp4_2160_key : null,
-      });
-
-      await uploadFileToR2(mp4_720_key, out720, "video/mp4");
-      await uploadFileToR2(mp4_1080_key, out1080, "video/mp4");
-      if (do4k) {
-        await uploadFileToR2(mp4_2160_key, out2160, "video/mp4");
-      }
-
-      console.log("✅ VIDEO TRANSCODE COMPLETE", {
-        requestId,
-        videoId,
-        mp4_720_key,
-        mp4_1080_key,
-        do4k,
-      });
-
-      // 5) Update DB record with output paths/urls (no .save() needed)
-      const updated = await VideoModel.findOneAndUpdate(
-        { videoId },
-        {
-          $set: {
-            mp4_720_path: mp4_720_key,
-            mp4_1080_path: mp4_1080_key,
-            mp4_2160_path: do4k ? mp4_2160_key : "",
-
-            mp4_720_url: publicUrlForKey(mp4_720_key),
-            mp4_1080_url: publicUrlForKey(mp4_1080_key),
-            mp4_2160_url: do4k ? publicUrlForKey(mp4_2160_key) : "",
-
-            status: "active",
-          },
-        },
-        { new: true }
-      );
-
-      return res.status(201).json({
-        message: "Video committed successfully",
-        video: updated ?? initial,
-      });
-    } finally {
-      // 6) Cleanup tmp dir
-      await fs.rm(tmpDir, { recursive: true, force: true });
-    }
+    return res.status(201).json({
+      message: "Video queued for processing",
+      video: videoDoc,
+    });
   } catch (err: any) {
     console.error("Video commit error:", { requestId, err });
-
-    try {
-      if (req.body?.videoId) {
-        await VideoModel.findOneAndUpdate(
-          { videoId: req.body.videoId },
-          { $set: { status: "failed" } }
-        );
-      }
-    } catch (updateErr) {
-      console.error("Failed to set video status to failed:", updateErr);
-    }
-
-    return res.status(500).json({
-      message: "Failed to commit video",
-      error: err.message,
-    });
+    return res.status(500).json({ message: "Failed to commit video", error: err.message });
   }
 });
 
+
+// GET /api/videos (Admin)
+app.get("/api/videos", requireAdmin, async (_req: Request, res: Response) => {
+  try {
+    const videos = await VideoModel.find({ status: { $ne: "archived" } })
+      .sort({ createdAt: -1 })
+      .select(
+        "_id videoId title artist video_is_premium make_4k master_mp4_path poster_url mp4_720_url mp4_1080_url mp4_2160_url status processing_started_at createdAt updatedAt"
+      )
+      .lean();
+
+    return res.json({ videos });
+  } catch (err: any) {
+    console.error("List videos error:", err);
+    return res.status(500).json({ message: "Failed to list videos", error: err.message });
+  }
+});
+
+// POST /api/videos/:videoId/retry (Admin)
+app.post("/api/videos/:videoId/retry", requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const { videoId } = req.params;
+
+    const updated = await VideoModel.findOneAndUpdate(
+      { videoId },
+      {
+        $set: {
+          status: "processing",
+          processing_lock: "",
+          processing_started_at: null,
+        },
+      },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).json({ message: "Video not found" });
+    return res.json({ message: "Video queued for processing", video: updated });
+  } catch (err: any) {
+    console.error("Retry video error:", err);
+    return res.status(500).json({ message: "Failed to retry video", error: err.message });
+  }
+});
 
 app.get("/api/videos/playback/:videoId", requireAdmin, async (req: Request, res: Response) => {
   try {

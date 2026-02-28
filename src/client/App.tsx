@@ -24,6 +24,7 @@ import BibleLessonsForm from "./BibleLessonsForm";
 import MusicAlbumForm from "./MusicAlbumForm";
 import AddTrackToAlbumForm from "./AddTrackToAlbumForm";
 import VideoForm from "./VideoForm";
+import VideoAdmin from "./VideoAdmin";
 
 // Basic signed-in protection
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => (
@@ -142,37 +143,37 @@ const App: React.FC = () => {
             </AdminRoute>
           }
         />
+{/* ================= VIDEO ================= */}
 
-        {/* ================= VIDEO ================= */}
+<Route
+  path="/admin/videos"
+  element={
+    <AdminRoute>
+      <VideoAdmin />
+    </AdminRoute>
+  }
+/>
 
-        <Route
-          path="/admin/videos"
-          element={
-            <AdminRoute>
-              {/* Later this can become a VideoList component */}
-              <VideoForm />
-            </AdminRoute>
-          }
-        />
+<Route
+  path="/admin/videos/upload"
+  element={
+    <AdminRoute>
+      <VideoForm />
+    </AdminRoute>
+  }
+/>
 
-        <Route
-          path="/admin/videos/upload"
-          element={
-            <AdminRoute>
-              <VideoForm />
-            </AdminRoute>
-          }
-        />
+// Optional future-proof route (later you can build VideoEdit)
+{/* <Route
+  path="/admin/videos/edit/:videoId"
+  element={
+    <AdminRoute>
+      <VideoForm />
+    </AdminRoute>
+  }
+/> */}
+        
 
-        {/* Optional future-proof route */}
-        <Route
-          path="/admin/videos/edit/:videoId"
-          element={
-            <AdminRoute>
-              <VideoForm />
-            </AdminRoute>
-          }
-        />
         {/* Admin-only create routes */}
         <Route
           path="/create"
