@@ -180,19 +180,18 @@ app.use(
       "http://localhost:5173",
     ],
     methods: ["GET", "POST", "PUT", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-uploader-key"],
     credentials: true,
   })
 );
 
-app.options("*", (req: Request, res: Response) => {
+app.options("*", (req, res) => {
   res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS");
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization, x-uploader-key");
   res.header("Access-Control-Allow-Credentials", "true");
   res.sendStatus(204);
 });
-
 // Body parsing (uploads are multipart/multer)
 app.use(bodyParser.json({ limit: "10mb" }));
 app.use(bodyParser.urlencoded({ limit: "10mb", extended: true }));
