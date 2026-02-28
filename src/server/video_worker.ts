@@ -1,4 +1,15 @@
-import "dotenv/config";
+/**
+ * video_worker.ts
+ * - Runs on your Mac Studio (or any machine with ffmpeg)
+ * - Polls Mongo for Video docs with status="processing" that are not claimed
+ * - Downloads master from R2, transcodes 720/1080/(optional 2160), uploads back to R2
+ * - Updates Mongo to status="active" or "failed"
+ *
+ * Run from project root:
+ *   npx tsx src/server/video_worker.ts
+ */
+
+import dotenv from "dotenv";
 import mongoose from "mongoose";
 import path from "path";
 import os from "os";
@@ -8,21 +19,31 @@ import { spawn } from "child_process";
 import { Readable } from "stream";
 import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 
+// ✅ IMPORTANT: make sure this import path is correct for your repo.
+// If this fails, import VideoModel from the file where you define the schema.
+import { VideoModel } from "../shared/interfaces.js";
 
-// IMPORTANT: adjust this import to wherever your VideoModel lives
-import { VideoModel } from "shared/interfaces.js"; // <-- if your models are exported there
-// If VideoModel is not exported there, import it from the file where you defined it.
+interface VideoJob {
+    videoId: string;
+    master_mp4_path: string;
+    make_4k?: boolean;
+}
 
-const MONGODB_URI = process.env.MONGODB_URI!;
-const R2_ACCOUNT_ID = process.env.CLOUDFLARE_R2_ACCOUNT_ID!;
-const R2_ACCESS_KEY_ID = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID!;
-const R2_SECRET_ACCESS_KEY = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY!;
-const R2_BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME!;
-const R2_PUBLIC_DOMAIN = process.env.CLOUDFLARE_R2_PUBLIC_DOMAIN!;
+// Load your local env file explicitly
+dotenv.config({
+    path: path.resolve(process.cwd(), ".env.development"),
+});
 
-if (!MONGODB_URI) throw new Error("Missing MONGODB_URI");
+const MONGODB_URI = process.env.MONGODB_URI || "";
+const R2_ACCOUNT_ID = process.env.CLOUDFLARE_R2_ACCOUNT_ID || "";
+const R2_ACCESS_KEY_ID = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID || "";
+const R2_SECRET_ACCESS_KEY = process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY || "";
+const R2_BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME || "";
+const R2_PUBLIC_DOMAIN = process.env.CLOUDFLARE_R2_PUBLIC_DOMAIN || "";
+
+if (!MONGODB_URI) throw new Error("Missing MONGODB_URI (check .env.development)");
 if (!R2_ACCOUNT_ID || !R2_ACCESS_KEY_ID || !R2_SECRET_ACCESS_KEY || !R2_BUCKET_NAME) {
-    throw new Error("Missing R2 env vars");
+    throw new Error("Missing R2 env vars (check .env.development)");
 }
 
 const r2 = new S3Client({
@@ -91,8 +112,11 @@ function runFfmpeg(args: string[]): Promise<void> {
  */
 async function transcodeToMp4(inputPath: string, outPath: string, height: number) {
     // scale to height, keep aspect ratio, even width/height
-    // -2 makes ffmpeg pick an even number automatically
     const vf = `scale=-2:${height}`;
+
+    const b = height === 720 ? "3500k" : height === 1080 ? "6000k" : "16000k";
+    const max = height === 720 ? "4500k" : height === 1080 ? "8000k" : "20000k";
+    const buf = height === 720 ? "9000k" : height === 1080 ? "16000k" : "40000k";
 
     await runFfmpeg([
         "-y",
@@ -103,11 +127,11 @@ async function transcodeToMp4(inputPath: string, outPath: string, height: number
         "-c:v",
         "h264_videotoolbox",
         "-b:v",
-        height === 720 ? "3500k" : height === 1080 ? "6000k" : "16000k",
+        b,
         "-maxrate",
-        height === 720 ? "4500k" : height === 1080 ? "8000k" : "20000k",
+        max,
         "-bufsize",
-        height === 720 ? "9000k" : height === 1080 ? "16000k" : "40000k",
+        buf,
         "-c:a",
         "aac",
         "-b:a",
@@ -128,10 +152,37 @@ function guessExtFromKey(key: string) {
     return "mp4";
 }
 
-async function processOne(video: any) {
-    const videoId = video.videoId as string;
-    const masterKey = video.master_mp4_path as string;
+async function markFailed(videoId: string, workerId: string, message: string) {
+    await VideoModel.findOneAndUpdate(
+        { videoId },
+        {
+            $set: {
+                status: "failed",
+                processing_lock: "",
+            },
+            $inc: { processing_attempts: 1 },
+            $push: {
+                processing_errors: {
+                    at: new Date(),
+                    workerId,
+                    message,
+                },
+            },
+        },
+        { new: true }
+    );
+}
+
+async function processOne(video: any, workerId: string) {
+    const videoId = String(video.videoId);
+    const masterKey = String(video.master_mp4_path || "");
     const do4k = !!video.make_4k;
+
+    if (!masterKey) {
+        console.error("❌ Missing master_mp4_path", { videoId });
+        await markFailed(videoId, workerId, "Missing master_mp4_path");
+        return;
+    }
 
     const tmpDir = path.join(os.tmpdir(), `blc-video-worker-${videoId}-${Date.now()}`);
     await fs.mkdir(tmpDir, { recursive: true });
@@ -142,23 +193,38 @@ async function processOne(video: any) {
         const ext = guessExtFromKey(masterKey);
         const inputPath = path.join(tmpDir, `master.${ext}`);
 
+        console.log("⬇️ Downloading master…");
         await downloadR2ObjectToFile(masterKey, inputPath);
 
         const out720 = path.join(tmpDir, "720p.mp4");
         const out1080 = path.join(tmpDir, "1080p.mp4");
         const out2160 = path.join(tmpDir, "2160p.mp4");
 
+        console.log("🧱 Transcoding 720p…");
         await transcodeToMp4(inputPath, out720, 720);
+
+        console.log("🧱 Transcoding 1080p…");
         await transcodeToMp4(inputPath, out1080, 1080);
-        if (do4k) await transcodeToMp4(inputPath, out2160, 2160);
+
+        if (do4k) {
+            console.log("🧱 Transcoding 2160p…");
+            await transcodeToMp4(inputPath, out2160, 2160);
+        }
 
         const k720 = `video/mp4/${videoId}/720p.mp4`;
         const k1080 = `video/mp4/${videoId}/1080p.mp4`;
         const k2160 = `video/mp4/${videoId}/2160p.mp4`;
 
+        console.log("⬆️ Uploading 720p…");
         await uploadFileToR2(k720, out720, "video/mp4");
+
+        console.log("⬆️ Uploading 1080p…");
         await uploadFileToR2(k1080, out1080, "video/mp4");
-        if (do4k) await uploadFileToR2(k2160, out2160, "video/mp4");
+
+        if (do4k) {
+            console.log("⬆️ Uploading 2160p…");
+            await uploadFileToR2(k2160, out2160, "video/mp4");
+        }
 
         await VideoModel.findOneAndUpdate(
             { videoId },
@@ -171,20 +237,18 @@ async function processOne(video: any) {
                     mp4_1080_url: publicUrlForKey(k1080),
                     mp4_2160_url: do4k ? publicUrlForKey(k2160) : "",
                     status: "active",
+                    processing_lock: "",
                 },
+                $inc: { processing_attempts: 1 },
             },
             { new: true }
         );
 
         console.log("✅ Done", { videoId, k720, k1080, do4k });
     } catch (err: any) {
-        console.error("❌ Failed", { videoId, err: err?.message || err });
-
-        await VideoModel.findOneAndUpdate(
-            { videoId },
-            { $set: { status: "failed" } },
-            { new: true }
-        );
+        const msg = err?.message || String(err);
+        console.error("❌ Failed", { videoId, msg });
+        await markFailed(videoId, workerId, msg);
     } finally {
         await fs.rm(tmpDir, { recursive: true, force: true });
     }
@@ -192,16 +256,40 @@ async function processOne(video: any) {
 
 async function main() {
     await mongoose.connect(MONGODB_URI);
-    console.log("✅ Worker connected to MongoDB");
 
-    // Poll forever
+    console.log("✅ Worker connected to MongoDB");
+    console.log("DB:", mongoose.connection.name);
+    console.log("HOST:", mongoose.connection.host);
+    const total = await VideoModel.countDocuments({});
+    const processingAny = await VideoModel.countDocuments({ status: "processing" });
+    const processingUnlocked = await VideoModel.countDocuments({
+        status: "processing",
+        processing_lock: { $in: ["", null] },
+    });
+
+    console.log("📊 counts at startup:", {
+        total,
+        processingAny,
+        processingUnlocked,
+    });
+
+    const latest = await VideoModel.findOne().sort({ updatedAt: -1 }).lean();
+    console.log("🧪 latest doc:", latest);
+
     const workerId = `${os.hostname()}-${process.pid}`;
+    console.log("🧑‍🏭 workerId:", workerId);
+
+    // quick visibility:
+    const processingCount = await VideoModel.countDocuments({ status: "processing" });
+    console.log("📦 Videos in processing:", processingCount);
 
     while (true) {
+        console.log("🔎 Polling for job…");
+
         const job = await VideoModel.findOneAndUpdate(
             {
                 status: "processing",
-                processing_lock: { $in: ["", null] }, // only unclaimed
+                processing_lock: { $in: ["", null] },
             },
             {
                 $set: {
@@ -213,18 +301,25 @@ async function main() {
                 sort: { updatedAt: 1 },
                 new: true,
             }
-        ).lean();
+        ).lean<VideoJob | null>();
 
         if (!job) {
+            console.log("…no jobs found (sleeping)");
             await new Promise((r) => setTimeout(r, 2000));
             continue;
         }
 
-        await processOne(job);
+        console.log("✅ Claimed job:", {
+            videoId: job.videoId,
+            master: job.master_mp4_path,
+            make_4k: !!job.make_4k,
+        });
+
+        await processOne(job, workerId);
     }
 }
 
 main().catch((e) => {
-    console.error(e);
+    console.error("Worker crashed:", e);
     process.exit(1);
 });
