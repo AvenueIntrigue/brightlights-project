@@ -324,6 +324,50 @@ musicTrackSchema.index({ albumId: 1, track_number: 1 }, { unique: true });
 
 const MusicTrackModel = mongoose.model<MusicTrack>("MusicTrack", musicTrackSchema);
 
+
+
+
+// ---- VIDEO ----
+const VideoSchema = new mongoose.Schema(
+  {
+    videoId: { type: String, required: true, unique: true, index: true },
+    title: { type: String, required: true },
+    artist: { type: String, default: "Great Light" },
+    description: { type: String, default: "" },
+
+    video_is_premium: { type: Boolean, default: true },
+
+    // R2 keys (paths)
+    master_mp4_path: { type: String, required: true },
+    poster_path: { type: String, default: "" },
+
+    // Progressive outputs (Phase A)
+    mp4_720_path: { type: String, default: "" },
+    mp4_1080_path: { type: String, default: "" },
+    mp4_2160_path: { type: String, default: "" }, // optional 4K
+
+    // Optional public URLs (keep "" if you don’t care)
+    poster_url: { type: String, default: "" },
+    mp4_720_url: { type: String, default: "" },
+    mp4_1080_url: { type: String, default: "" },
+    mp4_2160_url: { type: String, default: "" },
+
+    // HLS (later)
+    hls_master_path: { type: String, default: "" },
+
+    status: {
+      type: String,
+      enum: ["processing", "active", "archived", "failed"],
+      default: "processing",
+    }, // active | processing | archived
+  },
+  { timestamps: true }
+);
+
+// Optional: prevent duplicates per creator
+VideoSchema.index({ artist: 1, title: 1 });
+
+const VideoModel = mongoose.models.Video || mongoose.model("Video", VideoSchema);
 /**
  * =========================
  * Generic Posts
@@ -390,4 +434,6 @@ export {
   LessonsModel,
   MusicAlbumModel,
   MusicTrackModel,
+  VideoModel
+
 };

@@ -38,6 +38,7 @@ import {
   LessonsModel,
   MusicTrackModel,
   MusicAlbumModel,
+  VideoModel,
 } from "../shared/interfaces.js";
 
 // ESM-safe __dirname
@@ -436,8 +437,49 @@ async function transcodeAndUploadStreamsFromMaster(masterKey: string, base: stri
   return { mp3Key, m4aKey, mp3Url, m4aUrl };
 }
 
+function guessExtFromKey(key: string) {
+  const m = key.toLowerCase().match(/\.(mp4|mov|m4v|webm|mkv)$/);
+  return m ? m[1] : "mp4";
+}
+
+async function transcodeVideoToMp4(inputPath: string, outputPath: string, height: 720 | 1080 | 2160) {
+  // H.264 + AAC + faststart
+  await runFfmpeg([
+    "-y",
+    "-i", inputPath,
+    "-vf", `scale=-2:${height}`,
+    "-c:v", "libx264",
+    "-profile:v", "high",
+    "-preset", "veryfast",
+    "-crf", "22",
+    "-c:a", "aac",
+    "-b:a", height === 2160 ? "192k" : height === 1080 ? "160k" : "128k",
+    "-movflags", "+faststart",
+    outputPath,
+  ]);
+
+  if (!fileExistsAndNonEmpty(outputPath)) {
+    throw new Error(`Video MP4 ${height}p was not created by ffmpeg.`);
+  }
+}
+
+async function uploadFileToR2(key: string, filePath: string, contentType: string) {
+  await r2!.send(
+    new PutObjectCommand({
+      Bucket: R2_BUCKET_NAME!,
+      Key: key,
+      Body: await fs.readFile(filePath),
+      ContentType: contentType,
+    })
+  );
+}
+
+function publicUrlForKey(key: string) {
+  return R2_PUBLIC_DOMAIN ? `https://${R2_BUCKET_NAME}.${R2_PUBLIC_DOMAIN}/${key}` : "";
+}
+
 /**
- * Presign and commit endpoints for client direct-to-R2 uploads (optional).
+ * Presign endpoint for client direct-to-R2 uploads (music + video)
  */
 app.post("/api/r2/presign", requireAdmin, async (req: Request, res: Response) => {
   try {
@@ -445,11 +487,25 @@ app.post("/api/r2/presign", requireAdmin, async (req: Request, res: Response) =>
       return res.status(500).json({ message: "Cloudflare R2 is not configured on the server." });
     }
 
-    const { kind, albumTitle, artist, trackNumber, filename, contentType } = req.body as {
-      kind: "cover" | "master";
+    const {
+      kind,
+      // music fields
+      albumTitle,
+      artist,
+      trackNumber,
+      // video fields
+      videoId,
+      // shared
+      filename,
+      contentType,
+    } = req.body as {
+      kind: "cover" | "master" | "video_master" | "video_poster";
       albumTitle?: string;
       artist?: string;
       trackNumber?: number;
+
+      videoId?: string;
+
       filename: string;
       contentType?: string;
     };
@@ -459,21 +515,48 @@ app.post("/api/r2/presign", requireAdmin, async (req: Request, res: Response) =>
     }
 
     const safeFile = sanitizeName(filename);
-    const safeArtist = sanitizeName((artist || "Great_Light").trim());
-    const safeAlbum = sanitizeName((albumTitle || "Untitled_Album").trim());
 
-    const key =
-      kind === "cover"
-        ? `covers/${safeArtist}/${safeAlbum}/${Date.now()}_${safeFile}`
-        : `audio/master/${safeArtist}/${safeAlbum}/track_${String(trackNumber ?? 0).padStart(
-          2,
-          "0"
-        )}_${Date.now()}_${safeFile}`;
+    // Build object key depending on kind
+    let key = "";
+
+    if (kind === "cover") {
+      const safeArtist = sanitizeName((artist || "Great_Light").trim());
+      const safeAlbum = sanitizeName((albumTitle || "Untitled_Album").trim());
+      key = `covers/${safeArtist}/${safeAlbum}/${Date.now()}_${safeFile}`;
+    } else if (kind === "master") {
+      const safeArtist = sanitizeName((artist || "Great_Light").trim());
+      const safeAlbum = sanitizeName((albumTitle || "Untitled_Album").trim());
+      key = `audio/master/${safeArtist}/${safeAlbum}/track_${String(trackNumber ?? 0).padStart(
+        2,
+        "0"
+      )}_${Date.now()}_${safeFile}`;
+    } else if (kind === "video_master") {
+      if (!videoId) {
+        return res.status(400).json({ message: "Missing required field: videoId (for video_master)" });
+      }
+      key = `video/master/${sanitizeName(videoId)}/${Date.now()}_${safeFile}`;
+    } else if (kind === "video_poster") {
+      if (!videoId) {
+        return res.status(400).json({ message: "Missing required field: videoId (for video_poster)" });
+      }
+      key = `video/posters/${sanitizeName(videoId)}/${Date.now()}_${safeFile}`;
+    } else {
+      return res.status(400).json({ message: `Invalid kind: ${kind}` });
+    }
+
+    // IMPORTANT: ContentType is part of the signature.
+    // Whatever you sign here must match what the browser sends in the PUT.
+    const fallbackContentType =
+      kind === "cover" || kind === "video_poster"
+        ? "image/jpeg"
+        : kind === "master"
+          ? "audio/wav"
+          : "video/mp4";
 
     const cmd = new PutObjectCommand({
       Bucket: R2_BUCKET_NAME!,
       Key: key,
-      ContentType: contentType || (kind === "cover" ? "image/jpeg" : "audio/wav"),
+      ContentType: contentType || fallbackContentType,
     });
 
     const putUrl = await getSignedUrl(r2!, cmd, { expiresIn: 60 * 10 });
@@ -483,7 +566,6 @@ app.post("/api/r2/presign", requireAdmin, async (req: Request, res: Response) =>
     return res.status(500).json({ message: "Failed to presign upload", error: err.message });
   }
 });
-
 app.post("/api/albums/commit", requireAdmin, async (req: Request, res: Response) => {
   try {
     const { album_title, artist = "Great Light", album_is_premium = true, cover_key, tracks } = req.body as {
@@ -507,8 +589,8 @@ app.post("/api/albums/commit", requireAdmin, async (req: Request, res: Response)
     }
 
     console.log("✅ COMMIT HANDLER HIT");
-console.log("tracks count:", tracks.length);
-console.log("first master key:", tracks[0]?.master_wav_key);
+    console.log("tracks count:", tracks.length);
+    console.log("first master key:", tracks[0]?.master_wav_key);
 
     const albumDoc = await MusicAlbumModel.findOneAndUpdate(
       { title: String(album_title).trim(), artist: String(artist).trim() },
@@ -591,7 +673,7 @@ console.log("first master key:", tracks[0]?.master_wav_key);
 
     return res.status(500).json({ message: "Failed to commit album", error: err.message });
   }
-  
+
 });
 
 /**
@@ -951,6 +1033,231 @@ app.get("/api/music/signed-url/:trackId", requireAdmin, async (req: Request, res
   } catch (err: any) {
     console.error("Signed URL error:", err);
     return res.status(500).json({ message: "Failed to generate URL", error: err.message });
+  }
+});
+
+
+
+/**
+ * =========================
+ * VIDEO (Admin)
+ * =========================
+ */
+
+
+
+
+app.post("/api/videos/commit", requireAdmin, async (req: Request, res: Response) => {
+  const requestId = makeUploadId();
+
+  try {
+    if (!isR2Configured()) {
+      return res.status(500).json({ message: "Cloudflare R2 is not configured on the server." });
+    }
+
+    const {
+      videoId,
+      title,
+      artist = "Great Light",
+      description = "",
+      video_is_premium = true,
+      master_key,
+      poster_key = "",
+      make_4k = false,
+    } = req.body as {
+      videoId: string;
+      title: string;
+      artist?: string;
+      description?: string;
+      video_is_premium?: boolean;
+      master_key: string;
+      poster_key?: string;
+      make_4k?: boolean;
+    };
+
+    console.log("✅ VIDEO COMMIT HIT", {
+      requestId,
+      videoId,
+      title,
+      master_key,
+      poster_key,
+      make_4k,
+    });
+
+    if (!videoId || !title || !master_key) {
+      return res.status(400).json({ message: "Missing videoId, title, or master_key." });
+    }
+
+    // 1) Create/Upsert DB record (processing)
+    const initial = await VideoModel.findOneAndUpdate(
+      { videoId }, // ✅ Option C: use separate videoId field
+      {
+        $setOnInsert: {
+          videoId,
+          title: String(title).trim(),
+          artist: String(artist).trim(),
+        },
+        $set: {
+          description: String(description || ""),
+          video_is_premium: !!video_is_premium,
+          master_mp4_path: master_key,
+          poster_path: poster_key || "",
+          poster_url: poster_key ? publicUrlForKey(poster_key) : "",
+          status: "processing",
+        },
+      },
+      { new: true, upsert: true }
+    );
+
+    const tmpDir = path.join(os.tmpdir(), `blc-video-commit-${requestId}`);
+    await fs.mkdir(tmpDir, { recursive: true });
+
+    try {
+      // 2) Download master to disk
+      const inputExt = guessExtFromKey(master_key); // e.g. "mp4", "mov"
+      const inputPath = path.join(tmpDir, `master.${inputExt}`);
+
+      console.log("⬇️ downloading master from R2", { master_key, inputPath });
+      await downloadR2ObjectToFile(master_key, inputPath);
+
+      // 3) Transcode outputs
+      const out720 = path.join(tmpDir, "720p.mp4");
+      const out1080 = path.join(tmpDir, "1080p.mp4");
+      const out2160 = path.join(tmpDir, "2160p.mp4");
+
+      console.log("🎬 transcoding 720p...");
+      await transcodeVideoToMp4(inputPath, out720, 720);
+
+      console.log("🎬 transcoding 1080p...");
+      await transcodeVideoToMp4(inputPath, out1080, 1080);
+
+      const do4k = !!make_4k;
+      if (do4k) {
+        console.log("🎬 transcoding 2160p (4K)...");
+        await transcodeVideoToMp4(inputPath, out2160, 2160);
+      }
+
+      // 4) Upload outputs to R2
+      const safeVid = sanitizeName(videoId);
+
+      const mp4_720_key = `video/mp4/${safeVid}/720p.mp4`;
+      const mp4_1080_key = `video/mp4/${safeVid}/1080p.mp4`;
+      const mp4_2160_key = `video/mp4/${safeVid}/2160p.mp4`;
+
+      console.log("⬆️ uploading outputs to R2", {
+        mp4_720_key,
+        mp4_1080_key,
+        mp4_2160_key: do4k ? mp4_2160_key : null,
+      });
+
+      await uploadFileToR2(mp4_720_key, out720, "video/mp4");
+      await uploadFileToR2(mp4_1080_key, out1080, "video/mp4");
+      if (do4k) {
+        await uploadFileToR2(mp4_2160_key, out2160, "video/mp4");
+      }
+
+      console.log("✅ VIDEO TRANSCODE COMPLETE", {
+        requestId,
+        videoId,
+        mp4_720_key,
+        mp4_1080_key,
+        do4k,
+      });
+
+      // 5) Update DB record with output paths/urls (no .save() needed)
+      const updated = await VideoModel.findOneAndUpdate(
+        { videoId },
+        {
+          $set: {
+            mp4_720_path: mp4_720_key,
+            mp4_1080_path: mp4_1080_key,
+            mp4_2160_path: do4k ? mp4_2160_key : "",
+
+            mp4_720_url: publicUrlForKey(mp4_720_key),
+            mp4_1080_url: publicUrlForKey(mp4_1080_key),
+            mp4_2160_url: do4k ? publicUrlForKey(mp4_2160_key) : "",
+
+            status: "active",
+          },
+        },
+        { new: true }
+      );
+
+      return res.status(201).json({
+        message: "Video committed successfully",
+        video: updated ?? initial,
+      });
+    } finally {
+      // 6) Cleanup tmp dir
+      await fs.rm(tmpDir, { recursive: true, force: true });
+    }
+  } catch (err: any) {
+    console.error("Video commit error:", { requestId, err });
+
+    try {
+      if (req.body?.videoId) {
+        await VideoModel.findOneAndUpdate(
+          { videoId: req.body.videoId },
+          { $set: { status: "failed" } }
+        );
+      }
+    } catch (updateErr) {
+      console.error("Failed to set video status to failed:", updateErr);
+    }
+
+    return res.status(500).json({
+      message: "Failed to commit video",
+      error: err.message,
+    });
+  }
+});
+
+
+app.get("/api/videos/playback/:videoId", requireAdmin, async (req: Request, res: Response) => {
+  try {
+    if (!isR2Configured()) {
+      return res.status(500).json({ message: "Cloudflare R2 is not configured on the server." });
+    }
+
+    const { videoId } = req.params;
+    const video = await VideoModel.findById(videoId);
+    if (!video) return res.status(404).json({ message: "Video not found" });
+
+    const qualities: Array<{ q: "720p" | "1080p" | "4k"; url: string }> = [];
+
+    // Use public URL if you set R2_PUBLIC_DOMAIN, otherwise signed GET
+    async function getUrlForKey(key: string) {
+      if (!key) return "";
+      if (R2_PUBLIC_DOMAIN) return publicUrlForKey(key);
+      const cmd = new GetObjectCommand({ Bucket: R2_BUCKET_NAME!, Key: key });
+      return await getSignedUrl(r2!, cmd, { expiresIn: 60 * 30 }); // 30 minutes
+    }
+
+    const url720 = await getUrlForKey((video as any).mp4_720_path);
+    const url1080 = await getUrlForKey((video as any).mp4_1080_path);
+    const url2160 = await getUrlForKey((video as any).mp4_2160_path);
+
+    if (url720) qualities.push({ q: "720p", url: url720 });
+    if (url1080) qualities.push({ q: "1080p", url: url1080 });
+    if (url2160) qualities.push({ q: "4k", url: url2160 });
+
+    const posterUrl = (video as any).poster_path ? await getUrlForKey((video as any).poster_path) : "";
+
+    return res.json({
+      kind: "mp4",
+      posterUrl,
+      qualities,
+      video: {
+        id: (video as any)._id,
+        title: (video as any).title,
+        artist: (video as any).artist,
+        video_is_premium: (video as any).video_is_premium,
+        status: (video as any).status,
+      },
+    });
+  } catch (err: any) {
+    console.error("Video playback error:", err);
+    return res.status(500).json({ message: "Failed to get playback", error: err.message });
   }
 });
 
