@@ -20,14 +20,15 @@ import { Readable } from "stream";
 import { S3Client, GetObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 
 // ✅ IMPORTANT: make sure this import path is correct for your repo.
-// If this fails, import VideoModel from the file where you define the schema.
 import { VideoModel } from "../shared/interfaces.js";
 
-interface VideoJob {
+type VideoJob = {
     videoId: string;
     master_mp4_path: string;
     make_4k?: boolean;
-}
+};
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // Load your local env file explicitly
 dotenv.config({
@@ -111,7 +112,6 @@ function runFfmpeg(args: string[]): Promise<void> {
  * Output: H.264 + AAC in MP4.
  */
 async function transcodeToMp4(inputPath: string, outPath: string, height: number) {
-    // scale to height, keep aspect ratio, even width/height
     const vf = `scale=-2:${height}`;
 
     const b = height === 720 ? "3500k" : height === 1080 ? "6000k" : "16000k";
@@ -152,42 +152,35 @@ function guessExtFromKey(key: string) {
     return "mp4";
 }
 
-async function markFailed(videoId: string, workerId: string, message: string) {
-    await VideoModel.findOneAndUpdate(
+async function markFailed(videoId: string, message: string) {
+    await (VideoModel as any).findOneAndUpdate(
         { videoId },
         {
             $set: {
                 status: "failed",
                 processing_lock: "",
             },
-            $inc: { processing_attempts: 1 },
-            $push: {
-                processing_errors: {
-                    at: new Date(),
-                    workerId,
-                    message,
-                },
-            },
         },
         { new: true }
     );
+
+    console.error("❌ Marked failed:", { videoId, message });
 }
 
-async function processOne(video: any, workerId: string) {
+async function processOne(video: VideoJob, workerId: string) {
     const videoId = String(video.videoId);
     const masterKey = String(video.master_mp4_path || "");
     const do4k = !!video.make_4k;
 
     if (!masterKey) {
-        console.error("❌ Missing master_mp4_path", { videoId });
-        await markFailed(videoId, workerId, "Missing master_mp4_path");
+        await markFailed(videoId, "Missing master_mp4_path");
         return;
     }
 
     const tmpDir = path.join(os.tmpdir(), `blc-video-worker-${videoId}-${Date.now()}`);
     await fs.mkdir(tmpDir, { recursive: true });
 
-    console.log("🎬 Processing", { videoId, masterKey, do4k });
+    console.log("🎬 Processing", { videoId, masterKey, do4k, workerId });
 
     try {
         const ext = guessExtFromKey(masterKey);
@@ -226,7 +219,7 @@ async function processOne(video: any, workerId: string) {
             await uploadFileToR2(k2160, out2160, "video/mp4");
         }
 
-        await VideoModel.findOneAndUpdate(
+        await (VideoModel as any).findOneAndUpdate(
             { videoId },
             {
                 $set: {
@@ -239,7 +232,6 @@ async function processOne(video: any, workerId: string) {
                     status: "active",
                     processing_lock: "",
                 },
-                $inc: { processing_attempts: 1 },
             },
             { new: true }
         );
@@ -248,7 +240,7 @@ async function processOne(video: any, workerId: string) {
     } catch (err: any) {
         const msg = err?.message || String(err);
         console.error("❌ Failed", { videoId, msg });
-        await markFailed(videoId, workerId, msg);
+        await markFailed(videoId, msg);
     } finally {
         await fs.rm(tmpDir, { recursive: true, force: true });
     }
@@ -260,52 +252,61 @@ async function main() {
     console.log("✅ Worker connected to MongoDB");
     console.log("DB:", mongoose.connection.name);
     console.log("HOST:", mongoose.connection.host);
-    const total = await VideoModel.countDocuments({});
-    const processingAny = await VideoModel.countDocuments({ status: "processing" });
-    const processingUnlocked = await VideoModel.countDocuments({
-        status: "processing",
-        processing_lock: { $in: ["", null] },
-    });
-
-    console.log("📊 counts at startup:", {
-        total,
-        processingAny,
-        processingUnlocked,
-    });
-
-    const latest = await VideoModel.findOne().sort({ updatedAt: -1 }).lean();
-    console.log("🧪 latest doc:", latest);
 
     const workerId = `${os.hostname()}-${process.pid}`;
     console.log("🧑‍🏭 workerId:", workerId);
 
-    // quick visibility:
-    const processingCount = await VideoModel.countDocuments({ status: "processing" });
-    console.log("📦 Videos in processing:", processingCount);
+    // helpful visibility at startup
+    const counts = {
+        total: await (VideoModel as any).countDocuments({}),
+        processingAny: await (VideoModel as any).countDocuments({ status: "processing" }),
+        processingUnlocked: await (VideoModel as any).countDocuments({
+            status: "processing",
+            $or: [{ processing_lock: { $in: ["", null] } }, { processing_lock: { $exists: false } }],
+        }),
+    };
+    console.log("📊 counts at startup:", counts);
+
+    const latest = await (VideoModel as any).findOne().sort({ updatedAt: -1 }).lean();
+    console.log("🧪 latest doc:", latest);
+
+    // graceful shutdown
+    const shutdown = async () => {
+        console.log("\n👋 Shutting down worker…");
+        try {
+            await mongoose.disconnect();
+        } catch { }
+        process.exit(0);
+    };
+    process.on("SIGINT", shutdown);
+    process.on("SIGTERM", shutdown);
 
     while (true) {
         console.log("🔎 Polling for job…");
 
-        const job = await VideoModel.findOneAndUpdate(
-            {
-                status: "processing",
-                processing_lock: { $in: ["", null] },
-            },
-            {
-                $set: {
-                    processing_lock: workerId,
-                    processing_started_at: new Date(),
+        // ✅ FIX: the cast prevents TS from thinking this might be an array-type lean result
+        const job = (await (VideoModel as any)
+            .findOneAndUpdate(
+                {
+                    status: "processing",
+                    $or: [
+                        { processing_lock: { $in: ["", null] } },
+                        { processing_lock: { $exists: false } },
+                    ],
                 },
-            },
-            {
-                sort: { updatedAt: 1 },
-                new: true,
-            }
-        ).lean<VideoJob | null>();
+                {
+                    $set: {
+                        processing_lock: workerId,
+                        processing_started_at: new Date(),
+                    },
+                },
+                { sort: { updatedAt: 1 }, new: true }
+            )
+            .lean()) as VideoJob | null;
 
         if (!job) {
             console.log("…no jobs found (sleeping)");
-            await new Promise((r) => setTimeout(r, 2000));
+            await sleep(2000);
             continue;
         }
 

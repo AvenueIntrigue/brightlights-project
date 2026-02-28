@@ -1125,40 +1125,42 @@ app.post("/api/videos/commit", requireUploaderKey, async (req: Request, res: Res
     }
 
     const videoDoc = await VideoModel.findOneAndUpdate(
-      { videoId },
-      {
-        $setOnInsert: { videoId },
+  { videoId },
+  {
+    $setOnInsert: {
+      videoId,
+      title: String(title).trim(),
+      artist: String(artist).trim(),
+    },
+    $set: {
+      description: String(description || ""),
+      video_is_premium: !!video_is_premium,
+      master_mp4_path: master_key,
+      poster_path: poster_key || "",
+      poster_url: poster_key ? publicUrlForKey(poster_key) : "",
 
-        $set: {
-          // allow metadata edits on re-commit
-          title: String(title).trim(),
-          artist: String(artist).trim(),
-          description: String(description || ""),
-          video_is_premium: !!video_is_premium,
+      status: "processing",
+      make_4k: !!make_4k,
 
-          master_mp4_path: master_key,
-          poster_path: poster_key || "",
-          poster_url: poster_key ? publicUrlForKey(poster_key) : "",
+      // ✅ IMPORTANT: make job claimable + reset any stale lock
+      processing_lock: "",
+      processing_started_at: null,
 
-          // queue it
-          status: "processing",
-          make_4k: !!make_4k,
-
-          // IMPORTANT: clear lock so the worker can claim it
-          processing_lock: "",
-          processing_started_at: null,
-
-          // clear outputs on re-commit
-          mp4_720_path: "",
-          mp4_1080_path: "",
-          mp4_2160_path: "",
-          mp4_720_url: "",
-          mp4_1080_url: "",
-          mp4_2160_url: "",
-        },
-      },
-      { new: true, upsert: true }
-    );
+      // clear outputs on re-commit
+      mp4_720_path: "",
+      mp4_1080_path: "",
+      mp4_2160_path: "",
+      mp4_720_url: "",
+      mp4_1080_url: "",
+      mp4_2160_url: "",
+    },
+  },
+  {
+    new: true,
+    upsert: true,
+    setDefaultsOnInsert: true, // ✅ IMPORTANT
+  }
+);
 
     return res.status(201).json({
       message: "Video queued for processing",
