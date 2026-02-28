@@ -481,6 +481,15 @@ function publicUrlForKey(key: string) {
 /**
  * Presign endpoint for client direct-to-R2 uploads (music + video)
  */
+/**
+ * Presign endpoint for client direct-to-R2 uploads
+ * - Music:
+ *   - cover (ContentType pinned)
+ *   - master WAV (ContentType pinned)
+ * - Video:
+ *   - video_master (ContentType NOT pinned)
+ *   - video_poster (ContentType NOT pinned)
+ */
 app.post("/api/r2/presign", requireAdmin, async (req: Request, res: Response) => {
   try {
     if (!isR2Configured()) {
@@ -503,9 +512,7 @@ app.post("/api/r2/presign", requireAdmin, async (req: Request, res: Response) =>
       albumTitle?: string;
       artist?: string;
       trackNumber?: number;
-
       videoId?: string;
-
       filename: string;
       contentType?: string;
     };
@@ -544,22 +551,30 @@ app.post("/api/r2/presign", requireAdmin, async (req: Request, res: Response) =>
       return res.status(400).json({ message: `Invalid kind: ${kind}` });
     }
 
-    // IMPORTANT: ContentType is part of the signature.
-    // Whatever you sign here must match what the browser sends in the PUT.
-    const fallbackContentType =
-      kind === "cover" || kind === "video_poster"
-        ? "image/jpeg"
-        : kind === "master"
-          ? "audio/wav"
-          : "video/mp4";
-
-    const cmd = new PutObjectCommand({
+    // Build PutObjectCommand params.
+    // ✅ Pin ContentType ONLY for cover + audio master
+    // ❌ Do NOT pin ContentType for video_* (avoids signature mismatch + CORS header issues)
+    const cmdParams: {
+      Bucket: string;
+      Key: string;
+      ContentType?: string;
+    } = {
       Bucket: R2_BUCKET_NAME!,
       Key: key,
-      ContentType: contentType || fallbackContentType,
-    });
+    };
 
-    const putUrl = await getSignedUrl(r2!, cmd, { expiresIn: 60 * 10 });
+    if (kind === "cover") {
+      cmdParams.ContentType = contentType || "image/jpeg";
+    }
+
+    if (kind === "master") {
+      // For WAV, pick ONE stable value and use it consistently
+      cmdParams.ContentType = contentType || "audio/wav";
+    }
+
+    const cmd = new PutObjectCommand(cmdParams);
+
+    const putUrl = await getSignedUrl(r2!, cmd, { expiresIn: 60 * 30 });
     return res.json({ key, putUrl });
   } catch (err: any) {
     console.error("Presign error:", err);
