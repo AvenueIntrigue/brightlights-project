@@ -145,7 +145,7 @@ const App: React.FC = () => {
         />
 {/* ================= VIDEO ================= */}
 
-<Route
+{/* <Route
   path="/admin/videos"
   element={
     <AdminRoute>
@@ -161,7 +161,7 @@ const App: React.FC = () => {
       <VideoForm />
     </AdminRoute>
   }
-/>
+/> */}
 
 // Optional future-proof route (later you can build VideoEdit)
 {/* <Route
